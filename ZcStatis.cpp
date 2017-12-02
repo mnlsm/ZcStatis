@@ -2,13 +2,12 @@
 //
 
 #include "stdafx.h"
-
 #include "resource.h"
-
 #include "MainDlg.h"
 
 CAppModule _Module;
 
+//http://odds.500.com/europe_sfc.shtml
 int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 {
 	CMessageLoop theLoop;
