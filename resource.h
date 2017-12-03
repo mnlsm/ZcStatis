@@ -3,6 +3,7 @@
 // Used by ZcStatis.rc
 //
 #define IDM_REFRESH                     0
+#define ID_IMPORT_EXCEL_PL              3
 #define IDR_MAINFRAME                   128
 #define IDD_MAINDLG                     129
 #define IDR_MENU_MAIN                   201
@@ -22,6 +23,9 @@
 #define IDC_BUTTON_DEL                  1012
 #define IDC_BUTTON2                     1013
 #define IDC_BUTTON_CLEAR                1013
+#define IDC_STATIC_SALES                1014
+#define IDC_EDIT_BONUS2                 1015
+#define IDC_EDIT_SALES                  1015
 
 // Next default values for new objects
 // 

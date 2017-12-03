@@ -33,6 +33,7 @@
 
 
 # VC Temp Files
+*.aps
 *.orig
 *.sdf
 *.suo

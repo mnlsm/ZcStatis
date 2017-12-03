@@ -4,20 +4,18 @@
 
 #pragma once
 
-typedef struct DataPLTag
-{
+typedef struct DataRowTag {
+	CStringWTL m_strCodeZongShu;
+	CStringWTL m_strCodeLianOne;
+	CStringWTL m_strCodeLianTwo;
+	CStringWTL m_strCodeDuanDian;
 	CStringWTL m_strPL1;
 	CStringWTL m_strPL2;
 	CStringWTL m_strPL3;
 	CStringWTL m_strPLSum;
 	CStringWTL m_strGvJ;
 	CStringWTL m_strPlSCOPE;
-
-
-
-}DataPL ;
-
-
+} DataRow;
 
 
 class CMainDlg :
@@ -94,8 +92,7 @@ public:
 	void InitializeStatisData();
 	void ReloadStatisData();
 
-	BOOL GetLianXu(const CStringWTL &strCode,long &nMaxSP,long &nMaxSF,long &nMaxPF);
-	BOOL GetPL(const CStringWTL &strCode,const CStringWTL &strPL1,DataPL &dataPL);
+	BOOL GetPL(const CStringWTL &strCode, const CStringWTL &strPL1, DataRow &dataPL);
 
 
 

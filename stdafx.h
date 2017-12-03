@@ -36,10 +36,7 @@ extern CAppModule _Module;
 #define _WTL_USE_CSTRING
 #include <atlddx.h>
 
-//Include STL File
 #include "StlFiles.h" 
-
-
 #include ".\\db\\DbOledb.h"
 
 
@@ -110,5 +107,4 @@ public:
 
 
 
-CStlString GetAppPath();
-BOOL DepartString(CStlString strTxt, CStlString strDim, CStlStrArray &arrPart);
+
