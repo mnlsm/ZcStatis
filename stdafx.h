@@ -38,7 +38,7 @@ extern CAppModule _Module;
 
 #include "StlFiles.h" 
 #include ".\\db\\DbOledb.h"
-
+#include ".\\lua\\lua.hpp"
 
 
 typedef WTL::CString CStringWTL;

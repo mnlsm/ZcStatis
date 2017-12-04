@@ -1,6 +1,9 @@
 #pragma once
 
 typedef struct CommonFilterFactorsTag {
+	CommonFilterFactorsTag() {
+		Clear(); 
+	}
 	int mTotal3Count;
 	int mTotal1Count;
 	int mTotal0Count;
@@ -39,7 +42,6 @@ typedef struct CommonFilterFactorsTag {
 		mPLSum = 0.0;
 		mGvj = 0.0;
 		mPLScopes.clear();
-
 	}
 } CommonFilterFactors;
 
@@ -50,26 +52,29 @@ public:
 	virtual ~CEngine();
 
 public:
-
-public:
-	BOOL CalculateAllResult();
+	void SetMaxLose(long lLose);
+	void SetChoices(const CIntxyArray& arrChoices);
+	void SetAllRecord(const CIntxyArray& arrRecords);
+	void SetPL(const CStlString &pl);
 	const CIntxyArray& GetResult();
-
 
 public:
 	void static WriteRecordsToFile(const CStlString& filename, CIntxyArray &arrAllRecord);
 
 
 public:
+	virtual BOOL CalculateAllResult();
+
+protected:
 	virtual void Init() = 0;
-	virtual BOOL IsAValidRecord(const CIntArray& tempArr) = 0;
+	virtual BOOL IsAValidRecord(const CIntArray& tempArr, CStlString* invalid_reason) = 0;
 
 //for suoshui
 protected:							
 	long m_lMaxRate;			//Max compress data
 	long m_lMaxLimit;			//Save MAXLimit	
 	long m_lMaxLose;			//Max Lose (0-13)
-
+	CStlString m_strPL;
 	CIntxyArray m_arrChoices;			//save user's choiced data
 	CIntxyArray m_arrAllRecord;				//save All record!
 
@@ -82,9 +87,6 @@ protected:
 
 
 protected:
-	void SetMaxLose(long lLose);
-	void SetChoices(const CIntxyArray& arrChoices);
-	void SetAllRecord(const CIntxyArray& arrRecords);
 
 	void SearchAllRecord(CIntxyArray::iterator iter, CIntArray &tempArr);
 	bool FillAllCoverIndex(CIntxyArray &xyAll);
@@ -92,8 +94,12 @@ protected:
 	void GreedyCalcRectRecord(CIntxyArray &F, CIntxyArray &G);
 
 public:
-	static BOOL GetLianXu(const CIntArray& record, int &nMaxSP, int &nMaxSF, int &nMaxPF);
 	static BOOL GetPLDatas(const CStlString& strPL, CDoublexyArray& arrPLData, CDoublexyArray& arrGVData);
 	static BOOL CalcCommonFilterFactors(const CIntArray& record, const CDoublexyArray& arrPLData,
 		const CDoublexyArray& arrGVData, const CDoubleArray& arrPLScope, CommonFilterFactors& commonFF);
+
+private:
+	static BOOL GetLianXu(const CIntArray& record, int &nMaxSP, int &nMaxSF, int &nMaxPF);
+
+
 };

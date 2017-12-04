@@ -19,7 +19,6 @@ CEngine::~CEngine() {
 }
 
 BOOL CEngine::CalculateAllResult() {
-	Init();
 	m_arrCoverIndex.clear();
 	m_arrResultRecord.clear();
 	if (!m_arrChoices.empty()) {
@@ -32,7 +31,9 @@ BOOL CEngine::CalculateAllResult() {
 	}
 	CIntxyArray tempAll;
 	for (const auto& result : m_arrAllRecord) {
-		if (IsAValidRecord(result)) {
+		//CommonFilterFactors commFF;
+		//CalcCommonFilterFactors(result, m_arrPLData, m_arrGVData, m_arrPLScope, commFF);
+		if (IsAValidRecord(result, NULL)) {
 			tempAll.push_back(result);
 		}
 	}
@@ -71,6 +72,11 @@ void CEngine::WriteRecordsToFile(const CStlString& filename, CIntxyArray &arrAll
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void CEngine::SetPL(const CStlString &pl) {
+	m_strPL = pl;
+	GetPLDatas(m_strPL, m_arrPLData, m_arrGVData);
+}
+
 void CEngine::SetMaxLose(long lLose) {
 	m_lMaxLose = lLose;
 }
