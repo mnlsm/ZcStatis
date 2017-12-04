@@ -43,14 +43,10 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
     SystemParametersInfo(SPI_GETWORKAREA, 0, &rcDesktop, sizeof(RECT));
     rcDesktop.DeflateRect(1, 1, 1, 1);
 
-
     SetWindowPos(NULL, &rcDesktop, SWP_NOZORDER);
-
-
 
     InitializeStatisData();
     ReloadStatisData();
-
 
     return TRUE;
 }
@@ -281,7 +277,7 @@ BOOL CMainDlg::GetPL(const CStringWTL &strCode, const CStringWTL &strPL1, DataRo
 	sprintf(dataRow.m_strPLSum.GetBuffer(255), "%.2f", commonFF.mPLSum);
 	dataRow.m_strPLSum.ReleaseBuffer();
 
-	sprintf(dataRow.m_strGvJ.GetBuffer(255), "%.3f", commonFF.mGvj * 10 * 10 * 10 * 10 * 10 * 10);
+	sprintf(dataRow.m_strGvJ.GetBuffer(255), "%.4f", commonFF.mGvj * 10 * 10 * 10 * 10 * 10 * 10);
 	dataRow.m_strGvJ.ReleaseBuffer();
 
     

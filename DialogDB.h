@@ -91,6 +91,7 @@ public:
     CStringWTL m_strBonus;
     CStringWTL m_strSales;
     CStringWTL m_strPL;
+	CStringWTL m_strMatchs;
     CContainedWindowT<CListBox> m_lstQH;
     CContainedWindowT<CEdit> m_edQH;
     CContainedWindowT<CEdit> m_edCode;

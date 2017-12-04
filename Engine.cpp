@@ -320,15 +320,24 @@ BOOL CEngine::CalcCommonFilterFactors(const CIntArray& record, const CDoublexyAr
 		int pre_code = record[index - 1];
 		if (code == pre_code) {
 			if (code == 3) {
-				if (++l3 > commonFF.mLian3Count) {
+				if (++l3 == 1) {
+					l3++;
+				}
+				if (l3 > commonFF.mLian3Count) {
 					commonFF.mLian3Count = l3;
 				}
 			} else if (code == 1) {
-				if (++l1 > commonFF.mLian1Count) {
+				if (++l1 == 1) {
+					l1++;
+				}
+				if (l1 > commonFF.mLian1Count) {
 					commonFF.mLian1Count = l1;
 				}
 			} else if (code == 0) {
-				if (++l0 > commonFF.mLian0Count) {
+				if (++l0 == 1) {
+					l0++;
+				}
+				if (l0 > commonFF.mLian0Count) {
 					commonFF.mLian0Count = l0;
 				}
 			}
@@ -378,4 +387,5 @@ BOOL CEngine::CalcCommonFilterFactors(const CIntArray& record, const CDoublexyAr
 			}
 		}
 	}
+	return TRUE;
 }

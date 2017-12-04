@@ -44,39 +44,45 @@ LRESULT CDialogDB::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     LoadData();
 
     CenterWindow(::GetDesktopWindow());
-    return 1;  // 使系统设置焦点
+	m_edQH.SetFocus();
+    return 0;  // 使系统设置焦点
 }
 
 LRESULT CDialogDB::OnClickedAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
     DoDataExchange(TRUE);
-
 
     int nLenQH = m_strQH.GetLength();
     if(nLenQH != 5) {
         MessageBox("期号输入错误，请检查！", "错误", MB_OK);
         return 1L;
     }
-
     for(int i = 0 ; i < nLenQH ; i++) {
         if(m_strQH[i] < '0' || m_strQH[i] > '9') {
             MessageBox("期号输入错误，请检查！", "错误", MB_OK);
             return 1L;
         }
-
     }
+
+	if (m_strPL.IsEmpty()) {
+		MessageBox("赔率输入错误，请检查！", "错误", MB_OK);
+		return 1L;
+	}
 
     int nLenCode = m_strCode.GetLength();
     if(nLenCode != 14) {
-        MessageBox(_T("结果输入错误，请检查！"), _T("错误"), MB_OK);
-        return 1L;
+		m_strCode.Empty();
+        //MessageBox(_T("结果输入错误，请检查！"), _T("错误"), MB_OK);
+        //return 1L;
     }
-
 	for(int i = 0 ; i < nLenCode ; i++) {
         if(m_strCode[i] != '0' && m_strCode[i] != '1' && m_strCode[i] != '3') {
-            MessageBox("结果输入错误，请检查！", "错误", MB_OK);
-            return 1L;
+            //MessageBox("结果输入错误，请检查！", "错误", MB_OK);
+            //return 1L;
+			m_strCode.Empty();
+			break;
         }
     }
+
 
     //CStringWTL strSQL;
     //strSQL.Format( _T(" delete from PLDATA where ID = '%s' "),m_strQH);
@@ -91,14 +97,19 @@ LRESULT CDialogDB::OnClickedAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 
     float fBonus = _ttof(m_strBonus);
 	long lSales = _ttol(m_strSales);
-    strSQL = _T("INSERT INTO PLDATA (ID, BONUS,RESULT,PLDATA,SALES) values(?,?,?,?,?)");
+    strSQL = _T("INSERT INTO PLDATA (ID, BONUS,RESULT,PLDATA,SALES,MATCHS) values(?,?,?,?,?,?)");
     IDbCommand *pCmd = m_pDbSystem->CreateCommand(m_pDbDatabase);
     pCmd->Create(strSQL);
     pCmd->SetParam(0, m_strQH);
     pCmd->SetParam(1, &fBonus);
-    pCmd->SetParam(2, m_strCode);
+	if (!m_strCode.IsEmpty()) {
+		pCmd->SetParam(2, m_strCode);
+	} else {
+		pCmd->SetParam(2, "00000000000000");
+	}
     pCmd->SetParam(3, m_strPL);
 	pCmd->SetParam(4, &lSales);
+	pCmd->SetParam(5, m_strMatchs);
 
     pCmd->Execute(NULL);
     pCmd->Close();
@@ -152,7 +163,7 @@ LRESULT CDialogDB::OnListQHSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 
 
     CStringWTL strSQL;
-    strSQL.Format(_T(" select ID,BONUS,RESULT,PLDATA,SALES from PLDATA where ID = '%s' "), strID);
+    strSQL.Format(_T("select ID,BONUS,RESULT,PLDATA,SALES,MATCHS from PLDATA where ID='%s'"), strID);
     IDbRecordset *pRS = m_pDbSystem->CreateRecordset(m_pDbDatabase);
     pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY);
 
@@ -168,6 +179,7 @@ LRESULT CDialogDB::OnListQHSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 		pRS->GetField(4, lSales);
 		sprintf(m_strSales.GetBuffer(255), "%u", lSales);
 		m_strSales.ReleaseBuffer();
+		pRS->GetField(5, m_strMatchs);
     }
     pRS->Close();
     delete pRS;
@@ -211,7 +223,7 @@ LRESULT CDialogDB::OnClickedExcel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
             return 1L;
         }
         CComPtr<Excel::_Workbook> pWorkbook;
-        hr = pWorkbooks->raw_Open(CComBSTR(fn_ole.m_psz), vtMissing, vtMissing,
+		hr = pWorkbooks->raw_Open(CComBSTR(fn_ole.m_psz), vtMissing, vtMissing,
                                   vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
                                   vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
                                   0, &pWorkbook);
@@ -231,7 +243,8 @@ LRESULT CDialogDB::OnClickedExcel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
             MessageBox("Excel Com 初始化失败 6！", "错误", MB_OK);
             return 1L;
         }
-        CStlString rateStr;
+        CStlString rateStr, matchStr;
+		const std::string dmVS = "    VS    ";
         for(long j = 0; j < sheet_count; j++) {
             CComPtr<IDispatch> pIDispath;
             CComVariant vIndex(j + 1);
@@ -247,6 +260,9 @@ LRESULT CDialogDB::OnClickedExcel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
                 MessageBox("Excel Com 初始化失败 8！", "错误", MB_OK);
                 return 1L;
             }
+			if (wcscmp(sheet_name.m_str, L"Sheet1") != 0) {
+				continue;
+			}
             CComPtr<Excel::Range> pRootCells;
             hr = pWorksheet->get_UsedRange(0, &pRootCells);
             if(FAILED(hr) || pRootCells.p == NULL) {
@@ -257,29 +273,70 @@ LRESULT CDialogDB::OnClickedExcel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
             Excel::RangePtr rows = pRootCells->GetRows();
             long row_count = rows->GetCount();
             for(int i = 3; i <= row_count; i = i + 2) {
-                for(int j = 8; j < 11; j++) {
-                    CComVariant rowIndex(i), colIndex(j);
+				CComVariant rowIndex(i);
+				CStlString strMatchPrefix(16, ' ');
+				int matchNameState = 0;
+				for(int j = 1; j < 11; j++) {
+                    CComVariant colIndex(j);
                     Excel::RangePtr cell_item = pRootCells->GetItem(rowIndex, colIndex);
-                    if(cell_item.GetInterfacePtr() != NULL) {
-                        _variant_t cell_value = cell_item->GetValue2();
-                        if(cell_value.vt == VT_R8) {
-                            TCHAR szRata[20] = { _T('\0') };
-                            _stprintf(szRata, _T("%.2f"), cell_value.dblVal);
-                            if(rateStr.empty()) {
-                                rateStr = szRata;
-                            } else {
-                                rateStr = rateStr + _T('#') + szRata;
-                            }
-                        }
-                    }
+					if (cell_item.GetInterfacePtr() == NULL) {
+						continue;
+					}
+					_variant_t cell_value = cell_item->GetValue2();
+					TCHAR szR[20] = { _T('\0') };
+					if (j == 1 && cell_value.vt == VT_R8) {
+						DWORD iMatchNo = (DWORD)cell_value.dblVal;
+						_stprintf(szR, _T("%02u."), iMatchNo);
+						TCHAR* dataPos = (TCHAR*)strMatchPrefix.data();
+						memcpy(dataPos, szR, _tcslen(szR) * sizeof(TCHAR));
+						matchNameState++;
+					} else if (j == 5 && cell_value.vt == VT_BSTR) {
+						CW2T teamName(cell_value.bstrVal);
+						int teamNameLen = _tcslen(teamName.m_psz);
+						if (teamNameLen < strMatchPrefix.size() - 3) {
+							matchNameState++;
+							TCHAR* dataPos = (TCHAR*)strMatchPrefix.data() + strMatchPrefix.size() - teamNameLen;
+							memcpy(dataPos, teamName.m_psz, teamNameLen * sizeof(TCHAR));
+						}
+					} else if (j == 7 && cell_value.vt == VT_BSTR) {
+						if (matchNameState == 2) {
+							strMatchPrefix = strMatchPrefix + dmVS + CW2T(cell_value.bstrVal).m_psz;
+						} else {
+							strMatchPrefix.clear();
+						}
+						if (!strMatchPrefix.empty()) {
+							if (matchStr.empty()) {
+								matchStr = strMatchPrefix.c_str();
+							}
+							else {
+								matchStr = matchStr + _T("\n") + strMatchPrefix.c_str();
+							}
+						}
+					} else if (j == 8 || j == 9 || j == 10) {
+						if (cell_value.vt == VT_R8) {
+							_stprintf(szR, _T("%.2f"), cell_value.dblVal);
+							if (rateStr.empty()) {
+								rateStr = szR;
+							}
+							else {
+								rateStr = rateStr + _T('#') + szR;
+							}
+						}
+					}
                 }
             }
         }
-        m_strPL = rateStr.c_str();
-        DoDataExchange(FALSE);
-        //Excel::_WorkbookPtr pWorkbook = pExcelApp->Workbooks->Open(fn_ole.m_psz);
-        //pWorkbook->
-
+		CStlStrArray arrTemp;
+		Global::DepartString(rateStr, _T("#"), arrTemp);
+		if (arrTemp.size() == 42) {
+			m_strPL = rateStr.c_str();
+		}
+		Global::DepartString(matchStr, _T("\n"), arrTemp);
+		if (arrTemp.size() == 14) {
+			m_strMatchs = matchStr.c_str();
+			std::wstring matchs_w = CT2W(matchStr.c_str()).m_psz;
+		}
+		DoDataExchange(FALSE);
     } catch(_com_error& error) {
         MessageBox(error.ErrorMessage(), "错误", MB_OK);
         return 1L;

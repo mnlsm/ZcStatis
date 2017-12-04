@@ -2049,7 +2049,7 @@ _References : IDispatch
 // Wrapper method implementations
 //
 
-#include "e:\librarys\github\zcstatis\debug\vbe6ext.tli"
+#include "vbe6ext.tli"
 
 } // namespace VBIDE
 
