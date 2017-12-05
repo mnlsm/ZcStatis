@@ -37,7 +37,6 @@
 *.orig
 *.sdf
 *.suo
-*.vcxproj.filters
 *.vcxproj.user
 *.opensdf
 
