@@ -181,7 +181,7 @@ void CEngineLua::push_scriptfunc_params(lua_State *L, const CIntArray& record) {
 			plscope = cNum;
 		}
 		else {
-			plscope = plscope + cNum;
+			plscope = plscope + ',' + cNum;
 		}
 	}
 	lua_pushstring(L, "plscope");
