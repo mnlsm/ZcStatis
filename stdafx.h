@@ -13,11 +13,13 @@
 #define _WIN32_IE	0x0400
 #define _RICHEDIT_VER	0x0100
 
-#define _WTL_FORWARD_DECLARE_CSTRING
+//#define _WTL_USE_CSTRING
+//#define _WTL_FORWARD_DECLARE_CSTRING
 
 //#define  __ATLSTR_H__
 
 #include <atlbase.h>
+#include <atlstr.h>
 #include <atlapp.h>
 
 extern CAppModule _Module;
@@ -33,7 +35,7 @@ extern CAppModule _Module;
 #include <atldlgs.h>
 #include <atlMisc.h>
 
-#define _WTL_USE_CSTRING
+//#define _WTL_USE_CSTRING
 #include <atlddx.h>
 
 #include "StlFiles.h" 
@@ -41,7 +43,7 @@ extern CAppModule _Module;
 #include "./lua/lua.hpp"
 typedef int(*lua_CFunction) (lua_State *L);
 
-typedef WTL::CString CStringWTL;
+typedef ATL::CString CStringATL;
 
 namespace WTL
 {
@@ -57,7 +59,7 @@ template<class T>
 class CDDX_Text_WTL
 {
 public:	
-	BOOL DDX_Text_WTL(UINT nID, CStringWTL& strText, int /*cbSize*/, BOOL bSave, BOOL bValidate = FALSE, int nLength = 0)
+	BOOL DDX_Text_WTL(UINT nID, CStringATL& strText, int /*cbSize*/, BOOL bSave, BOOL bValidate = FALSE, int nLength = 0)
 	{
 		T* pT = static_cast<T*>(this);
 		BOOL bSuccess = TRUE;

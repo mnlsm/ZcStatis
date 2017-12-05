@@ -147,6 +147,9 @@
     <ClCompile Include="EngineLua.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DialogTZ.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DialogDB.h">
@@ -255,6 +258,9 @@
       <Filter>lua</Filter>
     </ClInclude>
     <ClInclude Include="EngineLua.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DialogTZ.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

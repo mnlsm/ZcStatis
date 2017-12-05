@@ -119,7 +119,7 @@ public:
    virtual BOOL GetField(short iIndex, LPTSTR pData, UINT cchMax) = 0;
    virtual BOOL GetField(short iIndex, SYSTEMTIME& Data) = 0;
 #if defined(__ATLSTR_H__) || defined(_WTL_USE_CSTRING)
-   virtual BOOL GetField(short iIndex, WTL::CString& pData) = 0;
+   virtual BOOL GetField(short iIndex, ATL::CString& pData) = 0;
 #endif // __ATLSTR_H__
 #if defined(_STRING_)
    virtual BOOL GetField(short iIndex, std::string& pData) = 0;
@@ -157,7 +157,7 @@ public:
    virtual BOOL SetParam(short iIndex, std::string& str) = 0;
 #endif // _STRING
 #if defined(__ATLSTR_H__) || defined(_WTL_USE_CSTRING)
-   virtual BOOL SetParam(short iIndex, WTL::CString& str) = 0;
+   virtual BOOL SetParam(short iIndex, ATL::CString& str) = 0;
 #endif // __ATLSTR_H__
 };
 

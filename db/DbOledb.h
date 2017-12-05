@@ -182,7 +182,7 @@ public:
    BOOL GetField(short iIndex, LPTSTR pData, UINT cchMax);
    BOOL GetField(short iIndex, SYSTEMTIME& pSt);
 #if defined(__ATLSTR_H__) || defined(_WTL_USE_CSTRING)
-   BOOL GetField(short iIndex, WTL::CString& pData);
+   BOOL GetField(short iIndex, ATL::CString& pData);
 #endif // __ATLSTR_H__
 #if defined(_STRING_)
    BOOL GetField(short iIndex, std::string& pData);
@@ -247,7 +247,7 @@ public:
    BOOL SetParam(short iIndex, std::string& str);
 #endif // _STRING
 #if defined(__ATLSTR_H__) || defined(_WTL_USE_CSTRING)
-   BOOL SetParam(short iIndex, WTL::CString& str);
+   BOOL SetParam(short iIndex, ATL::CString& str);
 #endif // __ATLSTR_H__
 
 protected:

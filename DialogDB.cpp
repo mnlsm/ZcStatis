@@ -11,12 +11,12 @@
 void CDialogDB::LoadData() {
     m_lstQH.ResetContent();
 
-    CStringWTL strSQL = _T("SELECT ID FROM PLDATA ORDER BY ID DESC");
+    CStringATL strSQL = _T("SELECT ID FROM PLDATA ORDER BY ID DESC");
     IDbRecordset *pRS = m_pDbSystem->CreateRecordset(m_pDbDatabase);
     pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY);
 
     while(!pRS->IsEOF()) {
-        CStringWTL strID;
+        CStringATL strID;
         pRS->GetField(0, strID);
         strID.TrimLeft();
         strID.TrimRight();
@@ -84,10 +84,10 @@ LRESULT CDialogDB::OnClickedAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
     }
 
 
-    //CStringWTL strSQL;
+    //CStringATL strSQL;
     //strSQL.Format( _T(" delete from PLDATA where ID = '%s' "),m_strQH);
     //m_pDbDatabase->ExecuteSQL(m_strQH);
-    CStringWTL strSQL =  _T("delete from PLDATA where ID = ?");
+    CStringATL strSQL =  _T("delete from PLDATA where ID = ?");
     IDbCommand *pCmd1 = m_pDbSystem->CreateCommand(m_pDbDatabase);
     pCmd1->Create(strSQL);
     pCmd1->SetParam(0, m_strQH);
@@ -136,11 +136,11 @@ LRESULT CDialogDB::OnClickedDelete(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
     int nSel = m_lstQH.GetCurSel();
     if(nSel < 0) return 1L;
 
-    CStringWTL strID;
+    CStringATL strID;
     m_lstQH.GetText(nSel, strID.GetBuffer(1024));
     strID.ReleaseBuffer();
 
-    CStringWTL strSQL =  _T("delete from PLDATA where ID = ?");
+    CStringATL strSQL =  _T("delete from PLDATA where ID = ?");
     IDbCommand *pCmd = m_pDbSystem->CreateCommand(m_pDbDatabase);
     pCmd->Create(strSQL);
     pCmd->SetParam(0, strID);
@@ -157,12 +157,12 @@ LRESULT CDialogDB::OnListQHSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
     int nSel = m_lstQH.GetCurSel();
     if(nSel < 0) return 1L;
 
-    CStringWTL strID;
+    CStringATL strID;
     m_lstQH.GetText(nSel, strID.GetBuffer(1024));
     strID.ReleaseBuffer();
 
 
-    CStringWTL strSQL;
+    CStringATL strSQL;
     strSQL.Format(_T("select ID,BONUS,RESULT,PLDATA,SALES,MATCHS from PLDATA where ID='%s'"), strID);
     IDbRecordset *pRS = m_pDbSystem->CreateRecordset(m_pDbDatabase);
     pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY);

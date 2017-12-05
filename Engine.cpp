@@ -53,7 +53,7 @@ void CEngine::WriteRecordsToFile(const CStlString& filename, CIntxyArray &arrAll
 	try {
 		file.open(filename.c_str());
 		if (file.is_open()) {
-			CStringWTL strTemp, strCount;
+			CStringATL strTemp, strCount;
 			long count = 0;
 			for (CIntxyArray::iterator iter = arrAllRecord.begin(); iter != arrAllRecord.end(); iter++, count++) {
 				for (CIntArray::iterator intIter = iter->begin(); intIter != iter->end(); intIter++) {

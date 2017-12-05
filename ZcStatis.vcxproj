@@ -123,6 +123,7 @@
   <ItemGroup>
     <ClCompile Include="db\DbOledb.cpp" />
     <ClCompile Include="DialogDB.cpp" />
+    <ClCompile Include="DialogTZ.cpp" />
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="EngineLua.cpp" />
     <ClCompile Include="Global.cpp" />
@@ -273,6 +274,7 @@
     <ClInclude Include="db\DbBase.h" />
     <ClInclude Include="db\DbOledb.h" />
     <ClInclude Include="DialogDB.h" />
+    <ClInclude Include="DialogTZ.h" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="EngineLua.h" />
     <ClInclude Include="Global.h" />

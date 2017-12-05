@@ -572,7 +572,7 @@ BOOL COledbRecordset::GetField(short iIndex, SYSTEMTIME& Data) {
 
 #if defined(__ATLSTR_H__) || defined(_WTL_USE_CSTRING)
 
-BOOL COledbRecordset::GetField(short iIndex, WTL::CString& pData) {
+BOOL COledbRecordset::GetField(short iIndex, ATL::CString& pData) {
     _ASSERTE(IsOpen());
     iIndex += m_iAdjustIndex;
     _ASSERTE(iIndex >= 0 && iIndex < m_nCols);
@@ -1171,7 +1171,7 @@ BOOL COledbCommand::SetParam(short iIndex, std::string& str) {
 
 #if defined(__ATLSTR_H__) || defined(_WTL_USE_CSTRING)
 
-BOOL COledbCommand::SetParam(short iIndex, WTL::CString& str) {
+BOOL COledbCommand::SetParam(short iIndex, ATL::CString& str) {
     return SetParam(iIndex, (LPCTSTR) str);
 }
 

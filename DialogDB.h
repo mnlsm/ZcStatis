@@ -86,12 +86,12 @@ public:
     void LoadData();
 
 public:
-    CStringWTL m_strQH;
-    CStringWTL m_strCode;
-    CStringWTL m_strBonus;
-    CStringWTL m_strSales;
-    CStringWTL m_strPL;
-	CStringWTL m_strMatchs;
+    CStringATL m_strQH;
+    CStringATL m_strCode;
+    CStringATL m_strBonus;
+    CStringATL m_strSales;
+    CStringATL m_strPL;
+	CStringATL m_strMatchs;
     CContainedWindowT<CListBox> m_lstQH;
     CContainedWindowT<CEdit> m_edQH;
     CContainedWindowT<CEdit> m_edCode;

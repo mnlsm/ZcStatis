@@ -108,16 +108,16 @@ void CMainDlg::InitializeStatisData() {
     m_pDbSystem = new COledbSystem();
     m_pDbDatabase = m_pDbSystem->CreateDatabase();
     CStlString strAppPath = Global::GetAppPath();
-    CStringWTL strConnect = "Provider= Microsoft.Jet.OLEDB.4.0;";
+    CStringATL strConnect = "Provider= Microsoft.Jet.OLEDB.4.0;";
     strConnect += "User ID=Admin;";
-    strConnect = strConnect + CStringWTL("Data Source=") + CStringWTL(strAppPath.c_str()) + CStringWTL("ZcStatis.mdb;");
+    strConnect = strConnect + CStringATL("Data Source=") + CStringATL(strAppPath.c_str()) + CStringATL("ZcStatis.mdb;");
     BOOL bRet = m_pDbDatabase->Open(NULL, (LPCTSTR) strConnect, _T(""), _T(""), DB_OPEN_READ_ONLY);
 
 }
 
 void CMainDlg::ReloadStatisData() {
     m_arrPLSCOPE.clear();
-    CStringWTL strSQL =  _T("select PLSCOPE from PLSCOPE");
+    CStringATL strSQL =  _T("select PLSCOPE from PLSCOPE");
     IDbRecordset *pRS1 = m_pDbSystem->CreateRecordset(m_pDbDatabase);
     pRS1->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY);
     while(!pRS1->IsEOF()) {
@@ -141,11 +141,11 @@ void CMainDlg::ReloadStatisData() {
         int colIndex = 0;
         float fBonus = 0;
         long lSales = 0;
-        CStringWTL strQH;
-        CStringWTL strCode;
-        CStringWTL strPL;
-        CStringWTL strBonus;
-        CStringWTL strBonusAvg;
+        CStringATL strQH;
+        CStringATL strCode;
+        CStringATL strPL;
+        CStringATL strBonus;
+        CStringATL strBonusAvg;
 
         pRS->GetField(0, strQH);
         pRS->GetField(1, fBonus);
@@ -248,7 +248,7 @@ LRESULT CMainDlg::OnRefresh(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 
 
 
-BOOL CMainDlg::GetPL(const CStringWTL &strCode, const CStringWTL &strPL1, DataRow &dataRow) {
+BOOL CMainDlg::GetPL(const CStringATL &strCode, const CStringATL &strPL1, DataRow &dataRow) {
     //CStlStrArray arrOther;
 	CDoublexyArray arrPLData, arrGVData;
     CStlString strPL = strPL1;
@@ -282,7 +282,7 @@ BOOL CMainDlg::GetPL(const CStringWTL &strCode, const CStringWTL &strPL1, DataRo
 
     
 	for (int i = 0; i < commonFF.mPLScopes.size(); i++) {
-        CStringWTL strTemp;
+        CStringATL strTemp;
 		strTemp.Format("%02d-", commonFF.mPLScopes[i]);
 		dataRow.m_strPlSCOPE += strTemp;
     }

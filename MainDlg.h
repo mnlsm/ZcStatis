@@ -5,16 +5,16 @@
 #pragma once
 
 typedef struct DataRowTag {
-	CStringWTL m_strCodeZongShu;
-	CStringWTL m_strCodeLianOne;
-	CStringWTL m_strCodeLianTwo;
-	CStringWTL m_strCodeDuanDian;
-	CStringWTL m_strPL1;
-	CStringWTL m_strPL2;
-	CStringWTL m_strPL3;
-	CStringWTL m_strPLSum;
-	CStringWTL m_strGvJ;
-	CStringWTL m_strPlSCOPE;
+	CStringATL m_strCodeZongShu;
+	CStringATL m_strCodeLianOne;
+	CStringATL m_strCodeLianTwo;
+	CStringATL m_strCodeDuanDian;
+	CStringATL m_strPL1;
+	CStringATL m_strPL2;
+	CStringATL m_strPL3;
+	CStringATL m_strPLSum;
+	CStringATL m_strGvJ;
+	CStringATL m_strPlSCOPE;
 } DataRow;
 
 
@@ -92,7 +92,7 @@ public:
 	void InitializeStatisData();
 	void ReloadStatisData();
 
-	BOOL GetPL(const CStringWTL &strCode, const CStringWTL &strPL1, DataRow &dataPL);
+	BOOL GetPL(const CStringATL &strCode, const CStringATL &strPL1, DataRow &dataPL);
 
 
 
