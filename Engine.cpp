@@ -18,33 +18,29 @@ CEngine::~CEngine() {
 
 }
 
-BOOL CEngine::CalculateAllResult() {
-	m_arrCoverIndex.clear();
-	m_arrResultRecord.clear();
-	if (!m_arrChoices.empty()) {
-		m_arrAllRecord.clear();
-		CIntArray tempArr;  //temp data
-		SearchAllRecord(m_arrChoices.begin(), tempArr);
-	} else { //去重
-		std::stable_sort(m_arrAllRecord.begin(), m_arrAllRecord.end());
-		m_arrAllRecord.erase(std::unique(m_arrAllRecord.begin(), m_arrAllRecord.end()), m_arrAllRecord.end());
-	}
-	CIntxyArray tempAll;
-	for (const auto& result : m_arrAllRecord) {
-		//CommonFilterFactors commFF;
-		//CalcCommonFilterFactors(result, m_arrPLData, m_arrGVData, m_arrPLScope, commFF);
-		if (IsAValidRecord(result, NULL)) {
-			tempAll.push_back(result);
-		}
-	}
-	m_arrAllRecord.swap(tempAll);
-	if (m_lMaxLose > 0) {
-		FillAllCoverIndex(m_arrAllRecord);
-		GreedyCalcRectRecord(m_arrCoverIndex, m_arrAllRecord);
-	} else {
-		m_arrResultRecord = m_arrAllRecord;
-	}
-	return true;
+void CEngine::SetPL(const CStlString &pl) {
+	m_strPL = pl;
+	GetPLDatas(m_strPL, m_arrPLData, m_arrGVData);
+}
+
+void CEngine::SetMaxLose(long lLose) {
+	m_lMaxLose = lLose;
+}
+
+void CEngine::SetChoices(const CIntxyArray &arrChoices) {
+	m_arrChoices.clear();
+	m_arrChoices.assign(arrChoices.begin(), arrChoices.end());
+	m_arrAllRecord.clear();
+}
+
+void CEngine::SetAllRecord(const CIntxyArray &arrRecords) {
+	m_arrAllRecord.clear();
+	m_arrAllRecord.assign(arrRecords.begin(), arrRecords.end());
+	m_arrChoices.clear();
+}
+
+BOOL CEngine::CalculateAllResult(CStlString& failed_reason) {
+	return CalculateAllResultImpl(NULL, failed_reason);
 }
 
 const CIntxyArray& CEngine::GetResult() {
@@ -72,38 +68,46 @@ void CEngine::WriteRecordsToFile(const CStlString& filename, CIntxyArray &arrAll
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CEngine::SetPL(const CStlString &pl) {
-	m_strPL = pl;
-	GetPLDatas(m_strPL, m_arrPLData, m_arrGVData);
-}
-
-void CEngine::SetMaxLose(long lLose) {
-	m_lMaxLose = lLose;
-}
-
-void CEngine::SetChoices(const CIntxyArray &arrChoices) {
-	m_arrChoices.clear();
-	m_arrChoices.assign(arrChoices.begin(), arrChoices.end());
-	m_arrAllRecord.clear();
-}
-
-void CEngine::SetAllRecord(const CIntxyArray &arrRecords) {
-	m_arrAllRecord.clear();
-	m_arrAllRecord.assign(arrRecords.begin(), arrRecords.end());
-	m_arrChoices.clear();
+BOOL CEngine::CalculateAllResultImpl(void* ctx, CStlString& failed_reason) {
+	m_arrCoverIndex.clear();
+	m_arrResultRecord.clear();
+	if (!m_arrChoices.empty()) {
+		m_arrAllRecord.clear();
+		CIntArray tempArr;  //temp data
+		SearchAllRecord(m_arrChoices.begin(), tempArr);
+	}
+	else { //去重
+		std::stable_sort(m_arrAllRecord.begin(), m_arrAllRecord.end());
+		m_arrAllRecord.erase(std::unique(m_arrAllRecord.begin(), m_arrAllRecord.end()), m_arrAllRecord.end());
+	}
+	CIntxyArray tempAll;
+	for (const auto& record : m_arrAllRecord) {
+		if (IsAValidRecord(record, ctx, NULL)) {
+			tempAll.push_back(record);
+		}
+	}
+	m_arrAllRecord.swap(tempAll);
+	if (m_lMaxLose > 0) {
+		FillAllCoverIndex(m_arrAllRecord);
+		GreedyCalcRectRecord(m_arrCoverIndex, m_arrAllRecord);
+	}
+	else {
+		m_arrResultRecord = m_arrAllRecord;
+	}
+	return TRUE;
 }
 
 void CEngine::SearchAllRecord(CIntxyArray::iterator choice_iter, CIntArray &tempArr) {
-    //finish DiGui
+	//finish DiGui
 	if (choice_iter == m_arrChoices.end()) {
-        m_arrAllRecord.push_back(tempArr);
-        return;
-    }
+		m_arrAllRecord.push_back(tempArr);
+		return;
+	}
 	for (CIntArray::iterator codeIter = choice_iter->begin(); codeIter != choice_iter->end(); ++codeIter) {
 		tempArr.push_back(*codeIter);
 		SearchAllRecord(choice_iter + 1, tempArr);
-        tempArr.pop_back();
-    }
+		tempArr.pop_back();
+	}
 }
 
 bool CEngine::FillAllCoverIndex(CIntxyArray &xyAll) {

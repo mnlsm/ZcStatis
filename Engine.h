@@ -63,11 +63,11 @@ public:
 
 
 public:
-	virtual BOOL CalculateAllResult();
+	virtual BOOL CalculateAllResult(CStlString& failed_reason);
 
 protected:
-	virtual void Init() = 0;
-	virtual BOOL IsAValidRecord(const CIntArray& tempArr, CStlString* invalid_reason) = 0;
+	virtual BOOL CalculateAllResultImpl(void* ctx, CStlString& failed_reason);
+	virtual BOOL IsAValidRecord(const CIntArray& record, void* ctx, CStlString* invalid_reason) = 0;
 
 //for suoshui
 protected:							

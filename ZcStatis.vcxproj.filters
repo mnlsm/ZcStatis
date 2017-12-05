@@ -144,6 +144,9 @@
     <ClCompile Include="lua\lbaselib.c">
       <Filter>lua</Filter>
     </ClCompile>
+    <ClCompile Include="EngineLua.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DialogDB.h">
@@ -250,6 +253,9 @@
     </ClInclude>
     <ClInclude Include="lua\lzio.h">
       <Filter>lua</Filter>
+    </ClInclude>
+    <ClInclude Include="EngineLua.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

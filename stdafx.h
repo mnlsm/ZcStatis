@@ -37,9 +37,9 @@ extern CAppModule _Module;
 #include <atlddx.h>
 
 #include "StlFiles.h" 
-#include ".\\db\\DbOledb.h"
-#include ".\\lua\\lua.hpp"
-
+#include "./db/DbOledb.h"
+#include "./lua/lua.hpp"
+typedef int(*lua_CFunction) (lua_State *L);
 
 typedef WTL::CString CStringWTL;
 
