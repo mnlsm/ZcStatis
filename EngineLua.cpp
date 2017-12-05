@@ -65,8 +65,42 @@ BOOL CEngineLua::IsAValidRecord(const CIntArray& record, void* ctx, CStlString* 
 	return TRUE;
 }
 
-//https://www.cnblogs.com/barrysgy/archive/2012/08/08/2679963.html
+lua_State* CEngineLua::InitLua(CStlString& failed_reason) {
+	lua_State* lua_state = luaL_newstate();
+	if (lua_state == NULL) {
+		failed_reason = _T("luaL_newstate failed!");
+		return lua_state;
+	}
 
+	luaL_openlibs(lua_state);
+
+	lua_pushlightuserdata(lua_state, this);
+	lua_pushcclosure(lua_state, CEngineLua::LUA_IsFilterTJ, 1);
+	lua_setglobal(lua_state, "IsFilterTJ");
+
+	if (luaL_dostring(lua_state, m_strScript.c_str()) != 0) {
+		failed_reason = _T("luaL_dostring failed!");
+		lua_close(lua_state);
+		lua_state = NULL;
+	}
+
+	return lua_state;
+}
+
+void CEngineLua::TermLua(lua_State* state) {
+	if (state != NULL) {
+		lua_close(state);
+	}
+}
+
+
+BOOL CEngineLua::IsFilterTJ(const CIntArray& record, const CStlString& strTJ) {
+
+	return FALSE;
+}
+
+
+//https://www.cnblogs.com/barrysgy/archive/2012/08/08/2679963.html
 void CEngineLua::push_scriptfunc_params(lua_State *L, const CIntArray& record) {
 	lua_newtable(L);
 	CommonFilterFactors commFF;
@@ -145,46 +179,12 @@ void CEngineLua::push_scriptfunc_params(lua_State *L, const CIntArray& record) {
 		sprintf(cNum, "%u", scope);
 		if (plscope.empty()) {
 			plscope = cNum;
-		} else {
+		}
+		else {
 			plscope = plscope + cNum;
 		}
 	}
 	lua_pushstring(L, "plscope");
 	lua_pushstring(L, plscope.c_str());
 	lua_settable(L, -3);
-}
-
-
-lua_State* CEngineLua::InitLua(CStlString& failed_reason) {
-	lua_State* lua_state = luaL_newstate();
-	if (lua_state == NULL) {
-		failed_reason = _T("luaL_newstate failed!");
-		return lua_state;
-	}
-
-	luaL_openlibs(lua_state);
-
-	lua_pushlightuserdata(lua_state, this);
-	lua_pushcclosure(lua_state, CEngineLua::LUA_IsFilterTJ, 1);
-	lua_setglobal(lua_state, "IsFilterTJ");
-
-	if (luaL_dostring(lua_state, m_strScript.c_str()) != 0) {
-		failed_reason = _T("luaL_dostring failed!");
-		lua_close(lua_state);
-		lua_state = NULL;
-	}
-
-	return lua_state;
-}
-
-void CEngineLua::TermLua(lua_State* state) {
-	if (state != NULL) {
-		lua_close(state);
-	}
-}
-
-
-BOOL CEngineLua::IsFilterTJ(const CIntArray& record, const CStlString& strTJ) {
-
-	return FALSE;
 }
