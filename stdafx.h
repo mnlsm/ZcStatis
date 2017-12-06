@@ -37,6 +37,7 @@ extern CAppModule _Module;
 
 //#define _WTL_USE_CSTRING
 #include <atlddx.h>
+#include "atlctrlsext.h"
 
 #include "StlFiles.h" 
 #include "./db/DbOledb.h"

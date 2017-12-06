@@ -1,29 +1,12 @@
 #pragma once
 #include "resource.h"
 
-#define IDM_DELETE_FANGAN	WM_APP + 200
-#define IDM_EDIT_FANGAN		WM_APP + 201
+#define IDM_DELETE_ROW		WM_APP + 200
+#define IDM_EDIT_CODES		WM_APP + 201
 #define IDM_EDIT_SCRIPT		WM_APP + 202
-#define IDM_DELETE_RESULT	WM_APP + 203
+#define IDM_COPY_SCRIPT		WM_APP + 204
+#define IDM_DELETE_RESULT	WM_APP + 205
 
-template <class T>
-class CCheckListViewCtrlEx
-	: public CCheckListViewCtrlImpl<CCheckListViewCtrlEx<T>>
-{
-public:
-	CCheckListViewCtrlEx(T *owner) {
-		m_owner = owner;
-	}
-public:
-	DECLARE_WND_SUPERCLASS(_T("WTL_CheckListViewCtrl_Ex"), GetWndClassName())
-	BEGIN_MSG_MAP(CCheckListViewCtrlEx<T>)
-		CHAIN_MSG_MAP_ALT_MEMBER((*m_owner), 1)
-		CHAIN_MSG_MAP(CCheckListViewCtrlImpl<CCheckListViewCtrlEx<T>>)
-	END_MSG_MAP()
-
-private:
-	T* m_owner;
-};
 
 class CDialogGambel : 
 	public CAxDialogImpl<CDialogGambel>,
@@ -52,14 +35,12 @@ public:
 		COMMAND_HANDLER(IDC_BUCALC, BN_CLICKED, OnClickedBuCalc)
 		COMMAND_HANDLER(IDCANCEL, BN_CLICKED, OnClickedBuExit)
 
-		COMMAND_RANGE_HANDLER(IDM_DELETE_FANGAN, IDM_DELETE_RESULT, OnClickedListMenu)
+		//COMMAND_RANGE_HANDLER(IDM_DELETE_FANGAN, IDM_DELETE_RESULT, OnClickedListMenu)
 
 		CHAIN_MSG_MAP(CAxDialogImpl<CDialogGambel>)
 		REFLECT_NOTIFICATIONS()
 		ALT_MSG_MAP(1)
 		MESSAGE_HANDLER(WM_RBUTTONDOWN, OnListRButtonDown)
-		MESSAGE_HANDLER(WM_LBUTTONDOWN, OnListLButtonDown)
-
 	END_MSG_MAP()
 
 public:
@@ -67,8 +48,6 @@ public:
 	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 	LRESULT OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-	LRESULT OnListLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-
 
 	LRESULT OnClickedBuAddDanShi(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnClickedBuAddFuShi(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
@@ -76,7 +55,7 @@ public:
 	LRESULT OnClickedBuCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnClickedBuExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
-	LRESULT OnClickedListMenu(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	void DoListMenuCommand(UINT cmd, UINT nItem);
 
 
 private:
@@ -102,4 +81,12 @@ private:
 		CStringATL m_strResult;
 	} DataRow;
 	std::vector<DataRow> m_arrDbData;
+
+
+private:
+	void DoEditCodesData(const DataRow& data);
+	void DoCopyScriptText(const DataRow& data);
+	void DoEditScriptText(const DataRow& data);
+	void DoDeleteResult(const DataRow& data);
+	void DoDeleteRow(const DataRow& data);
 };

@@ -272,6 +272,7 @@
     <ClCompile Include="ZcStatis.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="atlctrlsext.h" />
     <ClInclude Include="db\DbBase.h" />
     <ClInclude Include="db\DbOledb.h" />
     <ClInclude Include="DialogDB.h" />

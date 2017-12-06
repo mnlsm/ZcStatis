@@ -31,7 +31,7 @@ LRESULT CDialogTZ::OnCtlColor(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 
 LRESULT CDialogTZ::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
     CenterWindow();
-	initConctrol();
+	initConctrols();
 	ReLoadDataToShow();
     return TRUE;
 }
@@ -91,10 +91,10 @@ LRESULT CDialogTZ::OnClickedBuExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 	return 0;
 }
 
-void CDialogTZ::initConctrol() {
-	HICON hIconBig = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON));
+void CDialogTZ::initConctrols() {
+	HICON hIconBig = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR|LR_SHARED, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON));
 	SetIcon(hIconBig, TRUE);
-	HICON hIconSmall = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CXSMICON));
+	HICON hIconSmall = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR | LR_SHARED, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CXSMICON));
 	SetIcon(hIconBig, TRUE);
 	SetIcon(hIconSmall, FALSE);
 
@@ -174,11 +174,12 @@ BOOL CDialogTZ::ReLoadDataToShow() {
 		CStringATL strSQL, strResults;
 		strSQL.Format(_T("select CODES, PLDATA, MATCHS from GAMBEL where ID=%d"), m_GambleID);
 		std::auto_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
-		pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY);
-		while (!pRS->IsEOF()) {
-			pRS->GetField(0, strResults);
-			pRS->GetField(1, m_strPL);
-			pRS->GetField(2, m_strMatchs);
+		if(pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
+			while (!pRS->IsEOF()) {
+				pRS->GetField(0, strResults);
+				pRS->GetField(1, m_strPL);
+				pRS->GetField(2, m_strMatchs);
+			}
 		}
 		pRS->Close();
 
@@ -199,10 +200,11 @@ BOOL CDialogTZ::ReLoadDataToShow() {
 		CStringATL strSQL;
 		strSQL.Format(_T("select PLDATA, MATCHS from PLDATA where ID='%s'"), m_strQH.c_str());
 		std::auto_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
-		pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY);
-		if (!pRS->IsEOF()) {
-			pRS->GetField(0, m_strPL);
-			pRS->GetField(1, m_strMatchs);
+		if(pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
+			if (!pRS->IsEOF()) {
+				pRS->GetField(0, m_strPL);
+				pRS->GetField(1, m_strMatchs);
+			}
 		}
 		pRS->Close();
 	}

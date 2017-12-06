@@ -1,24 +1,7 @@
 #pragma once
 
-#define IDM_EDIT_FANGANS WM_APP + 300
-template <class T>
-class CSortListViewCtrlEx
-	: public CSortListViewCtrlImpl<CSortListViewCtrlEx<T>>
-{
-public:
-	CSortListViewCtrlEx(T *owner) {
-		m_owner = owner;
-	}
-public:
-	DECLARE_WND_SUPERCLASS(_T("WTL_SortListViewCtrl_Ex"), GetWndClassName())
-	BEGIN_MSG_MAP(CSortListViewCtrlEx<T>)
-		CHAIN_MSG_MAP_ALT_MEMBER((*m_owner), 1)
-		CHAIN_MSG_MAP(CSortListViewCtrlImpl<CSortListViewCtrlEx<T>>)
-	END_MSG_MAP()
-
-private:
-	T* m_owner;
-};
+#define IDM_EDIT_FANGANS   WM_APP + 300
+#define IDM_DELETE_PLDATA   WM_APP + 301
 
 class CMainDlg :
 		public CAxDialogImpl<CMainDlg>, 
@@ -54,37 +37,28 @@ public:
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
 
-		//COMMAND_RANGE_HANDLER(IDM_DELETE_FANGAN, IDM_DELETE_RESULT, OnClickedListMenu)
-
 		COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
 		COMMAND_ID_HANDLER(IDM_ADDRECORD, OnAddRecord)
 		COMMAND_ID_HANDLER(IDM_REFRESH, OnRefresh)
 
-
 		CHAIN_MSG_MAP(_BaseDlgResize)
 		CHAIN_MSG_MAP(CAxDialogImpl<CMainDlg>)
-
 		REFLECT_NOTIFICATIONS()
 		ALT_MSG_MAP(1)
+		MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnListLButtonDbclk)
 		MESSAGE_HANDLER(WM_RBUTTONDOWN, OnListRButtonDown)
-		//REFLECT_NOTIFICATIONS()
-		//CHAIN_MSG_MAP_MEMBER(m_lstStatis)
-		//DEFAULT_REFLECTION_HANDLER()
-		//DEFAULT_HA
 	END_MSG_MAP()
 
 	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+
 	LRESULT OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT OnListLButtonDbclk(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 	LRESULT OnCancel(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnAddRecord(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnRefresh(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	
-	//LRESULT OnClickedListMenu(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-
-	
-
 private:
 	typedef struct DataRowTag {
 		CStringATL m_strCodeZongShu;
@@ -100,10 +74,13 @@ private:
 	} DataRow;
 
 private:
+	void InitControls();
 	void InitializeStatisData();
 	void ReloadStatisData();
 	BOOL GetPL(const CStringATL &strCode, const CStringATL &strPL1, DataRow &dataPL);
-	void DoEditFangAns(const CStringATL &strQH);
+
+private:
+	void DoListMenuCommand(UINT cmd, UINT nItem);
 
 private:
 	CSortListViewCtrlEx<CMainDlg> m_lstStatis;

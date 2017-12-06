@@ -272,6 +272,9 @@
     <ClInclude Include="DialogGambel.h">
       <Filter>ui</Filter>
     </ClInclude>
+    <ClInclude Include="atlctrlsext.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="res\ZcStatis.exe.manifest">

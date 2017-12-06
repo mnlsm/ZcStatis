@@ -13,18 +13,18 @@ void CDialogDB::LoadData() {
 
     CStringATL strSQL = _T("SELECT ID FROM PLDATA ORDER BY ID DESC");
     IDbRecordset *pRS = m_pDbSystem->CreateRecordset(m_pDbDatabase);
-    pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY);
-
-    while(!pRS->IsEOF()) {
-        CStringATL strID;
-        pRS->GetField(0, strID);
-        strID.TrimLeft();
-        strID.TrimRight();
-        if(!strID.IsEmpty()) {
-            m_lstQH.AddString(strID);
-        }
-        pRS->MoveNext();
-    }
+    if(pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
+		while(!pRS->IsEOF()) {
+			CStringATL strID;
+			pRS->GetField(0, strID);
+			strID.TrimLeft();
+			strID.TrimRight();
+			if(!strID.IsEmpty()) {
+				m_lstQH.AddString(strID);
+			}
+			pRS->MoveNext();
+		}
+	}
 
     pRS->Close();
     delete pRS;
@@ -35,6 +35,11 @@ void CDialogDB::LoadData() {
 LRESULT CDialogDB::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
     CAxDialogImpl<CDialogDB>::OnInitDialog(uMsg, wParam, lParam, bHandled);
     DoDataExchange(FALSE);
+	HICON hIconBig = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR | LR_SHARED, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON));
+	SetIcon(hIconBig, TRUE);
+	HICON hIconSmall = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR | LR_SHARED, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CXSMICON));
+	SetIcon(hIconBig, TRUE);
+	SetIcon(hIconSmall, FALSE);
 
     //GetDlgItem(IDC_EDIT_QH)->
     m_edQH.SetLimitText(5);
@@ -53,30 +58,30 @@ LRESULT CDialogDB::OnClickedAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 
     int nLenQH = m_strQH.GetLength();
     if(nLenQH != 5) {
-        MessageBox("期号输入错误，请检查！", "错误", MB_OK);
+        MessageBox("期号输入错误，请检查！", "错误", MB_ICONERROR|MB_OK);
         return 1L;
     }
     for(int i = 0 ; i < nLenQH ; i++) {
         if(m_strQH[i] < '0' || m_strQH[i] > '9') {
-            MessageBox("期号输入错误，请检查！", "错误", MB_OK);
+            MessageBox("期号输入错误，请检查！", "错误", MB_ICONERROR|MB_OK);
             return 1L;
         }
     }
 
 	if (m_strPL.IsEmpty()) {
-		MessageBox("赔率输入错误，请检查！", "错误", MB_OK);
+		MessageBox("赔率输入错误，请检查！", "错误", MB_ICONERROR|MB_OK);
 		return 1L;
 	}
 
     int nLenCode = m_strCode.GetLength();
     if(nLenCode != 14) {
 		m_strCode.Empty();
-        //MessageBox(_T("结果输入错误，请检查！"), _T("错误"), MB_OK);
+        //MessageBox(_T("结果输入错误，请检查！"), _T("错误"), MB_ICONERROR|MB_OK);
         //return 1L;
     }
 	for(int i = 0 ; i < nLenCode ; i++) {
         if(m_strCode[i] != '0' && m_strCode[i] != '1' && m_strCode[i] != '3') {
-            //MessageBox("结果输入错误，请检查！", "错误", MB_OK);
+            //MessageBox("结果输入错误，请检查！", "错误", MB_ICONERROR|MB_OK);
             //return 1L;
 			m_strCode.Empty();
 			break;
@@ -160,21 +165,22 @@ LRESULT CDialogDB::OnListQHSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
     CStringATL strSQL;
     strSQL.Format(_T("select ID,BONUS,RESULT,PLDATA,SALES,MATCHS from PLDATA where ID='%s'"), strID);
     IDbRecordset *pRS = m_pDbSystem->CreateRecordset(m_pDbDatabase);
-    pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY);
-    if(!pRS->IsEOF()) {
-        float fBonus = 0;
-		long lSales = 0;
-        pRS->GetField(0, m_strQH);
-        pRS->GetField(1, fBonus);
-        sprintf(m_strBonus.GetBuffer(255), "%.2f", fBonus);
-        m_strBonus.ReleaseBuffer();
-        pRS->GetField(2, m_strCode);
-        pRS->GetField(3, m_strPL);
-		pRS->GetField(4, lSales);
-		sprintf(m_strSales.GetBuffer(255), "%u", lSales);
-		m_strSales.ReleaseBuffer();
-		pRS->GetField(5, m_strMatchs);
-    }
+    if(pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
+		if(!pRS->IsEOF()) {
+			float fBonus = 0;
+			long lSales = 0;
+			pRS->GetField(0, m_strQH);
+			pRS->GetField(1, fBonus);
+			sprintf(m_strBonus.GetBuffer(255), "%.2f", fBonus);
+			m_strBonus.ReleaseBuffer();
+			pRS->GetField(2, m_strCode);
+			pRS->GetField(3, m_strPL);
+			pRS->GetField(4, lSales);
+			sprintf(m_strSales.GetBuffer(255), "%u", lSales);
+			m_strSales.ReleaseBuffer();
+			pRS->GetField(5, m_strMatchs);
+		}
+	}
     pRS->Close();
     delete pRS;
 
@@ -189,7 +195,7 @@ LRESULT CDialogDB::OnClickedExcel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
     DoDataExchange(TRUE);
     int nLenQH = m_strQH.GetLength();
     if(nLenQH != 5) {
-        MessageBox("期号输入错误，请检查！", "错误", MB_OK);
+        MessageBox("期号输入错误，请检查！", "错误", MB_ICONERROR|MB_OK);
         return 1L;
     }
     CStlString fn = Global::GetAppPath() + _T("odds\\") + (LPCTSTR)m_strQH + _T(".xls");
@@ -200,20 +206,20 @@ LRESULT CDialogDB::OnClickedExcel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
         Excel::_ApplicationPtr pExcelApp1;
         HRESULT hr = pExcelApp1.CreateInstance(L"Excel.Application");
         if(FAILED(hr)) {
-            MessageBox("Excel Com 初始化失败 0！", "错误", MB_OK);
+            MessageBox("Excel Com 初始化失败 0！", "错误", MB_ICONERROR|MB_OK);
             return 1L;
         }
         pExcelApp = pExcelApp1.GetInterfacePtr();
 
         //HRESULT hr = pExcelApp.CoCreateInstance(L"Excel.Application", NULL);
         if(FAILED(hr)) {
-            MessageBox("Excel Com 初始化失败 0！", "错误", MB_OK);
+            MessageBox("Excel Com 初始化失败 0！", "错误", MB_ICONERROR|MB_OK);
             return 1L;
         }
         CComPtr<Excel::Workbooks> pWorkbooks;
         hr = pExcelApp->get_Workbooks(&pWorkbooks);
         if(FAILED(hr)) {
-            MessageBox("Excel Com 初始化失败 1！", "错误", MB_OK);
+            MessageBox("Excel Com 初始化失败 1！", "错误", MB_ICONERROR|MB_OK);
             return 1L;
         }
         CComPtr<Excel::_Workbook> pWorkbook;
@@ -222,19 +228,19 @@ LRESULT CDialogDB::OnClickedExcel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
                                   vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
                                   0, &pWorkbook);
         if(FAILED(hr) || pWorkbook.p == NULL) {
-            MessageBox("Excel Com 初始化失败 2！", "错误", MB_OK);
+            MessageBox("Excel Com 初始化失败 2！", "错误", MB_ICONERROR|MB_OK);
             return 1L;
         }
         CComPtr<Excel::Sheets> pSheets;
         hr = pWorkbook->get_Sheets(&pSheets);
         if(FAILED(hr) || pSheets.p == NULL) {
-            MessageBox("Excel Com 初始化失败 5！", "错误", MB_OK);
+            MessageBox("Excel Com 初始化失败 5！", "错误", MB_ICONERROR|MB_OK);
             return 1L;
         }
         long sheet_count = 0;
         hr = pSheets->get_Count(&sheet_count);
         if(FAILED(hr) || sheet_count <= 0) {
-            MessageBox("Excel Com 初始化失败 6！", "错误", MB_OK);
+            MessageBox("Excel Com 初始化失败 6！", "错误", MB_ICONERROR|MB_OK);
             return 1L;
         }
         CStlString rateStr, matchStr;
@@ -244,14 +250,14 @@ LRESULT CDialogDB::OnClickedExcel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
             CComVariant vIndex(j + 1);
             hr = pSheets->get_Item(vIndex, &pIDispath);
             if(FAILED(hr) || pIDispath.p == NULL) {
-                MessageBox("Excel Com 初始化失败 7！", "错误", MB_OK);
+                MessageBox("Excel Com 初始化失败 7！", "错误", MB_ICONERROR|MB_OK);
                 return 1L;
             }
             CComQIPtr<Excel::_Worksheet> pWorksheet(pIDispath);
             CComBSTR sheet_name;
             hr = pWorksheet->get_Name(&sheet_name);
             if(FAILED(hr) || sheet_name == NULL) {
-                MessageBox("Excel Com 初始化失败 8！", "错误", MB_OK);
+                MessageBox("Excel Com 初始化失败 8！", "错误", MB_ICONERROR|MB_OK);
                 return 1L;
             }
 			if (wcscmp(sheet_name.m_str, L"Sheet1") != 0) {
@@ -260,7 +266,7 @@ LRESULT CDialogDB::OnClickedExcel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
             CComPtr<Excel::Range> pRootCells;
             hr = pWorksheet->get_UsedRange(0, &pRootCells);
             if(FAILED(hr) || pRootCells.p == NULL) {
-                MessageBox("Excel Com 初始化失败 9！", "错误", MB_OK);
+                MessageBox("Excel Com 初始化失败 9！", "错误", MB_ICONERROR|MB_OK);
                 return 1L;
             }
             long root_cell_count = pRootCells->GetCount();
@@ -332,7 +338,7 @@ LRESULT CDialogDB::OnClickedExcel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 		}
 		DoDataExchange(FALSE);
     } catch(_com_error& error) {
-        MessageBox(error.ErrorMessage(), "错误", MB_OK);
+        MessageBox(error.ErrorMessage(), "错误", MB_ICONERROR|MB_OK);
         return 1L;
     }
 	try {

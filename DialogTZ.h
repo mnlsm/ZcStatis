@@ -32,7 +32,7 @@ public:
 	LRESULT OnResultSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 private:
-	void initConctrol();
+	void initConctrols();
 	BOOL ReadUserChoice(CStlString &strResults, CStringATL& strErrInfo);
 	BOOL ReLoadDataToShow();
 	void ClearUserChoice();
