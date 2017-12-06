@@ -32,8 +32,12 @@
 #define IDC_STOUTPUT                    1015
 #define IDC_STGAMBELS                   1016
 #define IDC_EDIT_OUTPUT                 1018
+#define IDC_BUADDFS                     1019
 #define IDC_BUCLEAR                     1020
+#define IDC_BUADDDS                     1020
 #define IDC_STDI                        1021
+#define IDC_BUADDFS2                    1021
+#define IDC_BUEMPTY                     1021
 #define IDC_STQI                        1023
 #define IDC_STSHOWQI                    1027
 #define IDC_CORESULT1                   1078
@@ -79,7 +83,6 @@
 #define IDC_CORESULT41                  1118
 #define IDC_CORESULT42                  1119
 #define IDC_BUADD                       1120
-#define IDC_BUADD2                      1121
 #define IDC_BUCALC                      1121
 #define IDC_STMATCHONE1                 8001
 #define IDC_STMATCHONE2                 8002
@@ -89,12 +92,12 @@
 #define IDC_STMATCHONE6                 8006
 #define IDC_STMATCHONE7                 8007
 #define IDC_STMATCHONE8                 8008
+#define IDC_STMATCHONE9                 8009
 #define IDC_STMATCHONE10                8010
 #define IDC_STMATCHONE11                8011
 #define IDC_STMATCHONE12                8012
 #define IDC_STMATCHONE13                8013
 #define IDC_STMATCHONE14                8014
-#define IDC_STMATCHONE9                 8019
 
 // Next default values for new objects
 // 
@@ -102,7 +105,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        206
 #define _APS_NEXT_COMMAND_VALUE         32772
-#define _APS_NEXT_CONTROL_VALUE         1019
+#define _APS_NEXT_CONTROL_VALUE         1020
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

@@ -39,15 +39,15 @@ public:
 public:
     BEGIN_DDX_MAP(CDialogDB)
 //      DDX_CONTROL(IDC_STATIS_LIST,m_lstStatis)
-    DDX_TEXT_WTLSTR(IDC_EDIT_QH, m_strQH)
-    DDX_TEXT_WTLSTR(IDC_EDIT_BONUS, m_strBonus)
-    DDX_TEXT_WTLSTR(IDC_EDIT_SALES, m_strSales)
-    DDX_TEXT_WTLSTR(IDC_EDIT_RESULT, m_strCode)
-    DDX_TEXT_WTLSTR(IDC_EDIT_PL, m_strPL)
-    DDX_CONTROL(IDC_LIST_QH, m_lstQH)
-    DDX_CONTROL(IDC_EDIT_QH, m_edQH)
-    DDX_CONTROL(IDC_EDIT_SALES, m_edSales)
-    DDX_CONTROL(IDC_EDIT_RESULT, m_edCode)
+		DDX_TEXT_WTLSTR(IDC_EDIT_QH, m_strQH)
+		DDX_TEXT_WTLSTR(IDC_EDIT_BONUS, m_strBonus)
+		DDX_TEXT_WTLSTR(IDC_EDIT_SALES, m_strSales)
+		DDX_TEXT_WTLSTR(IDC_EDIT_RESULT, m_strCode)
+		DDX_TEXT_WTLSTR(IDC_EDIT_PL, m_strPL)
+		DDX_CONTROL(IDC_LIST_QH, m_lstQH)
+		DDX_CONTROL(IDC_EDIT_QH, m_edQH)
+		DDX_CONTROL(IDC_EDIT_SALES, m_edSales)
+		DDX_CONTROL(IDC_EDIT_RESULT, m_edCode)
     END_DDX_MAP()
 
 
@@ -66,10 +66,6 @@ public:
     ALT_MSG_MAP(1)
     END_MSG_MAP()
 
-// 处理程序原型：
-//  LRESULT MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-//  LRESULT CommandHandler(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-//  LRESULT NotifyHandler(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
     LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnClickedAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnClickedExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
@@ -77,10 +73,7 @@ public:
     LRESULT OnClickedDelete(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
     LRESULT OnClickedExcel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-
     LRESULT OnListQHSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-
-
 
 public:
     void LoadData();

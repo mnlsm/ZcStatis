@@ -8,6 +8,12 @@
 #include "DialogDB.h"
 #include "Global.h"
 #include "Engine.h"
+#include "DialogGambel.h"
+
+CMainDlg::CMainDlg() : m_lstStatis(this) {
+	m_pDbSystem = NULL;
+	m_pDbDatabase = NULL;
+}
 
 BOOL CMainDlg::PreTranslateMessage(MSG* pMsg) {
     return CWindow::IsDialogMessage(pMsg);
@@ -49,162 +55,28 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
     return TRUE;
 }
 
-void CMainDlg::InitializeStatisData() {
-
-    DWORD dwStyleEx = LVS_EX_GRIDLINES | LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP
-                      | LVS_EX_REGIONAL;
-    ListView_SetExtendedListViewStyle(m_lstStatis.m_hWnd, dwStyleEx);
-
-    //insert header;
-    int colIndex = 0;
-    m_lstStatis.InsertColumn(colIndex, "期号", LVCFMT_CENTER, 65);    //70
-    m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
-
-    m_lstStatis.InsertColumn(colIndex, "奖金(万)", LVCFMT_LEFT, 80);    //170
-    m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_DOUBLE);
-
-    m_lstStatis.InsertColumn(colIndex, "均奖(万)", LVCFMT_LEFT, 80);    //170
-    m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_DOUBLE);
-
-    m_lstStatis.InsertColumn(colIndex, "号 码", LVCFMT_CENTER, 100);    //270
-    m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-
-    m_lstStatis.InsertColumn(colIndex, "一赔", LVCFMT_CENTER, 45);    //70
-    m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
-
-    m_lstStatis.InsertColumn(colIndex, "二赔", LVCFMT_CENTER, 45);    //70
-    m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
-
-    m_lstStatis.InsertColumn(colIndex, "三赔", LVCFMT_CENTER, 45);    //70
-    m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
-
-    m_lstStatis.InsertColumn(colIndex, "陪率和", LVCFMT_LEFT, 55);    //270
-    m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_DOUBLE);
-
-    m_lstStatis.InsertColumn(colIndex, "概率积", LVCFMT_LEFT, 55);    //270
-    m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_DOUBLE);
-
-    m_lstStatis.InsertColumn(colIndex, "赔率范围", LVCFMT_CENTER, 100);    //270
-    m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-
-	m_lstStatis.InsertColumn(colIndex, "断点数", LVCFMT_LEFT, 50);    //270
-	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-
-	m_lstStatis.InsertColumn(colIndex, "总3-总1-总0", LVCFMT_CENTER, 100);    //270
-	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-
-	m_lstStatis.InsertColumn(colIndex, "连3-连1-连0", LVCFMT_CENTER, 100);    //270
-	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-
-    m_lstStatis.InsertColumn(colIndex, "31连-30连-10连", LVCFMT_CENTER, 100);    //270
-    m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-
-    //set sort type
-    m_lstStatis.SetSortColumn(0);
-
-    //connect db
-    m_pDbSystem = new COledbSystem();
-    m_pDbDatabase = m_pDbSystem->CreateDatabase();
-    CStlString strAppPath = Global::GetAppPath();
-    CStringATL strConnect = "Provider= Microsoft.Jet.OLEDB.4.0;";
-    strConnect += "User ID=Admin;";
-    strConnect = strConnect + CStringATL("Data Source=") + CStringATL(strAppPath.c_str()) + CStringATL("ZcStatis.mdb;");
-    BOOL bRet = m_pDbDatabase->Open(NULL, (LPCTSTR) strConnect, _T(""), _T(""), DB_OPEN_READ_ONLY);
-
+LRESULT CMainDlg::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	LRESULT lRet = m_lstStatis.DefWindowProc(uMsg, wParam, lParam);
+	CPoint pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+	LVHITTESTINFO lvh = { 0 };
+	lvh.pt = pt;
+	UINT index = m_lstStatis.HitTest(&lvh);
+	if (index != -1) {
+		CMenu menu;
+		if (menu.CreatePopupMenu()) {
+			menu.AppendMenu(MF_STRING, IDM_EDIT_FANGANS, _T("编辑方案"));
+			ClientToScreen(&pt);
+			UINT cmd = menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RETURNCMD, pt.x, pt.y, m_hWnd);
+			if (cmd == IDM_EDIT_FANGANS) {
+				CStringATL strQH;
+				m_lstStatis.GetItemText(index, 0, strQH);
+				DoEditFangAns(strQH);
+			}
+			menu.DestroyMenu();
+		}
+	}
+	return lRet;
 }
-
-void CMainDlg::ReloadStatisData() {
-    m_arrPLSCOPE.clear();
-    CStringATL strSQL =  _T("select PLSCOPE from PLSCOPE");
-    IDbRecordset *pRS1 = m_pDbSystem->CreateRecordset(m_pDbDatabase);
-    pRS1->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY);
-    while(!pRS1->IsEOF()) {
-        double fPL = 0;
-        pRS1->GetField(0, fPL);
-        m_arrPLSCOPE.push_back(fPL);
-        pRS1->MoveNext();
-
-    }
-    pRS1->Close();
-    delete pRS1;
-
-    m_lstStatis.DeleteAllItems();
-
-    strSQL =  _T("select ID,BONUS,RESULT,PLDATA,SALES from PLDATA order by ID desc");
-    IDbRecordset *pRS = m_pDbSystem->CreateRecordset(m_pDbDatabase);
-    pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY);
-
-    int iIndex = 0;
-    while(!pRS->IsEOF()) {
-        int colIndex = 0;
-        float fBonus = 0;
-        long lSales = 0;
-        CStringATL strQH;
-        CStringATL strCode;
-        CStringATL strPL;
-        CStringATL strBonus;
-        CStringATL strBonusAvg;
-
-        pRS->GetField(0, strQH);
-        pRS->GetField(1, fBonus);
-        pRS->GetField(2, strCode);
-        pRS->GetField(3, strPL);
-        pRS->GetField(4, lSales);
-
-        sprintf(strBonus.GetBuffer(255), "%.2f", fBonus);
-        strBonus.ReleaseBuffer();
-
-        double avgBonus = lSales;
-        avgBonus = avgBonus / 20000000;
-        if(lSales == 0) {
-            avgBonus = 1.0;
-        }
-        fBonus = fBonus / (float)(avgBonus);
-        if(fBonus >= 5000.0) {
-            fBonus = 10000.0;
-        } else if(fBonus >= 500) {
-            fBonus = 500.0;
-        }
-
-        sprintf(strBonusAvg.GetBuffer(255), "%.2f", fBonus);
-        strBonusAvg.ReleaseBuffer();
-
-        iIndex = m_lstStatis.InsertItem(iIndex, strQH);
-        m_lstStatis.SetItemText(iIndex, ++colIndex, strBonus);
-        m_lstStatis.SetItemText(iIndex, ++colIndex, strBonusAvg);
-        m_lstStatis.SetItemText(iIndex, ++colIndex, strCode);
-
-		DataRow dataRow;
-		GetPL(strCode, strPL, dataRow);
-
-		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strPL1);
-		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strPL2);
-		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strPL3);
-
-		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strPLSum);
-		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strGvJ);
-		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strPlSCOPE);
-
-		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strCodeDuanDian);
-		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strCodeZongShu);
-		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strCodeLianOne);
-		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strCodeLianTwo);
-
-        pRS->MoveNext();
-    }
-
-    pRS->Close();
-    delete pRS;
-
-
-
-
-
-
-    return ;
-}
-
-
 
 LRESULT CMainDlg::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
     CRect rcDesktop;
@@ -214,7 +86,6 @@ LRESULT CMainDlg::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
     pMinMaxInfo->ptMaxSize.y = pMinMaxInfo->ptMaxTrackSize.y = rcDesktop.bottom - rcDesktop.top;
     return 1L;
 }
-
 
 LRESULT CMainDlg::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
     if(m_pDbDatabase != NULL) {
@@ -242,6 +113,162 @@ LRESULT CMainDlg::OnAddRecord(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, 
 LRESULT CMainDlg::OnRefresh(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
     ReloadStatisData();
     return 1L;
+}
+
+
+void CMainDlg::DoEditFangAns(const CStringATL &strQH) {
+	CDialogGambel dlg(m_pDbSystem, m_pDbDatabase, (LPCTSTR)strQH);
+	dlg.DoModal();
+}
+
+void CMainDlg::InitializeStatisData() {
+
+	DWORD dwStyleEx = LVS_EX_GRIDLINES | LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP
+		| LVS_EX_REGIONAL;
+	ListView_SetExtendedListViewStyle(m_lstStatis.m_hWnd, dwStyleEx);
+
+	//insert header;
+	int colIndex = 0;
+	m_lstStatis.InsertColumn(colIndex, "期号", LVCFMT_CENTER, 65);    //70
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
+
+	m_lstStatis.InsertColumn(colIndex, "奖金(万)", LVCFMT_LEFT, 80);    //170
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_DOUBLE);
+
+	m_lstStatis.InsertColumn(colIndex, "均奖(万)", LVCFMT_LEFT, 80);    //170
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_DOUBLE);
+
+	m_lstStatis.InsertColumn(colIndex, "号 码", LVCFMT_CENTER, 100);    //270
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
+
+	m_lstStatis.InsertColumn(colIndex, "一赔", LVCFMT_CENTER, 45);    //70
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
+
+	m_lstStatis.InsertColumn(colIndex, "二赔", LVCFMT_CENTER, 45);    //70
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
+
+	m_lstStatis.InsertColumn(colIndex, "三赔", LVCFMT_CENTER, 45);    //70
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
+
+	m_lstStatis.InsertColumn(colIndex, "陪率和", LVCFMT_LEFT, 55);    //270
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_DOUBLE);
+
+	m_lstStatis.InsertColumn(colIndex, "概率积", LVCFMT_LEFT, 55);    //270
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_DOUBLE);
+
+	m_lstStatis.InsertColumn(colIndex, "赔率范围", LVCFMT_CENTER, 100);    //270
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
+
+	m_lstStatis.InsertColumn(colIndex, "断点数", LVCFMT_LEFT, 50);    //270
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
+
+	m_lstStatis.InsertColumn(colIndex, "总3-总1-总0", LVCFMT_CENTER, 100);    //270
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
+
+	m_lstStatis.InsertColumn(colIndex, "连3-连1-连0", LVCFMT_CENTER, 100);    //270
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
+
+	m_lstStatis.InsertColumn(colIndex, "31连-30连-10连", LVCFMT_CENTER, 100);    //270
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
+
+	//set sort type
+	m_lstStatis.SetSortColumn(0);
+
+	//connect db
+	m_pDbSystem = new COledbSystem();
+	m_pDbDatabase = m_pDbSystem->CreateDatabase();
+	CStlString strAppPath = Global::GetAppPath();
+	CStringATL strConnect = "Provider= Microsoft.Jet.OLEDB.4.0;";
+	strConnect += "User ID=Admin;";
+	strConnect = strConnect + CStringATL("Data Source=") + CStringATL(strAppPath.c_str()) + CStringATL("ZcStatis.mdb;");
+	BOOL bRet = m_pDbDatabase->Open(NULL, (LPCTSTR)strConnect, _T(""), _T(""), DB_OPEN_READ_ONLY);
+
+}
+
+void CMainDlg::ReloadStatisData() {
+	m_arrPLSCOPE.clear();
+	CStringATL strSQL = _T("select PLSCOPE from PLSCOPE");
+	IDbRecordset *pRS1 = m_pDbSystem->CreateRecordset(m_pDbDatabase);
+	pRS1->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY);
+	while (!pRS1->IsEOF()) {
+		double fPL = 0;
+		pRS1->GetField(0, fPL);
+		m_arrPLSCOPE.push_back(fPL);
+		pRS1->MoveNext();
+
+	}
+	pRS1->Close();
+	delete pRS1;
+
+	m_lstStatis.DeleteAllItems();
+
+	strSQL = _T("select ID,BONUS,RESULT,PLDATA,SALES from PLDATA order by ID desc");
+	IDbRecordset *pRS = m_pDbSystem->CreateRecordset(m_pDbDatabase);
+	pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY);
+
+	int iIndex = 0;
+	while (!pRS->IsEOF()) {
+		int colIndex = 0;
+		float fBonus = 0;
+		long lSales = 0;
+		CStringATL strQH;
+		CStringATL strCode;
+		CStringATL strPL;
+		CStringATL strBonus;
+		CStringATL strBonusAvg;
+
+		pRS->GetField(0, strQH);
+		pRS->GetField(1, fBonus);
+		pRS->GetField(2, strCode);
+		pRS->GetField(3, strPL);
+		pRS->GetField(4, lSales);
+
+		sprintf(strBonus.GetBuffer(255), "%.2f", fBonus);
+		strBonus.ReleaseBuffer();
+
+		double avgBonus = lSales;
+		avgBonus = avgBonus / 20000000;
+		if (lSales == 0) {
+			avgBonus = 1.0;
+		}
+		fBonus = fBonus / (float)(avgBonus);
+		if (fBonus >= 5000.0) {
+			fBonus = 10000.0;
+		}
+		else if (fBonus >= 500) {
+			fBonus = 500.0;
+		}
+
+		sprintf(strBonusAvg.GetBuffer(255), "%.2f", fBonus);
+		strBonusAvg.ReleaseBuffer();
+
+		iIndex = m_lstStatis.InsertItem(iIndex, strQH);
+		m_lstStatis.SetItemText(iIndex, ++colIndex, strBonus);
+		m_lstStatis.SetItemText(iIndex, ++colIndex, strBonusAvg);
+		m_lstStatis.SetItemText(iIndex, ++colIndex, strCode);
+
+		DataRow dataRow;
+		GetPL(strCode, strPL, dataRow);
+
+		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strPL1);
+		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strPL2);
+		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strPL3);
+
+		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strPLSum);
+		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strGvJ);
+		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strPlSCOPE);
+
+		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strCodeDuanDian);
+		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strCodeZongShu);
+		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strCodeLianOne);
+		m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strCodeLianTwo);
+
+		pRS->MoveNext();
+	}
+
+	pRS->Close();
+	delete pRS;
+	return;
 }
 
 

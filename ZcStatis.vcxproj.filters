@@ -153,6 +153,9 @@
     <ClCompile Include="Global.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="DialogGambel.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="db\DbBase.h">
@@ -265,6 +268,9 @@
     </ClInclude>
     <ClInclude Include="StlFiles.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="DialogGambel.h">
+      <Filter>ui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

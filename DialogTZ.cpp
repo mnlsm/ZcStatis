@@ -8,7 +8,12 @@ CDialogTZ::CDialogTZ(IDbSystem *pDbSystem, IDbDatabase *pDbDatabase,
 	m_pDbDatabase = pDbDatabase;
 	m_strQH = qh;
 	m_GambleID = gambleID;
+	m_bDataChanged = FALSE;
     m_brush = GetSysColorBrush(COLOR_MENU);
+}
+
+BOOL CDialogTZ::IsDbDataChanged() {
+	return m_bDataChanged;
 }
 
 LRESULT CDialogTZ::OnCtlColor(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
@@ -20,7 +25,7 @@ LRESULT CDialogTZ::OnCtlColor(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
         ::SetBkMode(dc, TRANSPARENT);
         return (LRESULT)(HBRUSH)m_brush;
     }
-    bHandled = false;
+    bHandled = FALSE;
     return 1L;
 }
 
@@ -46,6 +51,8 @@ LRESULT CDialogTZ::OnResultSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 		pos1 = pos - 1;
 		pos2 = pos - 2;
 	}
+	pos1 += IDC_CORESULT1;
+	pos2 += IDC_CORESULT1;
 	co = GetDlgItem(pos1);
 	co.SetCurSel(0);
 	co = GetDlgItem(pos2);
@@ -200,7 +207,7 @@ BOOL CDialogTZ::ReLoadDataToShow() {
 		pRS->Close();
 	}
 	CStlStrArray arrMatchs;
-	Global::DepartString(m_strMatchs, _T(","), arrMatchs);
+	Global::DepartString(m_strMatchs, _T("\n"), arrMatchs);
 	if (arrMatchs.size() == (IDC_STMATCHONE14 - IDC_STMATCHONE1) + 1) {
 		for (int i = 0; i < arrMatchs.size(); i++) {
 			int ctrlPos = i + IDC_STMATCHONE1;
@@ -233,5 +240,6 @@ BOOL CDialogTZ::DoUpdateDatabase(const CStlString &strResults) {
 		ret = pCmd->Execute(NULL);
 	}
 	pCmd->Close();
-	return TRUE;
+	m_bDataChanged = TRUE;
+	return ret;
 }
