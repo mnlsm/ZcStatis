@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "DialogTZ.h"
+#include "Global.h"
 
 CDialogTZ::CDialogTZ(IDbSystem *pDbSystem, IDbDatabase *pDbDatabase, 
 	const CStlString& qh, int gambleID) {
@@ -25,7 +26,6 @@ LRESULT CDialogTZ::OnCtlColor(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 
 LRESULT CDialogTZ::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
     CenterWindow();
-	SetIcon(AtlLoadIcon(IDR_MAINFRAME), TRUE);
 	initConctrol();
 	ReLoadDataToShow();
     return TRUE;
@@ -53,23 +53,44 @@ LRESULT CDialogTZ::OnResultSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 	return 1L;
 }
 
-
 LRESULT CDialogTZ::OnClickedBuAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-	CStringATL strResults, strError;
+	CStlString strResults;
+	CStringATL strError;
 	if (!ReadUserChoice(strResults, strError)) {
-		MessageBox(strError, "错误", MB_OK | MB_ICONWARNING);
+		MessageBox(strError, _T("错误"), MB_OK | MB_ICONWARNING);
 		return 0;
+	}
+	BOOL bRet = DoUpdateDatabase(strResults);
+	if (bRet) {
+		CStringATL text = (m_GambleID == -1) ? _T("添加成功") : _T("更新成功");
+		MessageBox(text, _T("提示"), MB_OK | MB_ICONWARNING);
+		if (m_GambleID == -1) {
+			EndDialog(IDOK);
+		}
+	} else {
+		CStringATL text = (m_GambleID == -1) ? _T("添加失败") : _T("更新失败");
+		MessageBox(text, _T("错误"), MB_OK | MB_ICONWARNING);
 	}
 	return 0;
 }
-
 
 LRESULT CDialogTZ::OnClickedBuClear(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	ClearUserChoice();
 	return 0;
 }
 
+LRESULT CDialogTZ::OnClickedBuExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	EndDialog(IDCANCEL);
+	return 0;
+}
+
 void CDialogTZ::initConctrol() {
+	HICON hIconBig = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON));
+	SetIcon(hIconBig, TRUE);
+	HICON hIconSmall = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CXSMICON));
+	SetIcon(hIconBig, TRUE);
+	SetIcon(hIconSmall, FALSE);
+
     //init static data
     m_wndQI = GetDlgItem(IDC_STSHOWQI);
 	if (m_GambleID != -1) {
@@ -77,8 +98,6 @@ void CDialogTZ::initConctrol() {
 		CWindow wnd = GetDlgItem(IDC_BUADD);
 		wnd.SetWindowText(_T("更新"));
 	}
-
-
     CComboBox coWnd = NULL;
     for(int i = IDC_CORESULT1; i <= IDC_CORESULT42; i++) {
         coWnd = GetDlgItem(i);
@@ -102,8 +121,8 @@ void CDialogTZ::initConctrol() {
     }
 }
 
-BOOL CDialogTZ::ReadUserChoice(CStringATL &strResults, CStringATL& strErrInfo) {
-	strResults.Empty();
+BOOL CDialogTZ::ReadUserChoice(CStlString &strResults, CStringATL& strErrInfo) {
+	strResults.clear();
 	strErrInfo.Empty();
 	for (int i = IDC_CORESULT1; i <= IDC_CORESULT42; i = i + 3) {
 		CStringATL result;
@@ -124,15 +143,14 @@ BOOL CDialogTZ::ReadUserChoice(CStringATL &strResults, CStringATL& strErrInfo) {
 			strErrInfo.Format(_T("请选择结果： %s"), strTemp);
 			return FALSE;
 		}
-		if (strResults.IsEmpty()) {
+		if (strResults.empty()) {
 			strResults = result;
 		} else {
-			strResults = strResults + _T(",") + result;
+			strResults = strResults + _T(",") + (LPCTSTR)result;
 		}
 	}
 	return TRUE;
 }
-
 
 void CDialogTZ::ClearUserChoice() {
 	CComboBox coWnd = NULL;
@@ -144,5 +162,76 @@ void CDialogTZ::ClearUserChoice() {
 
 BOOL CDialogTZ::ReLoadDataToShow() {
 	m_wndQI.SetWindowText(m_strQH.c_str());
+	ClearUserChoice();
+	if (m_GambleID != -1) {
+		CStringATL strSQL, strResults;
+		strSQL.Format(_T("select CODES, PLDATA, MATCHS from GAMBEL where ID=%d"), m_GambleID);
+		std::auto_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
+		pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY);
+		while (!pRS->IsEOF()) {
+			pRS->GetField(0, strResults);
+			pRS->GetField(1, m_strPL);
+			pRS->GetField(2, m_strMatchs);
+		}
+		pRS->Close();
+
+		CStlStrArray arrResults;
+		Global::DepartString((LPCTSTR)strResults, _T(","), arrResults);
+		for (int i = IDC_CORESULT1; i <= IDC_CORESULT42; i = i + 3) {
+			int arrPos = (i - IDC_CORESULT1) / 3;
+			int ctrlPos = i + arrResults[arrPos].length();
+			CComboBox coWnd = GetDlgItem(ctrlPos);
+			if (coWnd.IsWindow()) {
+				int index = coWnd.FindStringExact(0, arrResults[arrPos].c_str());
+				if (index >= 0) {
+					coWnd.SetCurSel(index);
+				}
+			}
+		}
+	} else {
+		CStringATL strSQL;
+		strSQL.Format(_T("select PLDATA, MATCHS from PLDATA where ID='%s'"), m_strQH.c_str());
+		std::auto_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
+		pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY);
+		if (!pRS->IsEOF()) {
+			pRS->GetField(0, m_strPL);
+			pRS->GetField(1, m_strMatchs);
+		}
+		pRS->Close();
+	}
+	CStlStrArray arrMatchs;
+	Global::DepartString(m_strMatchs, _T(","), arrMatchs);
+	if (arrMatchs.size() == (IDC_STMATCHONE14 - IDC_STMATCHONE1) + 1) {
+		for (int i = 0; i < arrMatchs.size(); i++) {
+			int ctrlPos = i + IDC_STMATCHONE1;
+			CStatic matchCtrl = GetDlgItem(ctrlPos);
+			matchCtrl.SetWindowText(arrMatchs[i].c_str());
+		}
+	}
+	return TRUE;
+}
+
+BOOL CDialogTZ::DoUpdateDatabase(const CStlString &strResults) {
+	BOOL ret = FALSE;
+	CStringATL strSQL;
+	std::auto_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
+	if (m_GambleID == -1) {
+		strSQL = _T("INSERT INTO GAMBEL (QH, INUSE, CODESTYPE, CODES, PLDATA, MATCHS) VALUES(?,?,?,?,?,?)");
+		pCmd->Create(strSQL);
+		pCmd->SetParam(0, m_strQH);
+		long val = 0;
+		pCmd->SetParam(1, &val);
+		pCmd->SetParam(2, &val);
+		pCmd->SetParam(3, strResults.c_str());
+		pCmd->SetParam(4, m_strPL);
+		pCmd->SetParam(5, m_strMatchs);
+		ret = pCmd->Execute(NULL);
+	} else {
+		strSQL.Format(_T("UPDATE GAMBEL SET CODES=? WHERE ID=%d"), m_GambleID);
+		pCmd->Create(strSQL);
+		pCmd->SetParam(0, strResults.c_str());
+		ret = pCmd->Execute(NULL);
+	}
+	pCmd->Close();
 	return TRUE;
 }

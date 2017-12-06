@@ -1,46 +1,31 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{f5b1b53d-3499-4b9f-ae6f-8598f051e7da}</UniqueIdentifier>
-      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{91bd7506-fd8c-4cee-b1ec-c3f8720fbc35}</UniqueIdentifier>
-      <Extensions>h;hpp;hxx;hm;inl;inc</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{b1bdfc4f-4a8d-40b3-b926-470021737c0c}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;jpg;jpeg;jpe;manifest</Extensions>
-    </Filter>
     <Filter Include="db">
       <UniqueIdentifier>{aa54bf02-6dc2-445c-a2b7-c6526be53955}</UniqueIdentifier>
     </Filter>
     <Filter Include="lua">
       <UniqueIdentifier>{4c54fc7f-f2c5-4b6b-bfaa-fded7b195b12}</UniqueIdentifier>
     </Filter>
+    <Filter Include="app">
+      <UniqueIdentifier>{3d24a952-ad4e-46e1-ae3c-df89c92d7f45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ui">
+      <UniqueIdentifier>{e88755e7-5c22-45ea-9b73-14db7d2634cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engines">
+      <UniqueIdentifier>{e1b16e66-f2f3-4054-8445-7324127fb9ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="res">
+      <UniqueIdentifier>{486943e8-d1de-405a-8f67-e2e86e619f74}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{6cdde5c8-cec2-4bd6-94eb-c6709592f84d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DialogDB.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MainDlg.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ZcStatis.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="db\DbOledb.cpp">
       <Filter>db</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Global.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="lua\lbitlib.c">
       <Filter>lua</Filter>
@@ -144,40 +129,37 @@
     <ClCompile Include="lua\lbaselib.c">
       <Filter>lua</Filter>
     </ClCompile>
-    <ClCompile Include="EngineLua.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="ZcStatis.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="DialogDB.cpp">
+      <Filter>ui</Filter>
     </ClCompile>
     <ClCompile Include="DialogTZ.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="MainDlg.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine.cpp">
+      <Filter>engines</Filter>
+    </ClCompile>
+    <ClCompile Include="EngineLua.cpp">
+      <Filter>engines</Filter>
+    </ClCompile>
+    <ClCompile Include="Global.cpp">
+      <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DialogDB.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MainDlg.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="db\DbBase.h">
       <Filter>db</Filter>
     </ClInclude>
     <ClInclude Include="db\DbOledb.h">
       <Filter>db</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Global.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="StlFiles.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lua\lctype.h">
       <Filter>lua</Filter>
@@ -257,26 +239,47 @@
     <ClInclude Include="lua\lzio.h">
       <Filter>lua</Filter>
     </ClInclude>
-    <ClInclude Include="EngineLua.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="stdafx.h">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="DialogDB.h">
+      <Filter>ui</Filter>
     </ClInclude>
     <ClInclude Include="DialogTZ.h">
-      <Filter>Header Files</Filter>
+      <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="MainDlg.h">
+      <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine.h">
+      <Filter>engines</Filter>
+    </ClInclude>
+    <ClInclude Include="EngineLua.h">
+      <Filter>engines</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>res</Filter>
+    </ClInclude>
+    <ClInclude Include="Global.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="StlFiles.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="res\ZcStatis.exe.manifest">
-      <Filter>Resource Files</Filter>
+      <Filter>res</Filter>
     </Manifest>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\ZcStatis.ico">
-      <Filter>Resource Files</Filter>
+      <Filter>res</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ZcStatis.rc">
-      <Filter>Resource Files</Filter>
+      <Filter>res</Filter>
     </ResourceCompile>
   </ItemGroup>
 </Project>

@@ -1,5 +1,7 @@
 # Prerequisites
 *.d
+*.htm
+*.html
 
 # Compiled Object files
 *.slo

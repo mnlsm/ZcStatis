@@ -12,6 +12,7 @@ public:
 		MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColor)
 		COMMAND_HANDLER(IDC_BUADD, BN_CLICKED, OnClickedBuAdd)
 		COMMAND_HANDLER(IDC_BUCLEAR, BN_CLICKED, OnClickedBuClear)
+		COMMAND_HANDLER(IDCANCEL, BN_CLICKED, OnClickedBuExit)
 		COMMAND_RANGE_CODE_HANDLER(IDC_CORESULT1, IDC_CORESULT42, CBN_SELCHANGE, OnResultSelChange)
 		/*
 		COMMAND_ID_HANDLER(IDM_ADD_MATCH, OnAddMatch)
@@ -34,6 +35,7 @@ public:
 
 	LRESULT OnClickedBuClear(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnClickedBuAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnClickedBuExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnResultSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 	/*
@@ -51,14 +53,18 @@ public:
 
 private:
 	void initConctrol();
-	BOOL ReadUserChoice(CStringATL &strResults, CStringATL& strErrInfo);
+	BOOL ReadUserChoice(CStlString &strResults, CStringATL& strErrInfo);
 	BOOL ReLoadDataToShow();
 	void ClearUserChoice();
+	BOOL DoUpdateDatabase(const CStlString &strResults);
 
 private:
 
 private:
 	CStlString m_strQH;
+	CStlString m_strPL;
+	CStlString m_strMatchs;
+
 	int m_GambleID;
 	IDbDatabase *m_pDbDatabase;
 	IDbSystem *m_pDbSystem;

@@ -10,37 +10,28 @@
 #define IDM_ADDRECORD                   202
 #define IDD_DIALOG_DBDATA               203
 #define IDD_DIALOG_TZ                   204
+#define IDD_DIALOG_GAMBEL               205
 #define IDC_STATIS_LIST                 1001
 #define IDC_LIST_QH                     1002
-#define IDC_STMATCHONE1                 1002
 #define IDC_STATIC_LIST                 1003
-#define IDC_STMATCHONE2                 1003
 #define IDC_EDIT_QH                     1004
-#define IDC_STMATCHONE3                 1004
 #define IDC_STATIC_QH                   1005
-#define IDC_STMATCHONE4                 1005
 #define IDC_STATIC_QH2                  1006
-#define IDC_STMATCHONE5                 1006
 #define IDC_EDIT_BONUS                  1007
-#define IDC_STMATCHONE6                 1007
 #define IDC_STATIC_QH3                  1008
-#define IDC_STMATCHONE7                 1008
 #define IDC_EDIT_RESULT                 1009
-#define IDC_STMATCHONE8                 1009
 #define IDC_STATIC_QH4                  1010
-#define IDC_STMATCHONE9                 1010
 #define IDC_EDIT_PL                     1011
-#define IDC_STMATCHONE10                1011
 #define IDC_BUTTON_DEL                  1012
-#define IDC_STMATCHONE11                1012
 #define IDC_BUTTON2                     1013
 #define IDC_BUTTON_CLEAR                1013
-#define IDC_STMATCHONE12                1013
 #define IDC_STATIC_SALES                1014
-#define IDC_STMATCHONE13                1014
+#define IDC_GAMBEL_LIST                 1014
 #define IDC_EDIT_BONUS2                 1015
 #define IDC_EDIT_SALES                  1015
-#define IDC_STMATCHONE14                1015
+#define IDC_STOUTPUT                    1015
+#define IDC_STGAMBELS                   1016
+#define IDC_EDIT_OUTPUT                 1018
 #define IDC_BUCLEAR                     1020
 #define IDC_STDI                        1021
 #define IDC_STQI                        1023
@@ -87,16 +78,31 @@
 #define IDC_CORESULT40                  1117
 #define IDC_CORESULT41                  1118
 #define IDC_CORESULT42                  1119
-
 #define IDC_BUADD                       1120
+#define IDC_BUADD2                      1121
+#define IDC_BUCALC                      1121
+#define IDC_STMATCHONE1                 8001
+#define IDC_STMATCHONE2                 8002
+#define IDC_STMATCHONE3                 8003
+#define IDC_STMATCHONE4                 8004
+#define IDC_STMATCHONE5                 8005
+#define IDC_STMATCHONE6                 8006
+#define IDC_STMATCHONE7                 8007
+#define IDC_STMATCHONE8                 8008
+#define IDC_STMATCHONE10                8010
+#define IDC_STMATCHONE11                8011
+#define IDC_STMATCHONE12                8012
+#define IDC_STMATCHONE13                8013
+#define IDC_STMATCHONE14                8014
+#define IDC_STMATCHONE9                 8019
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        205
+#define _APS_NEXT_RESOURCE_VALUE        206
 #define _APS_NEXT_COMMAND_VALUE         32772
-#define _APS_NEXT_CONTROL_VALUE         1014
+#define _APS_NEXT_CONTROL_VALUE         1019
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

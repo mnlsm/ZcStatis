@@ -83,10 +83,6 @@ LRESULT CDialogDB::OnClickedAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
         }
     }
 
-
-    //CStringATL strSQL;
-    //strSQL.Format( _T(" delete from PLDATA where ID = '%s' "),m_strQH);
-    //m_pDbDatabase->ExecuteSQL(m_strQH);
     CStringATL strSQL =  _T("delete from PLDATA where ID = ?");
     IDbCommand *pCmd1 = m_pDbSystem->CreateCommand(m_pDbDatabase);
     pCmd1->Create(strSQL);
@@ -161,12 +157,10 @@ LRESULT CDialogDB::OnListQHSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
     m_lstQH.GetText(nSel, strID.GetBuffer(1024));
     strID.ReleaseBuffer();
 
-
     CStringATL strSQL;
     strSQL.Format(_T("select ID,BONUS,RESULT,PLDATA,SALES,MATCHS from PLDATA where ID='%s'"), strID);
     IDbRecordset *pRS = m_pDbSystem->CreateRecordset(m_pDbDatabase);
     pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY);
-
     if(!pRS->IsEOF()) {
         float fBonus = 0;
 		long lSales = 0;
