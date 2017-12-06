@@ -9,8 +9,8 @@
 // CDialogDB
 class CDialogDB :
     public CAxDialogImpl<CDialogDB>,
-    public CWinDataExchange< CDialogDB >,
-    public CDDX_Text_WTL<CDialogDB>
+    public CWinDataExchange< CDialogDB >
+    //public CDDX_Text_WTL<CDialogDB>
 
 {
 private:
@@ -38,12 +38,11 @@ public:
 
 public:
     BEGIN_DDX_MAP(CDialogDB)
-//      DDX_CONTROL(IDC_STATIS_LIST,m_lstStatis)
-		DDX_TEXT_WTLSTR(IDC_EDIT_QH, m_strQH)
-		DDX_TEXT_WTLSTR(IDC_EDIT_BONUS, m_strBonus)
-		DDX_TEXT_WTLSTR(IDC_EDIT_SALES, m_strSales)
-		DDX_TEXT_WTLSTR(IDC_EDIT_RESULT, m_strCode)
-		DDX_TEXT_WTLSTR(IDC_EDIT_PL, m_strPL)
+		DDX_TEXT(IDC_EDIT_QH, m_strQH)
+		DDX_TEXT(IDC_EDIT_BONUS, m_strBonus)
+		DDX_TEXT(IDC_EDIT_SALES, m_strSales)
+		DDX_TEXT(IDC_EDIT_RESULT, m_strCode)
+		DDX_TEXT(IDC_EDIT_PL, m_strPL)
 		DDX_CONTROL(IDC_LIST_QH, m_lstQH)
 		DDX_CONTROL(IDC_EDIT_QH, m_edQH)
 		DDX_CONTROL(IDC_EDIT_SALES, m_edSales)

@@ -67,7 +67,7 @@ public:
 
 protected:
 	virtual BOOL CalculateAllResultImpl(void* ctx, CStlString& failed_reason);
-	virtual BOOL IsAValidRecord(const CIntArray& record, void* ctx, CStlString* invalid_reason) = 0;
+	virtual BOOL IsAValidRecord(const CIntArray& record, void* ctx, CStlString* invalid_reason);
 
 //for suoshui
 protected:							
@@ -85,15 +85,17 @@ protected:
 	CDoublexyArray m_arrGVData;
 	CDoubleArray m_arrPLScope;
 
-
 protected:
-
 	void SearchAllRecord(CIntxyArray::iterator iter, CIntArray &tempArr);
 	bool FillAllCoverIndex(CIntxyArray &xyAll);
 	void GetCoverIndexArr(CIntxyArray::iterator iter, CIntxyArray &arrSource, CIntArray &arrResult);
 	void GreedyCalcRectRecord(CIntxyArray &F, CIntxyArray &G);
 
 public:
+	static BOOL GetChoices(const CStlString& strChoices, CIntxyArray& arrChoice);
+	static BOOL GetRecords(const CStlString& strCodes, CIntxyArray& arrRecords);
+	static UINT GetRecordCount(const CStlString& strCodes);
+
 	static BOOL GetPLDatas(const CStlString& strPL, CDoublexyArray& arrPLData, CDoublexyArray& arrGVData);
 	static BOOL CalcCommonFilterFactors(const CIntArray& record, const CDoublexyArray& arrPLData,
 		const CDoublexyArray& arrGVData, const CDoubleArray& arrPLScope, CommonFilterFactors& commonFF);

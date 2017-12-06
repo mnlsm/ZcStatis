@@ -2,11 +2,12 @@
 #include "DialogGambel.h"
 #include "DialogTZ.h"
 #include "Global.h"
+#include "Engine.h"
 
 static const CStlString DZ_FILTER_NAME = _T("单注文件(*.dz)");
 static const CStlString DZ_FILTER = _T("*.dz");
 
-static const CStlString LUA_FILTER_NAME = _T("单注文件(*.lua)");
+static const CStlString LUA_FILTER_NAME = _T("脚本文件(*.lua)");
 static const CStlString LUA_FILTER = _T("*.lua");
 
 CDialogGambel::CDialogGambel(IDbSystem *pDbSystem, IDbDatabase *pDbDatabase, 
@@ -55,6 +56,18 @@ LRESULT CDialogGambel::OnClickedBuExit(WORD wNotifyCode, WORD wID, HWND hWndCtl,
 	return 1L;
 }
 
+LRESULT CDialogGambel::OnListItemChanged(int wParam, LPNMHDR lParam, BOOL& bHandled) {
+	LPNMLISTVIEW p = (LPNMLISTVIEW)lParam;
+	if (p != NULL && p->uOldState != 0) {
+		UINT uCheckState = (p->uNewState & LVIS_STATEIMAGEMASK) >> 12;
+		DoRowInUse(p->iItem, (uCheckState == 2));
+	}
+	bHandled = FALSE;
+	return 1L;
+}
+
+
+
 LRESULT CDialogGambel::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	LRESULT lRet = m_lstGambel.DefWindowProc(uMsg, wParam, lParam);
 	CPoint pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
@@ -64,9 +77,19 @@ LRESULT CDialogGambel::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam
 	if (index != -1 && lvh.flags != LVHT_ONITEMSTATEICON) {
 		CMenu menu;
 		if (menu.CreatePopupMenu()) {
-			menu.AppendMenu(MF_STRING, IDM_EDIT_CODES, _T("更新选号"));
-			menu.AppendMenu(MF_STRING, IDM_EDIT_SCRIPT, _T("更新脚本"));
+			menu.AppendMenu(MF_STRING, IDM_CACL_RESULT, _T("计算结果"));
+			menu.AppendMenu(MF_STRING, IDM_SAVE_RESULT, _T("保存结果"));
 			menu.AppendMenu(MF_STRING, IDM_DELETE_RESULT, _T("删除结果"));
+			menu.AppendMenu(MF_SEPARATOR);
+
+			menu.AppendMenu(MF_STRING, IDM_EDIT_CODES, _T("更新选择"));
+			menu.AppendMenu(MF_SEPARATOR);
+
+			menu.AppendMenu(MF_STRING, IDM_EDIT_SCRIPT, _T("更新脚本"));
+			menu.AppendMenu(MF_STRING, IDM_COPY_SCRIPT, _T("复制脚本"));
+			menu.AppendMenu(MF_STRING, IDM_DELETE_SCRIPT, _T("删除脚本"));
+			menu.AppendMenu(MF_SEPARATOR);
+
 			menu.AppendMenu(MF_STRING, IDM_DELETE_ROW, _T("删除方案"));
 			m_lstGambel.ClientToScreen(&pt);
 			UINT cmd = menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RETURNCMD, 
@@ -92,17 +115,24 @@ void CDialogGambel::DoListMenuCommand(UINT cmd, UINT nItem) {
 	if (pData == NULL) {
 		return;
 	}
-	if (cmd == IDM_EDIT_CODES) {
-		DoEditCodesData(*pData);
-	} else if (cmd == IDM_EDIT_SCRIPT) {
-		DoEditScriptText(*pData);
+	if (cmd == IDM_CACL_RESULT) {
+		DoCalcResult(*pData);
+	} else if (cmd == IDM_SAVE_RESULT) {
+		DoSaveResult(*pData);
 	} else if (cmd == IDM_DELETE_RESULT) {
 		DoDeleteResult(*pData);
+	} else if (cmd == IDM_EDIT_CODES) {
+		DoEditCodes(*pData);
+	} else if (cmd == IDM_EDIT_SCRIPT) {
+		DoEditScript(*pData);
 	} else if (cmd == IDM_COPY_SCRIPT) {
-		DoCopyScriptText(*pData);
+		DoCopyScript(*pData);
+	} else if (cmd == IDM_DELETE_SCRIPT) {
+		DoDeleteScript(*pData);
 	} else if (cmd == IDM_DELETE_ROW) {
 		DoDeleteRow(*pData);
 	}
+
 }
 
 
@@ -119,16 +149,16 @@ void CDialogGambel::InitControls() {
 	dwStyleEx |= (LVS_EX_GRIDLINES | LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP
 		| LVS_EX_REGIONAL);
 	ListView_SetExtendedListViewStyle(m_lstGambel.m_hWnd, dwStyleEx);
-
 	int colIndex = 0;
 	m_lstGambel.InsertColumn(colIndex++, "编号", LVCFMT_LEFT, 65);    //70
 	m_lstGambel.InsertColumn(colIndex++, "投注类型", LVCFMT_CENTER, 65);    //70
 	m_lstGambel.InsertColumn(colIndex++, "投注数据", LVCFMT_LEFT, 300);    //70
 	m_lstGambel.InsertColumn(colIndex++, "脚本数据", LVCFMT_LEFT, 200);    //70
 	m_lstGambel.InsertColumn(colIndex++, "结果数据", LVCFMT_LEFT, 200);    //70
+	m_lstGambel.InsertColumn(colIndex++, "结果个数", LVCFMT_CENTER, 65);    //70
 
 	CStringATL strTemp;         
-	strTemp.Format(_T("方案列表(%s)"), m_strQH.c_str());
+	strTemp.Format(_T("方案列表(%s):"), m_strQH.c_str());
 	CWindow wnd = GetDlgItem(IDC_STGAMBELS);
 	wnd.SetWindowText(strTemp);
 	
@@ -174,11 +204,17 @@ void CDialogGambel::ReloadFangAnData() {
 		m_lstGambel.SetItemText(rowIndex, ++colIndex, row.m_strScript.Left(20));
 		if (!row.m_strResult.IsEmpty()) {
 			m_lstGambel.SetItemText(rowIndex, ++colIndex, row.m_strResult.Left(15) + _T(" ......"));
+		} else {
+			++colIndex;
 		}
+		//CIntxyArray arrRecords
+		strNum.Format(_T("%u"), CEngine::GetRecordCount((LPCTSTR)row.m_strResult));
+		m_lstGambel.SetItemText(rowIndex, ++colIndex, strNum);
+
 	}
 }
 
-void CDialogGambel::DoEditCodesData(const DataRow& data) {
+void CDialogGambel::DoEditCodes(const DataRow& data) {
 	if (data.m_nCodesType == 1) {
 		TCHAR szFilterName[30] = { _T('\0') };
 		_tcscpy(szFilterName, DZ_FILTER_NAME.c_str());
@@ -217,7 +253,7 @@ void CDialogGambel::DoEditCodesData(const DataRow& data) {
 	}
 }
 
-void CDialogGambel::DoEditScriptText(const DataRow& data) {
+void CDialogGambel::DoEditScript(const DataRow& data) {
 	TCHAR szFilterName[30] = { _T('\0') };
 	_tcscpy(szFilterName, LUA_FILTER_NAME.c_str());
 	_tcscat(szFilterName + LUA_FILTER_NAME.length() + 1, LUA_FILTER.c_str());
@@ -248,7 +284,7 @@ void CDialogGambel::DoEditScriptText(const DataRow& data) {
 	}
 }
 
-void CDialogGambel::DoCopyScriptText(const DataRow& data) {
+void CDialogGambel::DoCopyScript(const DataRow& data) {
 	if (OpenClipboard()) {
 		EmptyClipboard();
 		if (data.m_strScript.IsEmpty()) {
@@ -266,6 +302,21 @@ void CDialogGambel::DoCopyScriptText(const DataRow& data) {
 	}
 }
 
+void CDialogGambel::DoDeleteScript(const DataRow& data) {
+	std::auto_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
+	CStringATL strSQL = _T("UPDATE GAMBEL SET SCRIPT=? WHERE ID=?");
+	pCmd->Create(strSQL);
+	pCmd->SetParam(0, _T(""));
+	pCmd->SetParam(1, &data.m_nID);
+	if (pCmd->Execute(NULL)) {
+		ReloadFangAnData();
+	}
+}
+
+void CDialogGambel::DoSaveResult(const DataRow& data) {
+
+}
+
 void CDialogGambel::DoDeleteResult(const DataRow& data) {
 	std::auto_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	CStringATL strSQL = _T("UPDATE GAMBEL SET RESULT=? WHERE ID=?");
@@ -277,6 +328,10 @@ void CDialogGambel::DoDeleteResult(const DataRow& data) {
 	}
 }
 
+void CDialogGambel::DoCalcResult(const DataRow& data) {
+
+}
+
 void CDialogGambel::DoDeleteRow(const DataRow& data) {
 	std::auto_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	CStringATL strSQL = _T("DELETE FROM GAMBEL WHERE ID=?");
@@ -285,4 +340,34 @@ void CDialogGambel::DoDeleteRow(const DataRow& data) {
 	if (pCmd->Execute(NULL)) {
 		ReloadFangAnData();
 	}
+}
+
+void CDialogGambel::DoRowInUse(UINT uItem, BOOL inuse) {
+	CStringATL strID;
+	m_lstGambel.GetItemText(uItem, 0, strID);
+	int nID = _ttoi(strID);
+	DataRow *pData = NULL;
+	for (auto& row : m_arrDbData) {
+		if (nID == row.m_nID) {
+			pData = &row;
+			break;
+		}
+	}
+	if (pData == NULL) {
+		return;
+	}
+	int nInUse = inuse ? 1 : 0;
+	if (nInUse == pData->m_nInUse) {
+		return;
+	}
+	pData->m_nInUse = nInUse;
+	std::auto_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
+	CStringATL strSQL = _T("UPDATE GAMBEL SET INUSE=? WHERE ID=?");
+	pCmd->Create(strSQL);
+	pCmd->SetParam(0, &pData->m_nInUse);
+	pCmd->SetParam(1, &pData->m_nID);
+	if (pCmd->Execute(NULL)) {
+		//ReloadFangAnData();
+	}
+
 }

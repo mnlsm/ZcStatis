@@ -1,14 +1,17 @@
 #pragma once
 #include "resource.h"
 
-#define IDM_DELETE_ROW		WM_APP + 200
+#define IDM_CACL_RESULT		WM_APP + 199
+#define IDM_SAVE_RESULT		WM_APP + 207
+#define IDM_DELETE_RESULT	WM_APP + 206
+
 #define IDM_EDIT_CODES		WM_APP + 201
 #define IDM_EDIT_SCRIPT		WM_APP + 202
 #define IDM_COPY_SCRIPT		WM_APP + 204
-#define IDM_DELETE_RESULT	WM_APP + 205
+#define IDM_DELETE_SCRIPT	WM_APP + 205
 
-
-class CDialogGambel : 
+#define IDM_DELETE_ROW		WM_APP + 200
+class CDialogGambel :
 	public CAxDialogImpl<CDialogGambel>,
 	public CWinDataExchange<CDialogGambel>
 {
@@ -34,7 +37,7 @@ public:
 		COMMAND_HANDLER(IDC_BUEMPTY, BN_CLICKED, OnClickedBuEmpty)
 		COMMAND_HANDLER(IDC_BUCALC, BN_CLICKED, OnClickedBuCalc)
 		COMMAND_HANDLER(IDCANCEL, BN_CLICKED, OnClickedBuExit)
-
+		NOTIFY_HANDLER(IDC_GAMBEL_LIST, LVN_ITEMCHANGED, OnListItemChanged)
 		//COMMAND_RANGE_HANDLER(IDM_DELETE_FANGAN, IDM_DELETE_RESULT, OnClickedListMenu)
 
 		CHAIN_MSG_MAP(CAxDialogImpl<CDialogGambel>)
@@ -48,15 +51,14 @@ public:
 	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 	LRESULT OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT OnListItemChanged(int wParam, LPNMHDR lParam, BOOL& bHandled);;
+
 
 	LRESULT OnClickedBuAddDanShi(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnClickedBuAddFuShi(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnClickedBuEmpty(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnClickedBuCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnClickedBuExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-
-	void DoListMenuCommand(UINT cmd, UINT nItem);
-
 
 private:
 	CCheckListViewCtrlEx<CDialogGambel> m_lstGambel;
@@ -84,9 +86,17 @@ private:
 
 
 private:
-	void DoEditCodesData(const DataRow& data);
-	void DoCopyScriptText(const DataRow& data);
-	void DoEditScriptText(const DataRow& data);
+	void DoListMenuCommand(UINT cmd, UINT nItem);
+
+	void DoCalcResult(const DataRow& data);
+	void DoSaveResult(const DataRow& data);
 	void DoDeleteResult(const DataRow& data);
+
+	void DoEditCodes(const DataRow& data);
+	void DoEditScript(const DataRow& data);
+	void DoCopyScript(const DataRow& data);
+	void DoDeleteScript(const DataRow& data);
+
 	void DoDeleteRow(const DataRow& data);
+	void DoRowInUse(UINT uItem, BOOL inuse);
 };

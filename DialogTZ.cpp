@@ -175,7 +175,7 @@ BOOL CDialogTZ::ReLoadDataToShow() {
 		strSQL.Format(_T("select CODES, PLDATA, MATCHS from GAMBEL where ID=%d"), m_GambleID);
 		std::auto_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
 		if(pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
-			while (!pRS->IsEOF()) {
+			if (!pRS->IsEOF()) {
 				pRS->GetField(0, strResults);
 				pRS->GetField(1, m_strPL);
 				pRS->GetField(2, m_strMatchs);
@@ -187,7 +187,7 @@ BOOL CDialogTZ::ReLoadDataToShow() {
 		Global::DepartString((LPCTSTR)strResults, _T(","), arrResults);
 		for (int i = IDC_CORESULT1; i <= IDC_CORESULT42; i = i + 3) {
 			int arrPos = (i - IDC_CORESULT1) / 3;
-			int ctrlPos = i + arrResults[arrPos].length();
+			int ctrlPos = i + arrResults[arrPos].length() - 1;
 			CComboBox coWnd = GetDlgItem(ctrlPos);
 			if (coWnd.IsWindow()) {
 				int index = coWnd.FindStringExact(0, arrResults[arrPos].c_str());

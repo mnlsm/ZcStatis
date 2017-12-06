@@ -97,6 +97,11 @@ BOOL CEngine::CalculateAllResultImpl(void* ctx, CStlString& failed_reason) {
 	return TRUE;
 }
 
+BOOL CEngine::IsAValidRecord(const CIntArray& record, void* ctx, CStlString* invalid_reason) {
+	return TRUE;
+}
+
+
 void CEngine::SearchAllRecord(CIntxyArray::iterator choice_iter, CIntArray &tempArr) {
 	//finish DiGui
 	if (choice_iter == m_arrChoices.end()) {
@@ -191,7 +196,7 @@ void CEngine::GreedyCalcRectRecord(CIntxyArray &F, CIntxyArray &G) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 BOOL CEngine::GetLianXu(const CIntArray& record, int &nMaxSP, int &nMaxSF, int &nMaxPF) {
-	if (record.size() != 14) {
+	if (record.size() != TOTO_COUNT) {
 		return FALSE;
 	}
 	CIntPair pairCurSP, pairCurSF, pairCurPF;
@@ -294,7 +299,7 @@ BOOL CEngine::GetPLDatas(const CStlString& strPL, CDoublexyArray& arrPLData, CDo
 		arrTemp.push_back(d0);
 		arrGVData.push_back(arrTemp);
 	}
-	if (arrGVData.size() != 14 || arrPLData.size() != 14) {
+	if (arrGVData.size() != TOTO_COUNT || arrPLData.size() != TOTO_COUNT) {
 		arrPLData.clear();
 		arrGVData.clear();
 		return FALSE;
@@ -305,7 +310,7 @@ BOOL CEngine::GetPLDatas(const CStlString& strPL, CDoublexyArray& arrPLData, CDo
 BOOL CEngine::CalcCommonFilterFactors(const CIntArray& record, const CDoublexyArray& arrPLData,
 	const CDoublexyArray& arrGVData, const CDoubleArray& arrPLScope, CommonFilterFactors& commonFF) {
 	commonFF.Clear();
-	if (record.size() != 14) {
+	if (record.size() != TOTO_COUNT) {
 		return FALSE;
 	}
 	
@@ -361,7 +366,7 @@ BOOL CEngine::CalcCommonFilterFactors(const CIntArray& record, const CDoublexyAr
 	GetLianXu(record, commonFF.mLian31Count, commonFF.mLian30Count, commonFF.mLian10Count);
 	
 	//ÅâÂÊÊý¾Ý
-	if (arrPLData.size() == 14 && arrGVData.size() == 14) {
+	if (arrPLData.size() == TOTO_COUNT && arrGVData.size() == TOTO_COUNT) {
 		commonFF.mPL1Count = commonFF.mPL2Count = commonFF.mPL3Count = 0;
 		commonFF.mGvj = 1.0;
 		commonFF.mPLSum = 0.0;
@@ -396,6 +401,58 @@ BOOL CEngine::CalcCommonFilterFactors(const CIntArray& record, const CDoublexyAr
 				commonFF.mPLScopes.push_back(arrSCOPE[i]);
 			}
 		}
+	}
+	return TRUE;
+}
+
+BOOL CEngine::GetChoices(const CStlString& strChoices, CIntxyArray& arrChoices) {
+	arrChoices.clear();
+	CStlStrArray choices;
+	Global::DepartString(strChoices, _T(","), choices);
+	if (choices.size() != TOTO_COUNT) {
+		return FALSE;
+	}
+	for (const auto& codes : choices) {
+		if (codes.empty()) {
+			return FALSE;
+		}
+		CIntArray arrChoice;
+		for (const auto& code : codes) {
+			int iVal = code - _T('0');
+			if (iVal != 3 && iVal != 1 && iVal != 0) {
+				return FALSE;
+			}
+			arrChoice.push_back(iVal);
+		}
+		arrChoices.push_back(arrChoice);
+	}
+	return TRUE;
+}
+
+UINT CEngine::GetRecordCount(const CStlString& strCodes) {
+	CStlStrArray lines;
+	Global::DepartString(strCodes, _T("\n"), lines);
+	return lines.size();
+}
+
+
+BOOL CEngine::GetRecords(const CStlString& strCodes, CIntxyArray& arrRecords) {
+	arrRecords.clear();
+	CStlStrArray lines;
+	Global::DepartString(strCodes, _T("\n"), lines);
+	for (const auto& line : lines) {
+		if (line.size() != TOTO_COUNT) {
+			return FALSE;
+		}
+		CIntArray arrRecord;
+		for (const auto& code : line) {
+			int iVal = code - _T('0');
+			if (iVal != 3 && iVal != 1 && iVal != 0) {
+				return FALSE;
+			}
+			arrRecord.push_back(iVal);
+		}
+		arrRecords.push_back(arrRecord);
 	}
 	return TRUE;
 }

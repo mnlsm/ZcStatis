@@ -46,6 +46,9 @@ typedef int(*lua_CFunction) (lua_State *L);
 
 typedef ATL::CString CStringATL;
 
+#define TOTO_COUNT 14
+
+/*
 namespace WTL
 {
 
@@ -60,7 +63,7 @@ template<class T>
 class CDDX_Text_WTL
 {
 public:	
-	BOOL DDX_Text_WTL(UINT nID, CStringATL& strText, int /*cbSize*/, BOOL bSave, BOOL bValidate = FALSE, int nLength = 0)
+	BOOL DDX_Text_WTL(UINT nID, CStringATL& strText, int bSize, BOOL bSave, BOOL bValidate = FALSE, int nLength = 0)
 	{
 		T* pT = static_cast<T*>(this);
 		BOOL bSuccess = TRUE;
@@ -108,6 +111,6 @@ public:
 
 };
 
-
+*/
 
 

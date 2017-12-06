@@ -26,6 +26,8 @@
 *.lai
 *.la
 *.a
+*.ilb
+*.ldb
 #*.lib
 
 # Executables
@@ -46,3 +48,4 @@
 /debug/*
 /release/*
 /ipch/*
+/bin/gambel/*
