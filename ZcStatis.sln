@@ -4,6 +4,8 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ZcStatis", "ZcStatis.vcxproj", "{2EFBDF09-0736-44A0-9CAB-86E518C0EE3A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ZcPlay", "D:\vc\ZCPLAY\zcPlay\simple\ZcPlay.vcxproj", "{5679E95C-E50C-4739-816A-4D91EDF1D3D8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -14,6 +16,10 @@ Global
 		{2EFBDF09-0736-44A0-9CAB-86E518C0EE3A}.Debug|Win32.Build.0 = Debug|Win32
 		{2EFBDF09-0736-44A0-9CAB-86E518C0EE3A}.Release|Win32.ActiveCfg = Release|Win32
 		{2EFBDF09-0736-44A0-9CAB-86E518C0EE3A}.Release|Win32.Build.0 = Release|Win32
+		{5679E95C-E50C-4739-816A-4D91EDF1D3D8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5679E95C-E50C-4739-816A-4D91EDF1D3D8}.Debug|Win32.Build.0 = Debug|Win32
+		{5679E95C-E50C-4739-816A-4D91EDF1D3D8}.Release|Win32.ActiveCfg = Release|Win32
+		{5679E95C-E50C-4739-816A-4D91EDF1D3D8}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

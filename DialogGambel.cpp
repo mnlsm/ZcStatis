@@ -2,7 +2,7 @@
 #include "DialogGambel.h"
 #include "DialogTZ.h"
 #include "Global.h"
-#include "Engine.h"
+#include "EngineLua.h"
 
 static const CStlString DZ_FILTER_NAME = _T("µ¥×¢ÎÄ¼þ(*.dz)");
 static const CStlString DZ_FILTER = _T("*.dz");
@@ -30,7 +30,52 @@ LRESULT CDialogGambel::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 }
 
 LRESULT CDialogGambel::OnClickedBuAddDanShi(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-
+	TCHAR szFilterName[30] = { _T('\0') };
+	_tcscpy(szFilterName, DZ_FILTER_NAME.c_str());
+	_tcscat(szFilterName + DZ_FILTER_NAME.length() + 1, DZ_FILTER.c_str());
+	CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+		szFilterName, m_hWnd);
+	CStlString strPath = Global::GetAppPath() + _T("gambel");
+	CreateDirectory(strPath.c_str(), NULL);
+	strPath = strPath + _T("\\") + m_strQH;
+	CreateDirectory(strPath.c_str(), NULL);
+	dlg.m_ofn.lpstrInitialDir = strPath.c_str();
+	if (dlg.DoModal() != IDOK) {
+		return 1L;
+	}
+	CStlString strLoadPath = dlg.m_ofn.lpstrFile;
+	std::string filedata;
+	if (!Global::ReadFileData(strLoadPath, filedata) || filedata.size() == 0) {
+		MessageBox("µ¥×¢ÎÄ¼þ¶ÁÈ¡Ê§°Ü£¡", "´íÎó", MB_ICONERROR | MB_OK);
+		return 1L;
+	}
+	CStlString strCodes = Global::formUTF8(filedata);
+	CStringATL strSQL, strPL, strMatchs;
+	strSQL.Format(_T("SELECT PLDATA, MATCHS FROM PLDATA WHERE ID='%s'"), m_strQH.c_str());
+	std::unique_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
+	if (pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
+		if (!pRS->IsEOF()) {
+			pRS->GetField(0, strPL);
+			pRS->GetField(1, strMatchs);
+		}
+	}
+	pRS->Close();
+	strSQL = _T("INSERT INTO GAMBEL (QH, INUSE, CODESTYPE, CODES, PLDATA, MATCHS) VALUES(?,?,?,?,?,?)");
+	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
+	pCmd->Create(strSQL);
+	pCmd->SetParam(0, m_strQH);
+	long val = 0;
+	pCmd->SetParam(1, &val);
+	val = 1;
+	pCmd->SetParam(2, &val);
+	pCmd->SetParam(3, strCodes);
+	pCmd->SetParam(4, strPL);
+	pCmd->SetParam(5, strMatchs);
+	if (!pCmd->Execute(NULL)) {
+		MessageBox("INSERT DB Ê§°Ü£¡", "´íÎó", MB_ICONERROR | MB_OK);
+		return 1L;
+	}
+	pCmd->Close();
 	return 1L;
 }
 
@@ -65,8 +110,6 @@ LRESULT CDialogGambel::OnListItemChanged(int wParam, LPNMHDR lParam, BOOL& bHand
 	bHandled = FALSE;
 	return 1L;
 }
-
-
 
 LRESULT CDialogGambel::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	LRESULT lRet = m_lstGambel.DefWindowProc(uMsg, wParam, lParam);
@@ -132,7 +175,6 @@ void CDialogGambel::DoListMenuCommand(UINT cmd, UINT nItem) {
 	} else if (cmd == IDM_DELETE_ROW) {
 		DoDeleteRow(*pData);
 	}
-
 }
 
 
@@ -167,7 +209,7 @@ void CDialogGambel::InitControls() {
 void CDialogGambel::ReloadFangAnData() {
 	m_arrDbData.clear();
 	m_lstGambel.DeleteAllItems();
-	std::auto_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
+	std::unique_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
 	CStringATL strSQL;
 	strSQL.Format(_T("select ID, INUSE, CODESTYPE, CODES, PLDATA, SCRIPT,")
 		_T(" RESULT FROM GAMBEL WHERE QH='%s' order by ID asc"), m_strQH.c_str());
@@ -207,10 +249,8 @@ void CDialogGambel::ReloadFangAnData() {
 		} else {
 			++colIndex;
 		}
-		//CIntxyArray arrRecords
-		strNum.Format(_T("%u"), CEngine::GetRecordCount((LPCTSTR)row.m_strResult));
+		strNum.Format(_T("%u"), CEngine::GetRecordsCount((LPCTSTR)row.m_strResult));
 		m_lstGambel.SetItemText(rowIndex, ++colIndex, strNum);
-
 	}
 }
 
@@ -236,11 +276,14 @@ void CDialogGambel::DoEditCodes(const DataRow& data) {
 			return;
 		}
 		CStlString strCodes = Global::formUTF8(filedata);
-		std::auto_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
-		CStringATL strSQL = _T("UPDATE GAMBEL SET CODES=? WHERE ID=?");
+		std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
+		CStringATL strSQL = _T("UPDATE GAMBEL SET CODESTYPE=?,SET CODES=?,SET RESULT=? WHERE ID=?");
 		pCmd->Create(strSQL);
-		pCmd->SetParam(0, strCodes);
-		pCmd->SetParam(1, &data.m_nID);
+		long lVal = 1;
+		pCmd->SetParam(0, &lVal);
+		pCmd->SetParam(1, strCodes);
+		pCmd->SetParam(2, _T(""));
+		pCmd->SetParam(3, &data.m_nID);
 		if (pCmd->Execute(NULL)) {
 			ReloadFangAnData();
 		}
@@ -274,7 +317,7 @@ void CDialogGambel::DoEditScript(const DataRow& data) {
 		return;
 	}
 	CStlString strCodes = Global::formUTF8(filedata);
-	std::auto_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
+	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	CStringATL strSQL = _T("UPDATE GAMBEL SET SCRIPT=? WHERE ID=?");
 	pCmd->Create(strSQL);
 	pCmd->SetParam(0, strCodes);
@@ -303,7 +346,7 @@ void CDialogGambel::DoCopyScript(const DataRow& data) {
 }
 
 void CDialogGambel::DoDeleteScript(const DataRow& data) {
-	std::auto_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
+	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	CStringATL strSQL = _T("UPDATE GAMBEL SET SCRIPT=? WHERE ID=?");
 	pCmd->Create(strSQL);
 	pCmd->SetParam(0, _T(""));
@@ -314,11 +357,29 @@ void CDialogGambel::DoDeleteScript(const DataRow& data) {
 }
 
 void CDialogGambel::DoSaveResult(const DataRow& data) {
-
+	if (data.m_strResult.IsEmpty()) {
+		return;
+	}
+	TCHAR szFilterName[30] = { _T('\0') };
+	_tcscpy(szFilterName, LUA_FILTER_NAME.c_str());
+	_tcscat(szFilterName + LUA_FILTER_NAME.length() + 1, LUA_FILTER.c_str());
+	CFileDialog dlg(FALSE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+		szFilterName, m_hWnd);
+	CStlString strPath = Global::GetAppPath() + _T("gambel");
+	CreateDirectory(strPath.c_str(), NULL);
+	strPath = strPath + _T("\\") + m_strQH;
+	CreateDirectory(strPath.c_str(), NULL);
+	dlg.m_ofn.lpstrInitialDir = strPath.c_str();
+	if (dlg.DoModal() != IDOK) {
+		return;
+	}
+	CStlString strLoadPath = dlg.m_ofn.lpstrFile;
+	std::string utf8 = Global::toUTF8((LPCTSTR)data.m_strResult);
+	Global::SaveFileData(strLoadPath, utf8, FALSE);
 }
 
 void CDialogGambel::DoDeleteResult(const DataRow& data) {
-	std::auto_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
+	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	CStringATL strSQL = _T("UPDATE GAMBEL SET RESULT=? WHERE ID=?");
 	pCmd->Create(strSQL);
 	pCmd->SetParam(0, _T(""));
@@ -328,12 +389,8 @@ void CDialogGambel::DoDeleteResult(const DataRow& data) {
 	}
 }
 
-void CDialogGambel::DoCalcResult(const DataRow& data) {
-
-}
-
 void CDialogGambel::DoDeleteRow(const DataRow& data) {
-	std::auto_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
+	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	CStringATL strSQL = _T("DELETE FROM GAMBEL WHERE ID=?");
 	pCmd->Create(strSQL);
 	pCmd->SetParam(0, &data.m_nID);
@@ -361,7 +418,7 @@ void CDialogGambel::DoRowInUse(UINT uItem, BOOL inuse) {
 		return;
 	}
 	pData->m_nInUse = nInUse;
-	std::auto_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
+	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	CStringATL strSQL = _T("UPDATE GAMBEL SET INUSE=? WHERE ID=?");
 	pCmd->Create(strSQL);
 	pCmd->SetParam(0, &pData->m_nInUse);
@@ -369,5 +426,47 @@ void CDialogGambel::DoRowInUse(UINT uItem, BOOL inuse) {
 	if (pCmd->Execute(NULL)) {
 		//ReloadFangAnData();
 	}
+}
 
+void CDialogGambel::DoCalcResult(const DataRow& data) {
+	if (data.m_nInUse != 1) {
+		MessageBox("ÇëÏÈÆôÓÃ£¡", "´íÎó", MB_ICONERROR | MB_OK);
+		return;
+	}
+	if (data.m_strCodes.IsEmpty()) {
+		MessageBox("ÇëÏÈÑ¡ºÃºÅÂë£¡", "´íÎó", MB_ICONERROR | MB_OK);
+		return;
+	}
+	std::unique_ptr<CEngine> pEngine;
+	if (data.m_strScript.IsEmpty()) {
+		pEngine.reset(new CEngine());
+	} else {
+		pEngine.reset(new CEngineLua((LPCTSTR)data.m_strScript));
+	}
+	if (data.m_nCodesType == 0) {
+		pEngine->SetChoices((LPCTSTR)data.m_strCodes);
+	} else if (data.m_nCodesType == 0) {
+		pEngine->SetDZRecords((LPCTSTR)data.m_strCodes);
+	} else {
+		MessageBox("Î´ÖªºÅÂë¼¯ºÏ£¡", "´íÎó", MB_ICONERROR | MB_OK);
+		return;
+	}
+	pEngine->SetPL((LPCTSTR)data.m_strPL);
+	CStlString reason;
+	if (!pEngine->CalculateAllResult(reason)) {
+		CStringATL strError;
+		strError.Format(_T("¼ÆËã´íÎó, ºÅÂë: %s"), reason.c_str());
+		MessageBox(strError, "´íÎó", MB_ICONERROR | MB_OK);
+		return;
+	}
+	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
+	CStringATL strSQL = _T("UPDATE GAMBEL SET RESULT=? WHERE ID=?");
+	CStlString strResult;
+	CEngine::GetRecordsString(pEngine->GetResult(), strResult);
+	pCmd->Create(strSQL);
+	pCmd->SetParam(0, strResult);
+	pCmd->SetParam(1, &data.m_nID);
+	if (pCmd->Execute(NULL)) {
+		ReloadFangAnData();
+	}
 }

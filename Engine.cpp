@@ -15,7 +15,18 @@ CEngine::CEngine() {
 }
 
 CEngine::~CEngine() {
+}
 
+void CEngine::SetChoices(const CStlString& strChoices) {
+	CIntxyArray arrChoices;
+	CEngine::GetChoices(strChoices, arrChoices);
+	SetChoices(arrChoices);
+}
+
+void CEngine::SetDZRecords(const CStlString& strRecords) {
+	CIntxyArray arrRecords;
+	CEngine::GetRecords(strRecords, arrRecords);
+	SetDZRecords(arrRecords);
 }
 
 void CEngine::SetPL(const CStlString &pl) {
@@ -33,7 +44,7 @@ void CEngine::SetChoices(const CIntxyArray &arrChoices) {
 	m_arrAllRecord.clear();
 }
 
-void CEngine::SetAllRecord(const CIntxyArray &arrRecords) {
+void CEngine::SetDZRecords(const CIntxyArray &arrRecords) {
 	m_arrAllRecord.clear();
 	m_arrAllRecord.assign(arrRecords.begin(), arrRecords.end());
 	m_arrChoices.clear();
@@ -43,11 +54,43 @@ BOOL CEngine::CalculateAllResult(CStlString& failed_reason) {
 	return CalculateAllResultImpl(NULL, failed_reason);
 }
 
+BOOL CEngine::IsAValidRecord(const CIntArray& record, CStlString& failed_reason) {
+	failed_reason.clear(); 
+	BOOL bRet = FALSE;
+	if (record.size() != TOTO_COUNT) {
+		failed_reason = _T("source record invalid!\n");
+		return bRet;
+	}
+	int index = 0;
+	for (const auto& r : m_arrAllRecord) {
+		++index;
+		int samecount = 0;
+		for (int i = 0; i < TOTO_COUNT; i++) {
+			if (r[i] == record[i]) {
+				samecount++;
+			}
+		}
+		if (samecount >= TOTO_MAXLOSE) {
+			bRet = TRUE;
+			CStlString codes(TOTO_COUNT, '\0');
+			for (int i = 0; i < TOTO_COUNT; i++) {
+				codes[i] = record[i] + _T('0');
+			}
+			TCHAR szInfo[128] = { _T('\0') };
+			_stprintf(szInfo, _T("found record: codes=[%s], index=%d, losed=%d\n"), 
+				codes.c_str(), index, TOTO_COUNT - samecount);
+			failed_reason += szInfo;
+		}
+	}
+	return bRet;
+}
+
+
 const CIntxyArray& CEngine::GetResult() {
 	return m_arrResultRecord;
 }
 
-
+/*
 void CEngine::WriteRecordsToFile(const CStlString& filename, CIntxyArray &arrAllRecord) {
 	CStlOutFile file;
 	try {
@@ -66,6 +109,7 @@ void CEngine::WriteRecordsToFile(const CStlString& filename, CIntxyArray &arrAll
 	}
 	file.close();
 }
+*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 BOOL CEngine::CalculateAllResultImpl(void* ctx, CStlString& failed_reason) {
@@ -82,7 +126,7 @@ BOOL CEngine::CalculateAllResultImpl(void* ctx, CStlString& failed_reason) {
 	}
 	CIntxyArray tempAll;
 	for (const auto& record : m_arrAllRecord) {
-		if (IsAValidRecord(record, ctx, NULL)) {
+		if (IsAValidRecordImpl(record, ctx, NULL)) {
 			tempAll.push_back(record);
 		}
 	}
@@ -97,7 +141,7 @@ BOOL CEngine::CalculateAllResultImpl(void* ctx, CStlString& failed_reason) {
 	return TRUE;
 }
 
-BOOL CEngine::IsAValidRecord(const CIntArray& record, void* ctx, CStlString* invalid_reason) {
+BOOL CEngine::IsAValidRecordImpl(const CIntArray& record, void* ctx, CStlString* invalid_reason) {
 	return TRUE;
 }
 
@@ -429,12 +473,26 @@ BOOL CEngine::GetChoices(const CStlString& strChoices, CIntxyArray& arrChoices) 
 	return TRUE;
 }
 
-UINT CEngine::GetRecordCount(const CStlString& strCodes) {
+UINT CEngine::GetRecordsCount(const CStlString& strCodes) {
 	CStlStrArray lines;
 	Global::DepartString(strCodes, _T("\n"), lines);
 	return lines.size();
 }
 
+BOOL CEngine::GetRecord(const CStlString& strCode, CIntArray& arrRecord) {
+	arrRecord.clear();
+	if (strCode.length() != TOTO_COUNT) {
+		return FALSE;
+	}
+	for (const auto& code : strCode) {
+		int iVal = code - _T('0');
+		if (iVal != 3 && iVal != 1 && iVal != 0) {
+			return FALSE;
+		}
+		arrRecord.push_back(iVal);
+	}
+	return TRUE;
+}
 
 BOOL CEngine::GetRecords(const CStlString& strCodes, CIntxyArray& arrRecords) {
 	arrRecords.clear();
@@ -455,4 +513,20 @@ BOOL CEngine::GetRecords(const CStlString& strCodes, CIntxyArray& arrRecords) {
 		arrRecords.push_back(arrRecord);
 	}
 	return TRUE;
+}
+
+void CEngine::GetRecordsString(const CIntxyArray& arrRecords, CStlString& strRecords) {
+	strRecords.clear();
+	for (const auto& record : arrRecords) {
+		CStlString record(TOTO_COUNT, _T('\0'));
+		for (int i = 0; i < TOTO_COUNT; i++) {
+			const auto& code = record[i];
+			record[i] = _T('0') + code;
+		}
+		if (strRecords.empty()) {
+			strRecords = record;
+		} else {
+			strRecords = strRecords + _T('\n') + record;
+		}
+	}
 }

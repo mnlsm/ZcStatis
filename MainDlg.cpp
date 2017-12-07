@@ -194,7 +194,7 @@ void CMainDlg::ReloadStatisData() {
 
 	m_arrPLSCOPE.clear();
 	CStringATL strSQL = _T("select PLSCOPE from PLSCOPE");
-	std::auto_ptr<IDbRecordset> pRS1(m_pDbSystem->CreateRecordset(m_pDbDatabase));
+	std::unique_ptr<IDbRecordset> pRS1(m_pDbSystem->CreateRecordset(m_pDbDatabase));
 	if (pRS1->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
 		while (!pRS1->IsEOF()) {
 			double fPL = 0;
@@ -206,7 +206,7 @@ void CMainDlg::ReloadStatisData() {
 	pRS1->Close();
 
 	strSQL = _T("SELECT ID,BONUS,RESULT,PLDATA,SALES from PLDATA ORDER BY ID ASC");
-	std::auto_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
+	std::unique_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
 	if(pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
 		int iIndex = 0;
 		while (!pRS->IsEOF()) {
@@ -326,7 +326,7 @@ void CMainDlg::DoListMenuCommand(UINT cmd, UINT nItem) {
 		dlg.DoModal();
 		return;
 	} else if (cmd == IDM_DELETE_PLDATA) {
-		std::auto_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
+		std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 		CStringATL strSQL = _T("DELETE FROM PLDATA WHERE ID=?");
 		pCmd->Create(strSQL);
 		pCmd->SetParam(0, strQH);

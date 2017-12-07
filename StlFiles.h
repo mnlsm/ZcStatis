@@ -1,5 +1,6 @@
 #ifndef _STL_FILES
 #define _STL_FILES
+#include <memory>
 #include <iostream>
 #include <fstream>
 #include <vector>

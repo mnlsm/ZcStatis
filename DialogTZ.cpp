@@ -172,8 +172,8 @@ BOOL CDialogTZ::ReLoadDataToShow() {
 	ClearUserChoice();
 	if (m_GambleID != -1) {
 		CStringATL strSQL, strResults;
-		strSQL.Format(_T("select CODES, PLDATA, MATCHS from GAMBEL where ID=%d"), m_GambleID);
-		std::auto_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
+		strSQL.Format(_T("SELECT CODES, PLDATA, MATCHS FROM GAMBEL WHERE ID=%d"), m_GambleID);
+		std::unique_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
 		if(pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
 			if (!pRS->IsEOF()) {
 				pRS->GetField(0, strResults);
@@ -198,8 +198,8 @@ BOOL CDialogTZ::ReLoadDataToShow() {
 		}
 	} else {
 		CStringATL strSQL;
-		strSQL.Format(_T("select PLDATA, MATCHS from PLDATA where ID='%s'"), m_strQH.c_str());
-		std::auto_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
+		strSQL.Format(_T("SELECT PLDATA, MATCHS FROM PLDATA WHERE ID='%s'"), m_strQH.c_str());
+		std::unique_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
 		if(pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
 			if (!pRS->IsEOF()) {
 				pRS->GetField(0, m_strPL);
@@ -223,7 +223,7 @@ BOOL CDialogTZ::ReLoadDataToShow() {
 BOOL CDialogTZ::DoUpdateDatabase(const CStlString &strResults) {
 	BOOL ret = FALSE;
 	CStringATL strSQL;
-	std::auto_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
+	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	if (m_GambleID == -1) {
 		strSQL = _T("INSERT INTO GAMBEL (QH, INUSE, CODESTYPE, CODES, PLDATA, MATCHS) VALUES(?,?,?,?,?,?)");
 		pCmd->Create(strSQL);
@@ -236,9 +236,12 @@ BOOL CDialogTZ::DoUpdateDatabase(const CStlString &strResults) {
 		pCmd->SetParam(5, m_strMatchs);
 		ret = pCmd->Execute(NULL);
 	} else {
-		strSQL.Format(_T("UPDATE GAMBEL SET CODES=? WHERE ID=%d"), m_GambleID);
+		strSQL.Format(_T("UPDATE GAMBEL CODESTYPE=?, SET CODES=?, RESULT=? WHERE ID=%d"), m_GambleID);
 		pCmd->Create(strSQL);
-		pCmd->SetParam(0, strResults.c_str());
+		long val = 0;
+		pCmd->SetParam(0, &val);
+		pCmd->SetParam(1, strResults.c_str());
+		pCmd->SetParam(2, _T(""));
 		ret = pCmd->Execute(NULL);
 	}
 	pCmd->Close();

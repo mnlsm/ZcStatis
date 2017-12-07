@@ -69,12 +69,15 @@ CStlString Global::formUTF8(const std::string& utf8) {
 BOOL Global::ReadFileData(const CStlString& filename, std::string& filedata) {
 	filedata.clear();
 	CAtlFile afile;
-	if (!afile.Create(filename.c_str(), GENERIC_READ, 
-			FILE_SHARE_READ, OPEN_EXISTING)) {
+	DWORD dwLastError = 0;
+	HRESULT hr = afile.Create(filename.c_str(), GENERIC_READ,
+		FILE_SHARE_READ, OPEN_EXISTING);
+	if (FAILED(hr)) {
+		dwLastError = GetLastError();
 		return FALSE;
 	}
 	ULONGLONG nsize = 0;
-	HRESULT hr = afile.GetSize(nsize);
+	hr = afile.GetSize(nsize);
 	if (FAILED(hr)) {
 		return FALSE;
 	}
@@ -83,7 +86,8 @@ BOOL Global::ReadFileData(const CStlString& filename, std::string& filedata) {
 		DWORD dwBytesRead = 0;
 		char* pos = (char*)filedata.data();
 		do {
-			if (!afile.Read(pos, nsize, dwBytesRead)) {
+			hr = afile.Read(pos, nsize, dwBytesRead);
+			if (FAILED(hr)) {
 				return FALSE;
 			}
 			pos += dwBytesRead;
@@ -96,8 +100,11 @@ BOOL Global::ReadFileData(const CStlString& filename, std::string& filedata) {
 
 BOOL Global::SaveFileData(const CStlString& filename, const std::string& filedata, BOOL append) {
 	CAtlFile afile;
-	if (!afile.Create(filename.c_str(), GENERIC_WRITE,
-			FILE_SHARE_WRITE, OPEN_ALWAYS)) {
+	DWORD dwLastError = 0;
+	HRESULT hr = afile.Create(filename.c_str(), GENERIC_WRITE,
+		FILE_SHARE_WRITE, OPEN_ALWAYS);
+	if (FAILED(hr)) {
+		dwLastError = GetLastError();
 		return FALSE;
 	}
 	if (append) {
@@ -109,7 +116,8 @@ BOOL Global::SaveFileData(const CStlString& filename, const std::string& filedat
 	DWORD dwBytesWrite = 0;
 	char* pos = (char*)filedata.data();
 	do {
-		if (!afile.Write(pos, nsize, &dwBytesWrite)) {
+		hr = afile.Write(pos, nsize, &dwBytesWrite);
+		if (FAILED(hr)) {
 			return FALSE;
 		}
 		pos += dwBytesWrite;

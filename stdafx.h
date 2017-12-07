@@ -47,6 +47,7 @@ typedef int(*lua_CFunction) (lua_State *L);
 typedef ATL::CString CStringATL;
 
 #define TOTO_COUNT 14
+#define TOTO_MAXLOSE TOTO_COUNT - 1
 
 /*
 namespace WTL

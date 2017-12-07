@@ -9,9 +9,10 @@ public:
 
 public:
 	virtual BOOL CalculateAllResult(CStlString& failed_reason);
+	virtual BOOL IsAValidRecord(const CIntArray& record, CStlString& failed_reason);
 
 protected:
-	virtual BOOL IsAValidRecord(const CIntArray& record, void* ctx, CStlString* invalid_reason);
+	virtual BOOL IsAValidRecordImpl(const CIntArray& record, void* ctx, CStlString* invalid_reason);
 
 protected:
 	lua_State* InitLua(CStlString& failed_reason);

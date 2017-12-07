@@ -52,22 +52,27 @@ public:
 	virtual ~CEngine();
 
 public:
+	void SetChoices(const CStlString& strChoices);
+	void SetDZRecords(const CStlString& strRecords);
+	void SetPL(const CStlString &pl);
+
 	void SetMaxLose(long lLose);
 	void SetChoices(const CIntxyArray& arrChoices);
-	void SetAllRecord(const CIntxyArray& arrRecords);
-	void SetPL(const CStlString &pl);
+	void SetDZRecords(const CIntxyArray& arrRecords);
+
 	const CIntxyArray& GetResult();
 
 public:
-	void static WriteRecordsToFile(const CStlString& filename, CIntxyArray &arrAllRecord);
+	//void static WriteRecordsToFile(const CStlString& filename, CIntxyArray &arrAllRecord);
 
 
 public:
 	virtual BOOL CalculateAllResult(CStlString& failed_reason);
+	virtual BOOL IsAValidRecord(const CIntArray& record, CStlString& failed_reason);
 
 protected:
 	virtual BOOL CalculateAllResultImpl(void* ctx, CStlString& failed_reason);
-	virtual BOOL IsAValidRecord(const CIntArray& record, void* ctx, CStlString* invalid_reason);
+	virtual BOOL IsAValidRecordImpl(const CIntArray& record, void* ctx, CStlString* invalid_reason);
 
 //for suoshui
 protected:							
@@ -92,9 +97,13 @@ protected:
 	void GreedyCalcRectRecord(CIntxyArray &F, CIntxyArray &G);
 
 public:
-	static BOOL GetChoices(const CStlString& strChoices, CIntxyArray& arrChoice);
+	static BOOL GetChoices(const CStlString& strChoices, CIntxyArray& arrChoices);
 	static BOOL GetRecords(const CStlString& strCodes, CIntxyArray& arrRecords);
-	static UINT GetRecordCount(const CStlString& strCodes);
+	static UINT GetRecordsCount(const CStlString& strCodes);
+	static BOOL GetRecord(const CStlString& strCode, CIntArray& arrRecord);
+
+	static void GetRecordsString(const CIntxyArray& arrRecords, CStlString& strRecords);
+
 
 	static BOOL GetPLDatas(const CStlString& strPL, CDoublexyArray& arrPLData, CDoublexyArray& arrGVData);
 	static BOOL CalcCommonFilterFactors(const CIntArray& record, const CDoublexyArray& arrPLData,
