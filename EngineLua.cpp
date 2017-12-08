@@ -140,14 +140,15 @@ BOOL CEngineLua::IsAValidRecordImpl(const CIntArray& record, void* ctx, CStlStri
 		return FALSE;
 	}
 	int lua_ret = lua_table_getfield(L, "code", 0);
-	if (lua_ret != 0) {
+	BOOL isValid = (lua_ret != 1);
+	if (!isValid) {
 		std::string err = lua_table_getfield(L, "info", "unknow");
 		if (invalid_reason != NULL) {
 			*invalid_reason = CA2T(err.c_str()).m_psz;
 		}
 	}
 	lua_pop(L, 1);
-	return (lua_ret != 0);
+	return isValid;
 }
 
 lua_State* CEngineLua::InitLua(CStlString& failed_reason) {

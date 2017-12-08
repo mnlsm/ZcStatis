@@ -36,6 +36,7 @@ public:
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
 
+		COMMAND_HANDLER(IDC_BUSEARCH, BN_CLICKED, OnClickedBuSearch)
 		COMMAND_HANDLER(IDC_BUADDDS, BN_CLICKED, OnClickedBuAddDanShi)
 		COMMAND_HANDLER(IDC_BUADDFS, BN_CLICKED, OnClickedBuAddFuShi)
 		COMMAND_HANDLER(IDC_BUEMPTY, BN_CLICKED, OnClickedBuPreview)
@@ -65,6 +66,7 @@ public:
 	LRESULT OnClickedBuPreview(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnClickedBuPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnClickedBuExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnClickedBuSearch(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 private:
 	CCheckListViewCtrlEx<CDialogGambel> m_lstGambel;

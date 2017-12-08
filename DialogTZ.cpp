@@ -236,7 +236,7 @@ BOOL CDialogTZ::DoUpdateDatabase(const CStlString &strResults) {
 		pCmd->SetParam(5, m_strMatchs);
 		ret = pCmd->Execute(NULL);
 	} else {
-		strSQL.Format(_T("UPDATE GAMBEL CODESTYPE=?, SET CODES=?, RESULT=? WHERE ID=%d"), m_GambleID);
+		strSQL.Format(_T("UPDATE GAMBEL SET CODESTYPE=?, SET CODES=?, RESULT=? WHERE ID=%d"), m_GambleID);
 		pCmd->Create(strSQL);
 		long val = 0;
 		pCmd->SetParam(0, &val);

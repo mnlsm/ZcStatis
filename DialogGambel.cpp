@@ -39,6 +39,68 @@ LRESULT CDialogGambel::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 	return 1L;
 }
 
+LRESULT CDialogGambel::OnClickedBuSearch(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	CStlString strCodes(TOTO_COUNT, _T('\0'));
+	CStringATL strOutput;
+	ClearOutputText();
+	int code_length = m_edSearch.GetWindowText((LPTSTR)strCodes.data(), strCodes.size());
+	if (code_length != TOTO_COUNT) {
+		strOutput.Format(_T("搜索串长度错误, (%d)"), code_length);
+		AppendOutputText(strOutput);
+		return 1L;
+	}
+	for (const auto& code : strCodes) {
+		if (code != _T('0') && code != _T('1') && code != _T('3')) {
+			strOutput = _T("搜索格式错误!");
+			AppendOutputText(strOutput);
+			return 1L;
+		}
+	}
+	if (m_arrDbData.empty()) {
+		strOutput = _T("没有任何方案!");
+		AppendOutputText(strOutput);
+		return 1L;
+	}
+	CIntArray arrRecord;
+	CEngine::GetRecord(strCodes, arrRecord);
+	for (const auto& data : m_arrDbData) {
+		if (data.m_nInUse != 1) {
+			strOutput.Format(_T("方案(%d)未启用"), data.m_nID);
+			AppendOutputText(strOutput);
+			continue;
+		}
+		
+		if (data.m_strResult.IsEmpty()) {
+			strOutput.Format(_T("方案(%d)未计算结果"), data.m_nID);
+			AppendOutputText(strOutput);
+			continue;
+		}
+
+		std::unique_ptr<CEngine> pEngine;
+		if (data.m_strScript.IsEmpty()) {
+			pEngine.reset(new CEngine());
+		}
+		else {
+			pEngine.reset(new CEngineLua((LPCTSTR)data.m_strScript));
+		}
+		if (data.m_nCodesType == 0) {
+			pEngine->SetChoices((LPCTSTR)data.m_strCodes);
+		}
+		pEngine->SetDZRecords((LPCTSTR)data.m_strResult);
+		strOutput.Format(_T("方案(%d)搜索开始:"), data.m_nID);
+		AppendOutputText(strOutput);
+		pEngine->SetDZRecords((LPCTSTR)data.m_strResult);
+		CStlString reason;
+		pEngine->IsAValidRecord(arrRecord, reason);
+		if (!reason.empty()) {
+			AppendOutputText(reason.c_str());
+		}
+		strOutput.Format(_T("方案(%d)搜索结束\n"), data.m_nID);
+		AppendOutputText(strOutput);
+	}
+	return 1L;
+}
+
 LRESULT CDialogGambel::OnClickedBuAddDanShi(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	TCHAR szFilterName[30] = { _T('\0') };
 	_tcscpy(szFilterName, DZ_FILTER_NAME.c_str());
@@ -260,7 +322,6 @@ void CDialogGambel::DoListMenuCommand(UINT cmd, UINT nItem) {
 	}
 }
 
-
 void CDialogGambel::InitControls() {
 	DoDataExchange(FALSE);
 
@@ -270,6 +331,8 @@ void CDialogGambel::InitControls() {
 	SetIcon(hIconBig, TRUE);
 	SetIcon(hIconSmall, FALSE);
 	
+	m_edSearch.SetLimitText(TOTO_COUNT);
+
 	DWORD dwStyleEx = ListView_GetExtendedListViewStyle(m_lstGambel.m_hWnd);
 	dwStyleEx |= (LVS_EX_GRIDLINES | LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP
 		| LVS_EX_REGIONAL);
@@ -551,11 +614,13 @@ void CDialogGambel::DoCalcResult(const DataRow& data) {
 	CStlString reason;
 	CStringATL strMsg;
 	if (data.m_nInUse != 1) {
-		MessageBox(_T("请先启用方案！"), _T("错误"), MB_ICONERROR | MB_OK);
+		strMsg.Format(_T("(%d)请先启用方案"), data.m_nID);
+		AppendOutputText(strMsg);
 		return;
 	}
 	if (data.m_strCodes.IsEmpty()) {
-		MessageBox(_T("请先选好号码！"), _T("错误"), MB_ICONERROR | MB_OK);
+		strMsg.Format(_T("(%d)请先选好号码"), data.m_nID);
+		AppendOutputText(strMsg);
 		return;
 	}
 	std::unique_ptr<CEngine> pEngine;
@@ -569,14 +634,15 @@ void CDialogGambel::DoCalcResult(const DataRow& data) {
 	} else if (data.m_nCodesType == 0) {
 		pEngine->SetDZRecords((LPCTSTR)data.m_strCodes);
 	} else {
+		strMsg.Format(_T("(%d)未知号码集合"), data.m_nID);
 		AppendOutputText(strMsg);
-		MessageBox(_T("未知号码集合！"), _T("错误"), MB_ICONERROR | MB_OK);
 		return;
 	}
 	pEngine->SetPL((LPCTSTR)data.m_strPL);
 	if (!pEngine->CalculateAllResult(reason)) {
-		strMsg.Format(_T("(%d)计算错误, 号码: %s"), data.m_nID, reason.c_str());
-		MessageBox(strMsg, _T("错误"), MB_ICONERROR | MB_OK);
+		strMsg.Format(_T("(%d)计算错误, 原因: %s"), data.m_nID, reason.c_str());
+		AppendOutputText(strMsg);
+		//MessageBox(strMsg, _T("错误"), MB_ICONERROR | MB_OK);
 		return;
 	}
 	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
@@ -591,6 +657,6 @@ void CDialogGambel::DoCalcResult(const DataRow& data) {
 	}
 	strMsg.Format(_T("(%d)计算完成, 共有%u注结果"), data.m_nID, pEngine->GetResult().size());
 	AppendOutputText(strMsg);
-	MessageBox(strMsg, _T("提示"), MB_ICONINFORMATION | MB_OK);
+	//MessageBox(strMsg, _T("提示"), MB_ICONINFORMATION | MB_OK);
 	return;
 }
