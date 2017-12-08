@@ -20,6 +20,8 @@ protected:
 
 private:
 	static int __cdecl LUA_IsFilterTJ(lua_State *L);
+	static int __cdecl LUA_DbgTrace(lua_State *L);
+
 	BOOL IsFilterTJ(const CIntArray& record, const CStlString& strTJ);
 	void push_scriptfunc_params(lua_State *L, const CIntArray& record);
 

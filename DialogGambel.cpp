@@ -278,8 +278,8 @@ void CDialogGambel::InitControls() {
 	m_lstGambel.InsertColumn(colIndex++, "编号", LVCFMT_LEFT, 65);    //70
 	m_lstGambel.InsertColumn(colIndex++, "投注类型", LVCFMT_CENTER, 65);    //70
 	m_lstGambel.InsertColumn(colIndex++, "投注数据", LVCFMT_LEFT, 300);    //70
-	m_lstGambel.InsertColumn(colIndex++, "脚本数据", LVCFMT_LEFT, 200);    //70
-	m_lstGambel.InsertColumn(colIndex++, "结果数据", LVCFMT_LEFT, 200);    //70
+	m_lstGambel.InsertColumn(colIndex++, "脚本数据", LVCFMT_LEFT, 300);    //70
+	m_lstGambel.InsertColumn(colIndex++, "结果数据", LVCFMT_LEFT, 100);    //70
 	m_lstGambel.InsertColumn(colIndex++, "结果个数", LVCFMT_CENTER, 65);    //70
 
 	CStringATL strTemp;         
@@ -399,7 +399,7 @@ void CDialogGambel::DoEditCodes(const DataRow& data) {
 
 void CDialogGambel::DoEditScript(const DataRow& data) {
 	std::string filedata;
-	/*
+	///*
 	TCHAR szFilterName[30] = { _T('\0') };
 	_tcscpy(szFilterName, LUA_FILTER_NAME.c_str());
 	_tcscat(szFilterName + LUA_FILTER_NAME.length() + 1, LUA_FILTER.c_str());
@@ -418,8 +418,9 @@ void CDialogGambel::DoEditScript(const DataRow& data) {
 		MessageBox("Script文件读取失败！", "错误", MB_ICONERROR | MB_OK);
 		return;
 	}
-	*/
+	//*/
 
+	/*
 	if (!OpenClipboard()) {
 		MessageBox("打开剪贴板失败！", "错误", MB_ICONERROR | MB_OK);
 		return;
@@ -434,6 +435,7 @@ void CDialogGambel::DoEditScript(const DataRow& data) {
 		MessageBox("更新Script脚本失败！", "错误", MB_ICONERROR | MB_OK);
 		return;
 	}
+	*/
 
 	CStlString strScript = Global::formUTF8(filedata);
 	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));

@@ -1,6 +1,17 @@
 #include "stdafx.h"
 #include "EngineLua.h"
 
+static const std::string dbgview_prefix = "lua_dbgtrace: ";
+static const std::string dbgview_exception = "lua_exception: ";
+
+int __cdecl CEngineLua::LUA_DbgTrace(lua_State *L) {
+	if (lua_type(L, 1) == LUA_TSTRING) {
+		std::string line = dbgview_prefix + lua_tostring(L, 1);
+		OutputDebugStringA(line.c_str());
+	}
+	return 0;
+}
+
 int __cdecl CEngineLua::LUA_IsFilterTJ(lua_State *L) {
 	BOOL ret = FALSE;
 	if (lua_type(L, 1) == LUA_TSTRING && lua_type(L, 2) == LUA_TSTRING) {
@@ -105,16 +116,17 @@ static std::string lua_table_getfield(lua_State *L, const char *key,
 	return result;
 }
 
-
 BOOL CEngineLua::IsAValidRecordImpl(const CIntArray& record, void* ctx, CStlString* invalid_reason) {
 	BOOL result = TRUE;
 	lua_State *L = (lua_State *)ctx;
 	lua_getglobal(L, "IsFilterLua");					// 获取函数，压入栈中  
 	push_scriptfunc_params(L, record);
-	int call_ret = lua_pcall(L, 1, 2, 0);			    // 调用函数，调用完成以后，会将返回值压入栈中，1表示参数个数，2表示返回结果个数。
+	int call_ret = lua_pcall(L, 1, 1, 0);			    // 调用函数，调用完成以后，会将返回值压入栈中，1表示参数个数，2表示返回结果个数。
 	if (call_ret != 0) {
+		std::string errtext = dbgview_exception + lua_tostring(L, -1);
+		OutputDebugStringA(errtext.c_str());
 		if (invalid_reason != NULL) {
-			*invalid_reason = CA2T(lua_tostring(L, -1)).m_psz;
+			*invalid_reason = CA2T(errtext.c_str()).m_psz;
 		}
 		lua_pop(L, 1);
 		return FALSE;
@@ -122,7 +134,7 @@ BOOL CEngineLua::IsAValidRecordImpl(const CIntArray& record, void* ctx, CStlStri
 	int ret_type = lua_type(L, -1);
 	if (ret_type != LUA_TTABLE) {
 		if (invalid_reason != NULL) {
-			*invalid_reason = _T("exception by lua function result!");
+			*invalid_reason = _T("lua function invalid result!");
 		}
 		lua_pop(L, 1);
 		return FALSE;
@@ -148,6 +160,10 @@ lua_State* CEngineLua::InitLua(CStlString& failed_reason) {
 	lua_pushlightuserdata(L, this);
 	lua_pushcclosure(L, CEngineLua::LUA_IsFilterTJ, 1);
 	lua_setglobal(L, "IsFilterTJ");
+
+	lua_pushcclosure(L, CEngineLua::LUA_DbgTrace, 0);
+	lua_setglobal(L, "dbgview_print");
+
 	if (luaL_dostring(L, m_strScript.c_str()) != 0) {
 		failed_reason = _T("luaL_dostring failed!");
 		lua_close(L);
@@ -170,7 +186,6 @@ void CEngineLua::TermLua(lua_State* state) {
 	}
 }
 
-
 BOOL CEngineLua::IsFilterTJ(const CIntArray& record, const CStlString& strTJ) {
 	if (IsFilterH(record, strTJ)) {
 		return TRUE;
@@ -190,14 +205,9 @@ BOOL CEngineLua::IsFilterTJ(const CIntArray& record, const CStlString& strTJ) {
 	return FALSE;
 }
 
-
 //https://www.cnblogs.com/barrysgy/archive/2012/08/08/2679963.html
 void CEngineLua::push_scriptfunc_params(lua_State *L, const CIntArray& record) {
 	lua_newtable(L);
-	lua_pushstring(L, "thisptr");
-	lua_pushlightuserdata(L, this);
-	lua_settable(L, -3);
-
 	CommonFilterFactors commFF;
 	CalcCommonFilterFactors(record, m_arrPLData, m_arrGVData, m_arrPLScope, commFF);
 	std::string codes(record.size(), '\0');
@@ -208,15 +218,15 @@ void CEngineLua::push_scriptfunc_params(lua_State *L, const CIntArray& record) {
 	lua_pushstring(L, codes.c_str());
 	lua_settable(L, -3);
 
-	lua_pushstring(L, "total3");
+	lua_pushstring(L, "count3");
 	lua_pushinteger(L, commFF.mTotal3Count);
 	lua_settable(L, -3);
 
-	lua_pushstring(L, "total1");
+	lua_pushstring(L, "count1");
 	lua_pushinteger(L, commFF.mTotal1Count);
 	lua_settable(L, -3);
 
-	lua_pushstring(L, "total0");
+	lua_pushstring(L, "count0");
 	lua_pushinteger(L, commFF.mTotal0Count);
 	lua_settable(L, -3);
 
