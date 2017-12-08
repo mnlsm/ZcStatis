@@ -1,5 +1,7 @@
 #pragma once
 #include "resource.h"
+#include "MyPrintInfo.h"
+#include "PrintWnd.h"
 
 #define IDM_CACL_RESULT		WM_APP + 199
 #define IDM_SAVE_RESULT		WM_APP + 207
@@ -25,6 +27,8 @@ public:
 	BEGIN_DDX_MAP(CDialogGambel)
 		//DDX_CONTROL(IDC_STATIS_LIST, m_lstStatis)
 		DDX_CONTROL(IDC_GAMBEL_LIST, m_lstGambel)
+		DDX_CONTROL(IDC_EDIT_OUTPUT, m_edOutput)
+		DDX_CONTROL(IDC_EDIT_OUTPUT, m_edSearch);
 	END_DDX_MAP()
 
 public:
@@ -34,8 +38,8 @@ public:
 
 		COMMAND_HANDLER(IDC_BUADDDS, BN_CLICKED, OnClickedBuAddDanShi)
 		COMMAND_HANDLER(IDC_BUADDFS, BN_CLICKED, OnClickedBuAddFuShi)
-		COMMAND_HANDLER(IDC_BUEMPTY, BN_CLICKED, OnClickedBuEmpty)
-		COMMAND_HANDLER(IDC_BUCALC, BN_CLICKED, OnClickedBuCalc)
+		COMMAND_HANDLER(IDC_BUEMPTY, BN_CLICKED, OnClickedBuPreview)
+		COMMAND_HANDLER(IDC_BUCALC, BN_CLICKED, OnClickedBuPrint)
 		COMMAND_HANDLER(IDCANCEL, BN_CLICKED, OnClickedBuExit)
 		NOTIFY_HANDLER(IDC_GAMBEL_LIST, LVN_ITEMCHANGED, OnListItemChanged)
 		//COMMAND_RANGE_HANDLER(IDM_DELETE_FANGAN, IDM_DELETE_RESULT, OnClickedListMenu)
@@ -44,6 +48,8 @@ public:
 		REFLECT_NOTIFICATIONS()
 		ALT_MSG_MAP(1)
 		MESSAGE_HANDLER(WM_RBUTTONDOWN, OnListRButtonDown)
+		ALT_MSG_MAP(2)
+		ALT_MSG_MAP(3)
 	END_MSG_MAP()
 
 public:
@@ -56,16 +62,20 @@ public:
 
 	LRESULT OnClickedBuAddDanShi(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnClickedBuAddFuShi(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-	LRESULT OnClickedBuEmpty(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-	LRESULT OnClickedBuCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnClickedBuPreview(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnClickedBuPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnClickedBuExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 private:
 	CCheckListViewCtrlEx<CDialogGambel> m_lstGambel;
+	CContainedWindowT<CEdit> m_edOutput;
+	CContainedWindowT<CEdit> m_edSearch;
 
 private:
 	void InitControls();
 	void ReloadFangAnData();
+	void AppendOutputText(const TCHAR* text);
+	void ClearOutputText();
 
 private:
 	CStlString m_strQH;
@@ -99,4 +109,10 @@ private:
 
 	void DoDeleteRow(const DataRow& data);
 	void DoRowInUse(UINT uItem, BOOL inuse);
+
+
+private:
+	std::unique_ptr<CMyPrintInfo> m_pPrintInfo;
+	std::unique_ptr<CPrinter> m_pPrinter;
+	std::unique_ptr<CPrintWnd> m_wndPreview;
 };

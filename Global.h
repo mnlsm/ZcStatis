@@ -4,7 +4,14 @@
 class Global {
 public:
 	static CStlString GetAppPath();
-	static BOOL DepartString(const CStlString& strTxt, CStlString strDim, CStlStrArray &arrPart);
+	static BOOL DepartString(const CStlString& strTxt, const CStlString& strDim, 
+		CStlStrArray &arrPart);
+
+#ifdef _UNICODE
+	static BOOL DepartString(const std::string& strTxt, const std::string& strDim,
+		std::vector<std::string> &arrPart);
+#endif
+
 	static void TrimString(CStlString& str, TCHAR a);
 	static void TrimBlank(CStlString& str);
 

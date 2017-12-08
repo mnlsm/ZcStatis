@@ -29,7 +29,7 @@ void Global::TrimBlank(CStlString& str) {
     TrimString(str, _T('\t'));
 }
 
-BOOL Global::DepartString(const CStlString& strTxt, CStlString strDim, CStlStrArray &arrPart) {
+BOOL Global::DepartString(const CStlString& strTxt, const CStlString& strDim, CStlStrArray &arrPart) {
     arrPart.clear();
     if(strDim.empty()) {
         return false;
@@ -55,6 +55,38 @@ BOOL Global::DepartString(const CStlString& strTxt, CStlString strDim, CStlStrAr
     }
     return TRUE;
 }
+
+#ifdef _UNICODE
+BOOL Global::DepartString(const std::string& strTxt, const std::string& strDim,
+		std::vector<std::string> &arrPart) {
+	arrPart.clear();
+	if(strDim.empty()) {
+		return false;
+	}
+	std::string::size_type pos = std::string::npos;
+	std::string::size_type offset = 0;
+	while ((pos = strTxt.find(strDim, offset)) != std::string::npos) {
+		std::string token = strTxt.substr(offset, pos - offset);
+		TrimBlank(token);
+		if (!token.empty()) {
+			arrPart.push_back(token);
+		}
+		offset = pos + strDim.length();
+	}
+	if (!arrPart.empty()) {
+		if (offset < strTxt.length()) {
+			std::string token = strTxt.substr(offset);
+			TrimBlank(token);
+			if (!token.empty()) {
+				arrPart.push_back(token);
+			}
+		}
+	}
+	return TRUE;
+}
+#endif
+
+
 
 std::string Global::toUTF8(const CStlString& local) {
 	CT2W wide(local.c_str());

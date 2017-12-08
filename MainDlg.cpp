@@ -10,7 +10,7 @@
 #include "Engine.h"
 #include "DialogGambel.h"
 
-CMainDlg::CMainDlg() : m_lstStatis(this) {
+CMainDlg::CMainDlg() : m_lstStatis(this, 1) {
 	m_pDbSystem = NULL;
 	m_pDbDatabase = NULL;
 }

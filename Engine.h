@@ -96,6 +96,14 @@ protected:
 	void GetCoverIndexArr(CIntxyArray::iterator iter, CIntxyArray &arrSource, CIntArray &arrResult);
 	void GreedyCalcRectRecord(CIntxyArray &F, CIntxyArray &G);
 
+
+protected:
+	virtual BOOL IsFilterH(const CIntArray &tempArr, const std::string& strTJ, std::string *pStr = NULL);
+	virtual BOOL IsFilterL(const CIntArray &tempArr, const std::string& strTJ, std::string *pStr = NULL);
+	virtual BOOL IsFilterF(const CIntArray &tempArr, const std::string& strTJ, std::string *pStr = NULL);
+	virtual BOOL IsFilterW(const CIntArray &tempArr, const std::string& strTJ, std::string *pStr = NULL);
+	virtual BOOL IsFilterQ(const CIntArray &tempArr, const std::string& strTJ, std::string *pStr = NULL);
+
 public:
 	static BOOL GetChoices(const CStlString& strChoices, CIntxyArray& arrChoices);
 	static BOOL GetRecords(const CStlString& strCodes, CIntxyArray& arrRecords);
@@ -103,7 +111,7 @@ public:
 	static BOOL GetRecord(const CStlString& strCode, CIntArray& arrRecord);
 
 	static void GetRecordsString(const CIntxyArray& arrRecords, CStlString& strRecords);
-
+	static void GetRecordsPrintRecords(const CIntxyArray& arrRecords, CStlStrArray& records);
 
 	static BOOL GetPLDatas(const CStlString& strPL, CDoublexyArray& arrPLData, CDoublexyArray& arrGVData);
 	static BOOL CalcCommonFilterFactors(const CIntArray& record, const CDoublexyArray& arrPLData,

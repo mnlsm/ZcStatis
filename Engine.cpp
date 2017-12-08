@@ -58,7 +58,7 @@ BOOL CEngine::IsAValidRecord(const CIntArray& record, CStlString& failed_reason)
 	failed_reason.clear(); 
 	BOOL bRet = FALSE;
 	if (record.size() != TOTO_COUNT) {
-		failed_reason = _T("source record invalid!\n");
+		failed_reason = _T("source record invalid!");
 		return bRet;
 	}
 	int index = 0;
@@ -530,3 +530,21 @@ void CEngine::GetRecordsString(const CIntxyArray& arrRecords, CStlString& strRec
 		}
 	}
 }
+
+void CEngine::GetRecordsPrintRecords(const CIntxyArray& arrRecords, CStlStrArray& records) {
+	records.clear();
+	TCHAR szNum[12] = { _T('\0') };
+	for (const auto& record : arrRecords) {
+		CStlString line;
+		for (int i = 0; i < TOTO_COUNT; i++) {
+			_stprintf(szNum, _T("%d"), record[i]);
+			line = line + szNum;
+			if (fmod(i + 1, 5) == 0) {
+				line = line + _T("йд");
+			}
+		}
+		records.push_back(line);
+	}
+}
+
+

@@ -2,7 +2,7 @@
 #include "EngineLua.h"
 
 int __cdecl CEngineLua::LUA_IsFilterTJ(lua_State *L) {
-	BOOL ret = TRUE;
+	BOOL ret = FALSE;
 	if (lua_type(L, 1) == LUA_TSTRING && lua_type(L, 2) == LUA_TSTRING) {
 		const char* codes = lua_tostring(L, 1);
 		const char* tj = lua_tostring(L, 2);
@@ -42,7 +42,7 @@ BOOL CEngineLua::IsAValidRecord(const CIntArray& record, CStlString& failed_reas
 	failed_reason.clear();
 	BOOL bRet = FALSE;
 	if (record.size() != TOTO_COUNT) {
-		failed_reason = _T("source record invalid!\n");
+		failed_reason = _T("source record invalid!");
 		return bRet;
 	}
 	int index = 0;
@@ -70,12 +70,39 @@ BOOL CEngineLua::IsAValidRecord(const CIntArray& record, CStlString& failed_reas
 		lua_State* lua_state = InitLua(failed_reason);
 		if (lua_state != NULL) {
 			if (IsAValidRecordImpl(record, lua_state, &failed_reason)) {
-				failed_reason = _T("filter by compress\n");
+				failed_reason = _T("filter by compress");
 			}
 		}
 		TermLua(lua_state);
 	}
 	return bRet;
+}
+
+static int lua_table_getfield(lua_State *L, const char *key, int defval) {
+	int result = defval;
+	lua_pushstring(L, key);
+	lua_gettable(L, -2);
+	if (lua_type(L, -1) == LUA_TNUMBER) {
+		result = lua_tointeger(L, -1);
+	}
+	lua_pop(L, 1); 
+	return result;
+}
+
+static std::string lua_table_getfield(lua_State *L, const char *key, 
+		const char *defval) {
+	std::string result;
+	lua_pushstring(L, key);
+	lua_gettable(L, -2);
+	if (lua_type(L, -1) == LUA_TSTRING) {
+		result = lua_tostring(L, -1);
+	} else {
+		if (defval != NULL) {
+			result = defval;
+		}
+	}
+	lua_pop(L, 1);
+	return result;
 }
 
 
@@ -92,22 +119,23 @@ BOOL CEngineLua::IsAValidRecordImpl(const CIntArray& record, void* ctx, CStlStri
 		lua_pop(L, 1);
 		return FALSE;
 	}
-	if (lua_type(L, -1) != LUA_TSTRING || lua_type(L, -2) != LUA_TNUMBER) {
+	int ret_type = lua_type(L, -1);
+	if (ret_type != LUA_TTABLE) {
 		if (invalid_reason != NULL) {
 			*invalid_reason = _T("exception by lua function result!");
 		}
-		lua_pop(L, 2);
+		lua_pop(L, 1);
 		return FALSE;
 	}
-	const char* error = lua_tostring(L, -1);
-	int lua_ret = lua_tointeger(L, -2);
+	int lua_ret = lua_table_getfield(L, "code", 0);
 	if (lua_ret != 0) {
+		std::string err = lua_table_getfield(L, "info", "unknow");
 		if (invalid_reason != NULL) {
-			*invalid_reason = CA2T(error).m_psz;
+			*invalid_reason = CA2T(err.c_str()).m_psz;
 		}
 	}
-	lua_pop(L, 2);
-	return (lua_ret != 1);
+	lua_pop(L, 1);
+	return (lua_ret != 0);
 }
 
 lua_State* CEngineLua::InitLua(CStlString& failed_reason) {
@@ -116,13 +144,10 @@ lua_State* CEngineLua::InitLua(CStlString& failed_reason) {
 		failed_reason = _T("luaL_newstate failed!");
 		return NULL;
 	}
-
 	luaL_openlibs(L);
-
 	lua_pushlightuserdata(L, this);
 	lua_pushcclosure(L, CEngineLua::LUA_IsFilterTJ, 1);
 	lua_setglobal(L, "IsFilterTJ");
-
 	if (luaL_dostring(L, m_strScript.c_str()) != 0) {
 		failed_reason = _T("luaL_dostring failed!");
 		lua_close(L);
@@ -147,7 +172,21 @@ void CEngineLua::TermLua(lua_State* state) {
 
 
 BOOL CEngineLua::IsFilterTJ(const CIntArray& record, const CStlString& strTJ) {
-
+	if (IsFilterH(record, strTJ)) {
+		return TRUE;
+	}
+	if (IsFilterL(record, strTJ)) {
+		return TRUE;
+	}
+	if (IsFilterF(record, strTJ)) {
+		return TRUE;
+	}
+	if (IsFilterW(record, strTJ)) {
+		return TRUE;
+	}
+	if (IsFilterQ(record, strTJ)) {
+		return TRUE;
+	}
 	return FALSE;
 }
 

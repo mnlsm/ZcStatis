@@ -11,10 +11,17 @@ static const CStlString LUA_FILTER_NAME = _T("脚本文件(*.lua)");
 static const CStlString LUA_FILTER = _T("*.lua");
 
 CDialogGambel::CDialogGambel(IDbSystem *pDbSystem, IDbDatabase *pDbDatabase, 
-		const CStlString& qh) : m_lstGambel(this) {
+	const CStlString& qh) : 
+		m_lstGambel(this, 1), 
+		m_edOutput(this, 2),
+		m_edSearch(this, 3) {
 	m_pDbSystem = pDbSystem;
 	m_pDbDatabase = pDbDatabase;
 	m_strQH = qh;
+
+	m_pPrintInfo.reset(new (std::nothrow) CMyPrintInfo());
+	m_pPrinter.reset(new (std::nothrow) CPrinter());
+	m_wndPreview.reset(new (std::nothrow) CPrintWnd());
 }
 
 LRESULT CDialogGambel::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
@@ -25,6 +32,9 @@ LRESULT CDialogGambel::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 }
 
 LRESULT CDialogGambel::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	if (m_wndPreview->IsWindow()) {
+		m_wndPreview->DestroyWindow();
+	}
 	bHandled = FALSE;
 	return 1L;
 }
@@ -88,11 +98,84 @@ LRESULT CDialogGambel::OnClickedBuAddFuShi(WORD wNotifyCode, WORD wID, HWND hWnd
 	return 1L;
 }
 
-LRESULT CDialogGambel::OnClickedBuEmpty(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+LRESULT CDialogGambel::OnClickedBuPreview(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	m_wndPreview->Hide();
+	CStlStrArray arrS;
+	CIntxyArray arrAllRecord;
+	for (const auto& data : m_arrDbData) {
+		if (data.m_nInUse != 1) {
+			continue;
+		}
+		CIntxyArray arrRecords;
+		if (CEngine::GetRecords((LPCTSTR)data.m_strResult, arrRecords)) {
+			for (const auto& r : arrRecords) {
+				arrAllRecord.push_back(r);
+			}
+		}
+	}
+	if (arrAllRecord.empty()) {
+		MessageBox(_T("没有任何投注"), "提示", MB_ICONINFORMATION | MB_OK);
+		return 1L;
+	}
+	std::stable_sort(arrAllRecord.begin(), arrAllRecord.end());
+	arrAllRecord.erase(std::unique(arrAllRecord.begin(), arrAllRecord.end()), arrAllRecord.end());
+	CEngine::GetRecordsPrintRecords(arrAllRecord, arrS);
+	CPrintDialog dlg(false);
+	dlg.DoModal();
+	m_pPrintInfo->setData(arrS);
+	m_pPrinter->ClosePrinter();
+
+	CStringATL strName = dlg.GetDeviceName();
+	if (m_pPrinter->OpenPrinter(strName))
+	{
+		CDC dcPrinter;
+		dcPrinter.Attach(m_pPrinter->CreatePrinterDC(NULL));
+		m_pPrintInfo->BeginPrintJob(dcPrinter);
+		dcPrinter.DeleteDC();
+		m_wndPreview->SetPrintPreviewInfo(*m_pPrinter, NULL, m_pPrintInfo.get(),
+			m_pPrintInfo->GetMinPage(),
+			m_pPrintInfo->GetMaxPage());
+		m_wndPreview->SetPage(1);
+		m_wndPreview->ShowWindow(SW_SHOWMAXIMIZED);
+		m_wndPreview->UpdateWindow();
+	}
 	return 1L;
 }
 
-LRESULT CDialogGambel::OnClickedBuCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+LRESULT CDialogGambel::OnClickedBuPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	CStlStrArray arrS;
+	CIntxyArray arrAllRecord;
+	for (const auto& data : m_arrDbData) {
+		if (data.m_nInUse != 1) {
+			continue;
+		}
+		CIntxyArray arrRecords;
+		if (CEngine::GetRecords((LPCTSTR)data.m_strResult, arrRecords)) {
+			for (const auto& r : arrRecords) {
+				arrAllRecord.push_back(r);
+			}
+		}
+	}
+	if (arrAllRecord.empty()) {
+		MessageBox(_T("没有任何投注"), "提示", MB_ICONINFORMATION | MB_OK);
+		return 1L;
+	}
+	std::stable_sort(arrAllRecord.begin(), arrAllRecord.end());
+	arrAllRecord.erase(std::unique(arrAllRecord.begin(), arrAllRecord.end()), arrAllRecord.end());
+
+	CPrintDialog dlg(false);
+	dlg.DoModal();
+	m_pPrintInfo->setData(arrS);
+	m_pPrinter->ClosePrinter();
+
+	CStringATL strName = dlg.GetDeviceName();
+	if (m_pPrinter->OpenPrinter(strName)) {
+		CPrintJob job;
+		job.StartPrintJob(false, *m_pPrinter, NULL, m_pPrintInfo.get(),
+			" ", m_pPrintInfo->GetMinPage(),
+			m_pPrintInfo->GetMaxPage());
+
+	}
 	return 1L;
 }
 
@@ -243,16 +326,34 @@ void CDialogGambel::ReloadFangAnData() {
 			m_lstGambel.SetItemText(rowIndex, ++colIndex, _T("单式"));
 			m_lstGambel.SetItemText(rowIndex, ++colIndex, row.m_strCodes.Left(15) + _T(" ......"));
 		}
-		m_lstGambel.SetItemText(rowIndex, ++colIndex, row.m_strScript.Left(20));
+
+		CStringATL strScript = row.m_strScript.Left(50);
+		strScript.Replace(_T("--"), _T(""));
+		m_lstGambel.SetItemText(rowIndex, ++colIndex, strScript);
+
+		++colIndex;
 		if (!row.m_strResult.IsEmpty()) {
-			m_lstGambel.SetItemText(rowIndex, ++colIndex, row.m_strResult.Left(15) + _T(" ......"));
-		} else {
-			++colIndex;
+			m_lstGambel.SetItemText(rowIndex, colIndex, row.m_strResult.Left(15) + _T(" ......"));
 		}
 		strNum.Format(_T("%u"), CEngine::GetRecordsCount((LPCTSTR)row.m_strResult));
 		m_lstGambel.SetItemText(rowIndex, ++colIndex, strNum);
 	}
 }
+
+void CDialogGambel::AppendOutputText(const TCHAR* text) {
+	CStringATL oldText;
+	m_edOutput.GetWindowText(oldText);
+	if (oldText.GetLength() > 60000) {
+		oldText.Empty();
+	}
+	oldText = oldText + _T("\n") + text;
+	m_edOutput.SetWindowText(oldText);
+}
+
+void CDialogGambel::ClearOutputText() {
+	m_edOutput.SetWindowText(_T(""));
+}
+
 
 void CDialogGambel::DoEditCodes(const DataRow& data) {
 	if (data.m_nCodesType == 1) {
@@ -297,6 +398,8 @@ void CDialogGambel::DoEditCodes(const DataRow& data) {
 }
 
 void CDialogGambel::DoEditScript(const DataRow& data) {
+	std::string filedata;
+	/*
 	TCHAR szFilterName[30] = { _T('\0') };
 	_tcscpy(szFilterName, LUA_FILTER_NAME.c_str());
 	_tcscat(szFilterName + LUA_FILTER_NAME.length() + 1, LUA_FILTER.c_str());
@@ -311,16 +414,32 @@ void CDialogGambel::DoEditScript(const DataRow& data) {
 		return;
 	}
 	CStlString strLoadPath = dlg.m_ofn.lpstrFile;
-	std::string filedata;
 	if (!Global::ReadFileData(strLoadPath, filedata) || filedata.size() == 0) {
 		MessageBox("Script文件读取失败！", "错误", MB_ICONERROR | MB_OK);
 		return;
 	}
-	CStlString strCodes = Global::formUTF8(filedata);
+	*/
+
+	if (!OpenClipboard()) {
+		MessageBox("打开剪贴板失败！", "错误", MB_ICONERROR | MB_OK);
+		return;
+	}
+	HANDLE hData = GetClipboardData(CF_TEXT);
+	if (hData != NULL) {
+		filedata = (char*)GlobalLock(hData);
+		GlobalUnlock(hData);
+	}
+	CloseClipboard();
+	if (filedata.size() == 0) {
+		MessageBox("更新Script脚本失败！", "错误", MB_ICONERROR | MB_OK);
+		return;
+	}
+
+	CStlString strScript = Global::formUTF8(filedata);
 	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	CStringATL strSQL = _T("UPDATE GAMBEL SET SCRIPT=? WHERE ID=?");
 	pCmd->Create(strSQL);
-	pCmd->SetParam(0, strCodes);
+	pCmd->SetParam(0, strScript);
 	pCmd->SetParam(1, &data.m_nID);
 	if (pCmd->Execute(NULL)) {
 		ReloadFangAnData();
@@ -361,8 +480,8 @@ void CDialogGambel::DoSaveResult(const DataRow& data) {
 		return;
 	}
 	TCHAR szFilterName[30] = { _T('\0') };
-	_tcscpy(szFilterName, LUA_FILTER_NAME.c_str());
-	_tcscat(szFilterName + LUA_FILTER_NAME.length() + 1, LUA_FILTER.c_str());
+	_tcscpy(szFilterName, DZ_FILTER_NAME.c_str());
+	_tcscat(szFilterName + DZ_FILTER_NAME.length() + 1, DZ_FILTER.c_str());
 	CFileDialog dlg(FALSE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
 		szFilterName, m_hWnd);
 	CStlString strPath = Global::GetAppPath() + _T("gambel");
@@ -400,6 +519,7 @@ void CDialogGambel::DoDeleteRow(const DataRow& data) {
 }
 
 void CDialogGambel::DoRowInUse(UINT uItem, BOOL inuse) {
+	int nInUse = inuse ? 1 : 0;
 	CStringATL strID;
 	m_lstGambel.GetItemText(uItem, 0, strID);
 	int nID = _ttoi(strID);
@@ -410,11 +530,7 @@ void CDialogGambel::DoRowInUse(UINT uItem, BOOL inuse) {
 			break;
 		}
 	}
-	if (pData == NULL) {
-		return;
-	}
-	int nInUse = inuse ? 1 : 0;
-	if (nInUse == pData->m_nInUse) {
+	if (pData == NULL || nInUse == pData->m_nInUse) {
 		return;
 	}
 	pData->m_nInUse = nInUse;
@@ -429,12 +545,15 @@ void CDialogGambel::DoRowInUse(UINT uItem, BOOL inuse) {
 }
 
 void CDialogGambel::DoCalcResult(const DataRow& data) {
+	ClearOutputText();
+	CStlString reason;
+	CStringATL strMsg;
 	if (data.m_nInUse != 1) {
-		MessageBox("请先启用！", "错误", MB_ICONERROR | MB_OK);
+		MessageBox(_T("请先启用方案！"), _T("错误"), MB_ICONERROR | MB_OK);
 		return;
 	}
 	if (data.m_strCodes.IsEmpty()) {
-		MessageBox("请先选好号码！", "错误", MB_ICONERROR | MB_OK);
+		MessageBox(_T("请先选好号码！"), _T("错误"), MB_ICONERROR | MB_OK);
 		return;
 	}
 	std::unique_ptr<CEngine> pEngine;
@@ -448,15 +567,14 @@ void CDialogGambel::DoCalcResult(const DataRow& data) {
 	} else if (data.m_nCodesType == 0) {
 		pEngine->SetDZRecords((LPCTSTR)data.m_strCodes);
 	} else {
-		MessageBox("未知号码集合！", "错误", MB_ICONERROR | MB_OK);
+		AppendOutputText(strMsg);
+		MessageBox(_T("未知号码集合！"), _T("错误"), MB_ICONERROR | MB_OK);
 		return;
 	}
 	pEngine->SetPL((LPCTSTR)data.m_strPL);
-	CStlString reason;
 	if (!pEngine->CalculateAllResult(reason)) {
-		CStringATL strError;
-		strError.Format(_T("计算错误, 号码: %s"), reason.c_str());
-		MessageBox(strError, "错误", MB_ICONERROR | MB_OK);
+		strMsg.Format(_T("(%d)计算错误, 号码: %s"), data.m_nID, reason.c_str());
+		MessageBox(strMsg, _T("错误"), MB_ICONERROR | MB_OK);
 		return;
 	}
 	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
@@ -469,4 +587,8 @@ void CDialogGambel::DoCalcResult(const DataRow& data) {
 	if (pCmd->Execute(NULL)) {
 		ReloadFangAnData();
 	}
+	strMsg.Format(_T("(%d)计算完成, 共有%u注结果"), data.m_nID, pEngine->GetResult().size());
+	AppendOutputText(strMsg);
+	MessageBox(strMsg, _T("提示"), MB_ICONINFORMATION | MB_OK);
+	return;
 }

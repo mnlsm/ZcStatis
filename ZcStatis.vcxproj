@@ -127,6 +127,7 @@
     <ClCompile Include="DialogTZ.cpp" />
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="EngineLua.cpp" />
+    <ClCompile Include="EngineTJ.cpp" />
     <ClCompile Include="Global.cpp" />
     <ClCompile Include="lua\lapi.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -265,6 +266,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MainDlg.cpp" />
+    <ClCompile Include="MyPrintInfo.cpp" />
+    <ClCompile Include="PrintWnd.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -308,6 +311,8 @@
     <ClInclude Include="lua\lvm.h" />
     <ClInclude Include="lua\lzio.h" />
     <ClInclude Include="MainDlg.h" />
+    <ClInclude Include="MyPrintInfo.h" />
+    <ClInclude Include="PrintWnd.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StlFiles.h" />

@@ -3,7 +3,9 @@
 // Used by ZcStatis.rc
 //
 #define IDM_REFRESH                     0
+#define IDM_NEXT                        1
 #define ID_IMPORT_EXCEL_PL              3
+#define IDC_BUSEARCH                    3
 #define IDR_MAINFRAME                   128
 #define IDD_MAINDLG                     129
 #define IDR_MENU_MAIN                   201
@@ -11,6 +13,7 @@
 #define IDD_DIALOG_DBDATA               203
 #define IDD_DIALOG_TZ                   204
 #define IDD_DIALOG_GAMBEL               205
+#define IDR_MENU1                       214
 #define IDC_STATIS_LIST                 1001
 #define IDC_LIST_QH                     1002
 #define IDC_STATIC_LIST                 1003
@@ -39,6 +42,7 @@
 #define IDC_BUADDFS2                    1021
 #define IDC_BUEMPTY                     1021
 #define IDC_STQI                        1023
+#define IDC_EDIT_SEARCH                 1023
 #define IDC_STSHOWQI                    1027
 #define IDC_CORESULT1                   1078
 #define IDC_CORESULT2                   1079
@@ -98,14 +102,15 @@
 #define IDC_STMATCHONE12                8012
 #define IDC_STMATCHONE13                8013
 #define IDC_STMATCHONE14                8014
+#define IDM_PREV                        32772
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        206
-#define _APS_NEXT_COMMAND_VALUE         32772
-#define _APS_NEXT_CONTROL_VALUE         1020
+#define _APS_NEXT_COMMAND_VALUE         32773
+#define _APS_NEXT_CONTROL_VALUE         1024
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

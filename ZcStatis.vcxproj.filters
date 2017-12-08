@@ -22,6 +22,9 @@
     <Filter Include="utils">
       <UniqueIdentifier>{6cdde5c8-cec2-4bd6-94eb-c6709592f84d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="print">
+      <UniqueIdentifier>{ff8e7a7a-ba3e-43a4-9707-d806f8fd8eb5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="db\DbOledb.cpp">
@@ -156,6 +159,15 @@
     <ClCompile Include="DialogGambel.cpp">
       <Filter>ui</Filter>
     </ClCompile>
+    <ClCompile Include="MyPrintInfo.cpp">
+      <Filter>print</Filter>
+    </ClCompile>
+    <ClCompile Include="PrintWnd.cpp">
+      <Filter>print</Filter>
+    </ClCompile>
+    <ClCompile Include="EngineTJ.cpp">
+      <Filter>engines</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="db\DbBase.h">
@@ -274,6 +286,12 @@
     </ClInclude>
     <ClInclude Include="atlctrlsext.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="MyPrintInfo.h">
+      <Filter>print</Filter>
+    </ClInclude>
+    <ClInclude Include="PrintWnd.h">
+      <Filter>print</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

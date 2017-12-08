@@ -34,6 +34,7 @@ extern CAppModule _Module;
 #include <atlctrlx.h>
 #include <atldlgs.h>
 #include <atlMisc.h>
+#include <atlprint.h>
 
 //#define _WTL_USE_CSTRING
 #include <atlddx.h>
@@ -48,70 +49,4 @@ typedef ATL::CString CStringATL;
 
 #define TOTO_COUNT 14
 #define TOTO_MAXLOSE TOTO_COUNT - 1
-
-/*
-namespace WTL
-{
-
-#define DDX_TEXT_WTLSTR(nID, var) \
-		if(nCtlID == (UINT)-1 || nCtlID == nID) \
-		{ \
-			if(!DDX_Text_WTL(nID, var, sizeof(var), bSaveAndValidate)) \
-				return FALSE; \
-		}
-
-template<class T> 
-class CDDX_Text_WTL
-{
-public:	
-	BOOL DDX_Text_WTL(UINT nID, CStringATL& strText, int bSize, BOOL bSave, BOOL bValidate = FALSE, int nLength = 0)
-	{
-		T* pT = static_cast<T*>(this);
-		BOOL bSuccess = TRUE;
-
-		if(bSave)
-		{
-			HWND hWndCtrl = pT->GetDlgItem(nID);
-			int nLen = ::GetWindowTextLength(hWndCtrl);
-			int nRetLen = -1;
-			LPTSTR lpstr = strText.GetBufferSetLength(nLen);
-			if(lpstr != NULL)
-			{
-				nRetLen = ::GetWindowText(hWndCtrl, lpstr, nLen + 1);
-				strText.ReleaseBuffer();
-			}
-			if(nRetLen < nLen)
-				bSuccess = FALSE;
-		}
-		else
-		{
-			bSuccess = pT->SetDlgItemText(nID, strText);
-		}
-
-		if(!bSuccess)
-		{
-			pT->OnDataExchangeError(nID, bSave);
-		}
-		else if(bSave && bValidate)   // validation
-		{
-			ATLASSERT(nLength > 0);
-			if(strText.GetLength() > nLength)
-			{
-				T::_XData data = { T::ddxDataText };
-				data.textData.nLength = strText.GetLength();
-				data.textData.nMaxLength = nLength;
-				pT->OnDataValidateError(nID, bSave, data);
-				bSuccess = FALSE;
-			}
-		}
-		return bSuccess;
-	}
-
-
-};
-
-};
-
-*/
-
 

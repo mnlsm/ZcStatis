@@ -537,18 +537,20 @@ class CSortListViewCtrlEx
 	: public CSortListViewCtrlImpl<CSortListViewCtrlEx<T>>
 {
 public:
-	CSortListViewCtrlEx(T *owner) {
+	CSortListViewCtrlEx(T *owner, UINT mapid) {
 		m_owner = owner;
+		m_MapID = mapid;
 	}
 public:
 	DECLARE_WND_SUPERCLASS(_T("WTL_SortListViewCtrl_Ex"), GetWndClassName())
 	BEGIN_MSG_MAP(CSortListViewCtrlEx<T>)
-		CHAIN_MSG_MAP_ALT_MEMBER((*m_owner), 1)
+		CHAIN_MSG_MAP_ALT_MEMBER((*m_owner), m_MapID)
 		CHAIN_MSG_MAP(CSortListViewCtrlImpl<CSortListViewCtrlEx<T>>)
 	END_MSG_MAP()
 
 private:
 	T* m_owner;
+	UINT m_MapID;
 };
 
 template <class T>
@@ -556,18 +558,20 @@ class CCheckListViewCtrlEx
 	: public CCheckListViewCtrlImpl<CCheckListViewCtrlEx<T>>
 {
 public:
-	CCheckListViewCtrlEx(T *owner) {
+	CCheckListViewCtrlEx(T *owner, UINT mapid) {
 		m_owner = owner;
+		m_MapID = mapid;
 	}
 public:
 	DECLARE_WND_SUPERCLASS(_T("WTL_CheckListViewCtrl_Ex"), GetWndClassName())
 	BEGIN_MSG_MAP(CCheckListViewCtrlEx<T>)
-		CHAIN_MSG_MAP_ALT_MEMBER((*m_owner), 1)
+		CHAIN_MSG_MAP_ALT_MEMBER((*m_owner), m_MapID)
 		CHAIN_MSG_MAP(CCheckListViewCtrlImpl<CCheckListViewCtrlEx<T>>)
 	END_MSG_MAP()
 
 private:
 	T* m_owner;
+	UINT m_MapID;
 };
 
 /////////////////////////////////////////////////////////////////////////////
