@@ -7,6 +7,7 @@ CEngine::CEngine() {
     m_lMaxLimit = 10000000;
     m_lMaxLose = 0;
 
+	m_iInitRecordCount = 0;
 	m_arrPLScope.push_back(0.0);
 	m_arrPLScope.push_back(2.25);
 	m_arrPLScope.push_back(4.0);
@@ -62,6 +63,8 @@ BOOL CEngine::IsAValidRecord(const CIntArray& record, CStlString& failed_reason)
 		return bRet;
 	}
 	int index = 0;
+	int maxSame = 0;
+	CIntArray maxSameRecord;
 	for (const auto& r : m_arrAllRecord) {
 		++index;
 		int samecount = 0;
@@ -72,15 +75,23 @@ BOOL CEngine::IsAValidRecord(const CIntArray& record, CStlString& failed_reason)
 		}
 		if (samecount >= TOTO_MAXLOSE) {
 			bRet = TRUE;
-			CStlString codes(TOTO_COUNT, '\0');
-			for (int i = 0; i < TOTO_COUNT; i++) {
-				codes[i] = record[i] + _T('0');
-			}
+			CStlString codes = GetRecordString(r);
 			TCHAR szInfo[128] = { _T('\0') };
-			_stprintf(szInfo, _T("found record: codes=[%s], index=%d, losed=%d\n"), 
+			_stprintf(szInfo, _T("found record: codes=[%s], index=%d, losed=%d\r\n"),
 				codes.c_str(), index, TOTO_COUNT - samecount);
 			failed_reason += szInfo;
 		}
+		if (samecount > maxSame) {
+			maxSame = samecount;
+			maxSameRecord = r;
+		}
+	}
+	if (!bRet) {
+		TCHAR szInfo[128] = { _T('\0') };
+		CStlString codes = GetRecordString(maxSameRecord);
+		_stprintf(szInfo, _T("\r\nmax same record: codes=[%s], losed=%d\r\n"),
+			codes.c_str(), TOTO_COUNT - maxSame);
+		failed_reason += szInfo;
 	}
 	return bRet;
 }
@@ -113,6 +124,7 @@ void CEngine::WriteRecordsToFile(const CStlString& filename, CIntxyArray &arrAll
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 BOOL CEngine::CalculateAllResultImpl(void* ctx, CStlString& failed_reason) {
+	ZeroMemory(m_arrRecordFenBu, TOTO_COUNT * 3 * sizeof(int));
 	m_arrCoverIndex.clear();
 	m_arrResultRecord.clear();
 	if (!m_arrChoices.empty()) {
@@ -124,9 +136,19 @@ BOOL CEngine::CalculateAllResultImpl(void* ctx, CStlString& failed_reason) {
 		std::stable_sort(m_arrAllRecord.begin(), m_arrAllRecord.end());
 		m_arrAllRecord.erase(std::unique(m_arrAllRecord.begin(), m_arrAllRecord.end()), m_arrAllRecord.end());
 	}
+	m_iInitRecordCount = m_arrAllRecord.size();
 	CIntxyArray tempAll;
 	for (const auto& record : m_arrAllRecord) {
 		if (IsAValidRecordImpl(record, ctx, NULL)) {
+			for (size_t i = 0; i < record.size(); i++) {
+				if (record[i] == 3) {
+					m_arrRecordFenBu[3 * i]++;
+				} else if (record[i] == 1) {
+					m_arrRecordFenBu[3 * i + 1]++;
+				} else {
+					m_arrRecordFenBu[3 * i + 2]++;
+				}
+			}
 			tempAll.push_back(record);
 		}
 	}
@@ -515,18 +537,28 @@ BOOL CEngine::GetRecords(const CStlString& strCodes, CIntxyArray& arrRecords) {
 	return TRUE;
 }
 
+CStlString CEngine::GetRecordString(const CIntArray& record) {
+	CStlString strRecord;
+	strRecord.resize(TOTO_COUNT, _T('\0'));
+	for (int i = 0; i < TOTO_COUNT; i++) {
+		const auto& code = record[i];
+		strRecord[i] = _T('0') + code;
+	}
+	return strRecord;
+}
+
 void CEngine::GetRecordsString(const CIntxyArray& arrRecords, CStlString& strRecords) {
 	strRecords.clear();
 	for (const auto& record : arrRecords) {
-		CStlString record(TOTO_COUNT, _T('\0'));
+		CStlString line(TOTO_COUNT, _T('\0'));
 		for (int i = 0; i < TOTO_COUNT; i++) {
 			const auto& code = record[i];
-			record[i] = _T('0') + code;
+			line[i] = _T('0') + code;
 		}
 		if (strRecords.empty()) {
-			strRecords = record;
+			strRecords = line;
 		} else {
-			strRecords = strRecords + _T('\n') + record;
+			strRecords = strRecords + _T('\n') + line;
 		}
 	}
 }

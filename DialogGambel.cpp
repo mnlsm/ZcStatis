@@ -40,10 +40,11 @@ LRESULT CDialogGambel::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 }
 
 LRESULT CDialogGambel::OnClickedBuSearch(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	CAutoWaitCursor waiter;
 	CStlString strCodes(TOTO_COUNT, _T('\0'));
 	CStringATL strOutput;
 	ClearOutputText();
-	int code_length = m_edSearch.GetWindowText((LPTSTR)strCodes.data(), strCodes.size());
+	int code_length = m_edSearch.GetWindowText((LPTSTR)strCodes.data(), strCodes.size() + 1);
 	if (code_length != TOTO_COUNT) {
 		strOutput.Format(_T("搜索串长度错误, (%d)"), code_length);
 		AppendOutputText(strOutput);
@@ -83,19 +84,17 @@ LRESULT CDialogGambel::OnClickedBuSearch(WORD wNotifyCode, WORD wID, HWND hWndCt
 		else {
 			pEngine.reset(new CEngineLua((LPCTSTR)data.m_strScript));
 		}
-		if (data.m_nCodesType == 0) {
-			pEngine->SetChoices((LPCTSTR)data.m_strCodes);
-		}
-		pEngine->SetDZRecords((LPCTSTR)data.m_strResult);
-		strOutput.Format(_T("方案(%d)搜索开始:"), data.m_nID);
+
+		strOutput.Format(_T("方案[%d]搜索开始:\r\n"), data.m_nID);
 		AppendOutputText(strOutput);
 		pEngine->SetDZRecords((LPCTSTR)data.m_strResult);
+		pEngine->SetPL((LPCTSTR)data.m_strPL);
 		CStlString reason;
 		pEngine->IsAValidRecord(arrRecord, reason);
 		if (!reason.empty()) {
 			AppendOutputText(reason.c_str());
 		}
-		strOutput.Format(_T("方案(%d)搜索结束\n"), data.m_nID);
+		strOutput.Format(_T("方案[%d]搜索结束\r\n"), data.m_nID);
 		AppendOutputText(strOutput);
 	}
 	return 1L;
@@ -340,10 +339,10 @@ void CDialogGambel::InitControls() {
 	int colIndex = 0;
 	m_lstGambel.InsertColumn(colIndex++, "编号", LVCFMT_LEFT, 65);    //70
 	m_lstGambel.InsertColumn(colIndex++, "投注类型", LVCFMT_CENTER, 65);    //70
-	m_lstGambel.InsertColumn(colIndex++, "投注数据", LVCFMT_LEFT, 300);    //70
-	m_lstGambel.InsertColumn(colIndex++, "脚本数据", LVCFMT_LEFT, 300);    //70
+	m_lstGambel.InsertColumn(colIndex++, "投注数据", LVCFMT_LEFT, 380);    //70
+	m_lstGambel.InsertColumn(colIndex++, "脚本数据", LVCFMT_LEFT, 220);    //70
 	m_lstGambel.InsertColumn(colIndex++, "结果数据", LVCFMT_LEFT, 100);    //70
-	m_lstGambel.InsertColumn(colIndex++, "结果个数", LVCFMT_CENTER, 65);    //70
+	m_lstGambel.InsertColumn(colIndex++, "结果个数", LVCFMT_CENTER, 100);    //70
 
 	CStringATL strTemp;         
 	strTemp.Format(_T("方案列表(%s):"), m_strQH.c_str());
@@ -355,6 +354,7 @@ void CDialogGambel::InitControls() {
 void CDialogGambel::ReloadFangAnData() {
 	m_arrDbData.clear();
 	m_lstGambel.DeleteAllItems();
+	ClearOutputText();
 	std::unique_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
 	CStringATL strSQL;
 	strSQL.Format(_T("select ID, INUSE, CODESTYPE, CODES, PLDATA, SCRIPT,")
@@ -380,7 +380,6 @@ void CDialogGambel::ReloadFangAnData() {
 	for (const auto& row : m_arrDbData) {
 		strNum.Format(_T("%u"), row.m_nID);
 		rowIndex = m_lstGambel.InsertItem(rowIndex, strNum);
-		m_lstGambel.SetCheckState(rowIndex, (row.m_nInUse == 1));
 		UINT colIndex = 0;
 		if (row.m_nCodesType == 0) {
 			m_lstGambel.SetItemText(rowIndex, ++colIndex, _T("复式"));
@@ -390,7 +389,8 @@ void CDialogGambel::ReloadFangAnData() {
 			m_lstGambel.SetItemText(rowIndex, ++colIndex, row.m_strCodes.Left(15) + _T(" ......"));
 		}
 
-		CStringATL strScript = row.m_strScript.Left(50);
+		CStringATL strScript = row.m_strScript.Left(row.m_strScript.Find(_T("\n")));
+		strScript.TrimRight();
 		strScript.Replace(_T("--"), _T(""));
 		m_lstGambel.SetItemText(rowIndex, ++colIndex, strScript);
 
@@ -400,6 +400,7 @@ void CDialogGambel::ReloadFangAnData() {
 		}
 		strNum.Format(_T("%u"), CEngine::GetRecordsCount((LPCTSTR)row.m_strResult));
 		m_lstGambel.SetItemText(rowIndex, ++colIndex, strNum);
+		m_lstGambel.SetCheckState(rowIndex, (row.m_nInUse == 1));
 	}
 }
 
@@ -409,14 +410,19 @@ void CDialogGambel::AppendOutputText(const TCHAR* text) {
 	if (oldText.GetLength() > 60000) {
 		oldText.Empty();
 	}
-	oldText = oldText + _T("\n") + text;
+	if (!oldText.IsEmpty()) {
+		oldText = oldText + _T("\r\n") + text;
+	} else {
+		oldText = text;
+	}
 	m_edOutput.SetWindowText(oldText);
 }
 
 void CDialogGambel::ClearOutputText() {
+	//m_edOutput.Clear();
 	m_edOutput.SetWindowText(_T(""));
+	m_edOutput.RedrawWindow(NULL, NULL);
 }
-
 
 void CDialogGambel::DoEditCodes(const DataRow& data) {
 	if (data.m_nCodesType == 1) {
@@ -441,7 +447,7 @@ void CDialogGambel::DoEditCodes(const DataRow& data) {
 		}
 		CStlString strCodes = Global::formUTF8(filedata);
 		std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
-		CStringATL strSQL = _T("UPDATE GAMBEL SET CODESTYPE=?,SET CODES=?,SET RESULT=? WHERE ID=?");
+		CStringATL strSQL = _T("UPDATE GAMBEL SET CODESTYPE=?, CODES=?, RESULT=? WHERE ID=?");
 		pCmd->Create(strSQL);
 		long lVal = 1;
 		pCmd->SetParam(0, &lVal);
@@ -462,7 +468,6 @@ void CDialogGambel::DoEditCodes(const DataRow& data) {
 
 void CDialogGambel::DoEditScript(const DataRow& data) {
 	std::string filedata;
-	///*
 	TCHAR szFilterName[30] = { _T('\0') };
 	_tcscpy(szFilterName, LUA_FILTER_NAME.c_str());
 	_tcscat(szFilterName + LUA_FILTER_NAME.length() + 1, LUA_FILTER.c_str());
@@ -473,6 +478,18 @@ void CDialogGambel::DoEditScript(const DataRow& data) {
 	strPath = strPath + _T("\\") + m_strQH;
 	CreateDirectory(strPath.c_str(), NULL);
 	dlg.m_ofn.lpstrInitialDir = strPath.c_str();
+	CStringATL strInitFileName;
+	strInitFileName.Format(_T("%s_%d.lua"), m_strQH.c_str(), data.m_nID);
+	TCHAR szFileName[MAX_PATH + 1] = { _T('\0') };
+	_tcscpy(szFileName, strInitFileName);
+	dlg.m_ofn.lpstrFile = szFileName;
+	CStlString strFileFullName = strPath + _T("\\") + szFileName;
+	DWORD dwFileAttributes = ::GetFileAttributes(strFileFullName.c_str());
+	if (dwFileAttributes == INVALID_FILE_ATTRIBUTES || 
+			(dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
+		Global::SaveFileData(strFileFullName, "", FALSE);
+	}
+
 	if (dlg.DoModal() != IDOK) {
 		return;
 	}
@@ -481,8 +498,7 @@ void CDialogGambel::DoEditScript(const DataRow& data) {
 		MessageBox("Script文件读取失败！", "错误", MB_ICONERROR | MB_OK);
 		return;
 	}
-	//*/
-
+	
 	/*
 	if (!OpenClipboard()) {
 		MessageBox("打开剪贴板失败！", "错误", MB_ICONERROR | MB_OK);
@@ -499,7 +515,6 @@ void CDialogGambel::DoEditScript(const DataRow& data) {
 		return;
 	}
 	*/
-
 	CStlString strScript = Global::formUTF8(filedata);
 	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	CStringATL strSQL = _T("UPDATE GAMBEL SET SCRIPT=? WHERE ID=?");
@@ -549,11 +564,17 @@ void CDialogGambel::DoSaveResult(const DataRow& data) {
 	_tcscat(szFilterName + DZ_FILTER_NAME.length() + 1, DZ_FILTER.c_str());
 	CFileDialog dlg(FALSE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
 		szFilterName, m_hWnd);
-	CStlString strPath = Global::GetAppPath() + _T("gambel");
-	CreateDirectory(strPath.c_str(), NULL);
-	strPath = strPath + _T("\\") + m_strQH;
-	CreateDirectory(strPath.c_str(), NULL);
-	dlg.m_ofn.lpstrInitialDir = strPath.c_str();
+	CStringATL strPath(Global::GetAppPath().c_str());
+	strPath += _T("gambel");
+	CStringATL strInitFileName;
+	CreateDirectory(strPath, NULL);
+	strPath = strPath + _T("\\") + m_strQH.c_str();
+	CreateDirectory(strPath, NULL);
+	dlg.m_ofn.lpstrInitialDir = strPath;
+	strInitFileName.Format(_T("%s_%d.dz"), m_strQH.c_str(), data.m_nID);
+	TCHAR szFileName[MAX_PATH + 1] = { _T('\0') };
+	_tcscpy(szFileName, strInitFileName);
+	dlg.m_ofn.lpstrFile = szFileName;
 	if (dlg.DoModal() != IDOK) {
 		return;
 	}
@@ -595,6 +616,7 @@ void CDialogGambel::DoRowInUse(UINT uItem, BOOL inuse) {
 			break;
 		}
 	}
+	nInUse = m_lstGambel.GetCheckState(uItem);
 	if (pData == NULL || nInUse == pData->m_nInUse) {
 		return;
 	}
@@ -611,6 +633,7 @@ void CDialogGambel::DoRowInUse(UINT uItem, BOOL inuse) {
 
 void CDialogGambel::DoCalcResult(const DataRow& data) {
 	ClearOutputText();
+	CAutoWaitCursor waiter;
 	CStlString reason;
 	CStringATL strMsg;
 	if (data.m_nInUse != 1) {
@@ -655,8 +678,21 @@ void CDialogGambel::DoCalcResult(const DataRow& data) {
 	if (pCmd->Execute(NULL)) {
 		ReloadFangAnData();
 	}
-	strMsg.Format(_T("(%d)计算完成, 共有%u注结果"), data.m_nID, pEngine->GetResult().size());
+	strMsg.Format(_T("[%d]计算完成, 共有%u(%u--->%u)注结果, 分布数据如下:\r\n"), 
+		data.m_nID, pEngine->GetResult().size(), 
+		pEngine->GetInitRecordsCount(), pEngine->GetAllRecord().size());
 	AppendOutputText(strMsg);
-	//MessageBox(strMsg, _T("提示"), MB_ICONINFORMATION | MB_OK);
+
+	CStlStrArray arrPLs;
+	Global::DepartString((LPCTSTR)data.m_strPL, _T("#"), arrPLs);
+
+	const int* fenbu = pEngine->GetResultFenBu();
+	for (int i = 0; i < TOTO_COUNT * 3; i = i + 3) {
+		const int *pos = fenbu + i;
+		strMsg.Format(_T("%02d:       %04d(%s)      %04d(%s)      %04d(%s)"),
+			(i + 1) / 3 + 1, *pos, arrPLs[i].c_str(), *(pos + 1), arrPLs[i + 1].c_str(), 
+			*(pos + 2), arrPLs[i + 2].c_str());
+		AppendOutputText(strMsg);
+	}
 	return;
 }

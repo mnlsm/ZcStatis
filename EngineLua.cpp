@@ -57,6 +57,8 @@ BOOL CEngineLua::IsAValidRecord(const CIntArray& record, CStlString& failed_reas
 		return bRet;
 	}
 	int index = 0;
+	int maxSame = 0;
+	CIntArray maxSameRecord;
 	for (const auto& r : m_arrAllRecord) {
 		++index;
 		int samecount = 0;
@@ -67,14 +69,15 @@ BOOL CEngineLua::IsAValidRecord(const CIntArray& record, CStlString& failed_reas
 		}
 		if (samecount >= TOTO_MAXLOSE) {
 			bRet = TRUE;
-			CStlString codes(TOTO_COUNT, '\0');
-			for (int i = 0; i < TOTO_COUNT; i++) {
-				codes[i] = record[i] + _T('0');
-			}
+			CStlString codes = GetRecordString(r);
 			TCHAR szInfo[128] = { _T('\0') };
-			_stprintf(szInfo, _T("found record: codes=[%s], index=%d, losed=%d\n"),
+			_stprintf(szInfo, _T("found record: codes=[%s], index=%d, losed=%d\r\n"),
 				codes.c_str(), index, TOTO_COUNT - samecount);
 			failed_reason += szInfo;
+		}
+		if (samecount > maxSame) {
+			maxSame = samecount;
+			maxSameRecord = r;
 		}
 	}
 	if (!bRet) {
@@ -85,6 +88,13 @@ BOOL CEngineLua::IsAValidRecord(const CIntArray& record, CStlString& failed_reas
 			}
 		}
 		TermLua(lua_state);
+
+		TCHAR szInfo[128] = { _T('\0') };
+		CStlString codes = GetRecordString(maxSameRecord);
+		_stprintf(szInfo, _T("\r\nmax same record: codes=[%s], losed=%d\r\n"),
+			codes.c_str(),  TOTO_COUNT - maxSame);
+		failed_reason += szInfo;
+
 	}
 	return bRet;
 }
@@ -166,7 +176,12 @@ lua_State* CEngineLua::InitLua(CStlString& failed_reason) {
 	lua_setglobal(L, "dbgview_print");
 
 	if (luaL_dostring(L, m_strScript.c_str()) != 0) {
-		failed_reason = _T("luaL_dostring failed!");
+		failed_reason = _T("luaL_dostring failed: ");
+		if (lua_type(L, -1) == LUA_TSTRING) {
+			std::string err_text = dbgview_exception + lua_tostring(L, -1);
+			failed_reason += CA2T(err_text.c_str()).m_psz;
+			lua_pop(L, 1);
+		}
 		lua_close(L);
 		return NULL;
 	}

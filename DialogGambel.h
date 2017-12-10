@@ -28,7 +28,7 @@ public:
 		//DDX_CONTROL(IDC_STATIS_LIST, m_lstStatis)
 		DDX_CONTROL(IDC_GAMBEL_LIST, m_lstGambel)
 		DDX_CONTROL(IDC_EDIT_OUTPUT, m_edOutput)
-		DDX_CONTROL(IDC_EDIT_OUTPUT, m_edSearch);
+		DDX_CONTROL(IDC_EDIT_SEARCH, m_edSearch);
 	END_DDX_MAP()
 
 public:

@@ -21,6 +21,8 @@ public:
 	static BOOL ReadFileData(const CStlString& filename, std::string& filedata);
 	static BOOL SaveFileData(const CStlString& filename, const std::string& filedata, BOOL append);
 
+	static CStlString toFixedLengthString(const CStlString& src, size_t fixed_length);
+
 private:
 	static std::string  SysWideToUTF8(const wchar_t* wide);
 	static std::string  SysWideToUTF8(const std::wstring& wide);

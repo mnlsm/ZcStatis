@@ -61,6 +61,9 @@ public:
 	void SetDZRecords(const CIntxyArray& arrRecords);
 
 	const CIntxyArray& GetResult();
+	const CIntxyArray& GetAllRecord() { return m_arrAllRecord; }
+	const int* GetResultFenBu() { return (const int *)m_arrRecordFenBu; }
+	const int GetInitRecordsCount() { return m_iInitRecordCount; }
 
 public:
 	//void static WriteRecordsToFile(const CStlString& filename, CIntxyArray &arrAllRecord);
@@ -79,6 +82,8 @@ protected:
 	long m_lMaxRate;			//Max compress data
 	long m_lMaxLimit;			//Save MAXLimit	
 	long m_lMaxLose;			//Max Lose (0-13)
+
+	
 	CStlString m_strPL;
 	CIntxyArray m_arrChoices;			//save user's choiced data
 	CIntxyArray m_arrAllRecord;				//save All record!
@@ -89,6 +94,9 @@ protected:
 	CDoublexyArray m_arrPLData;
 	CDoublexyArray m_arrGVData;
 	CDoubleArray m_arrPLScope;
+
+	int m_iInitRecordCount;
+	int m_arrRecordFenBu[TOTO_COUNT * 3];
 
 protected:
 	void SearchAllRecord(CIntxyArray::iterator iter, CIntArray &tempArr);
@@ -110,6 +118,7 @@ public:
 	static UINT GetRecordsCount(const CStlString& strCodes);
 	static BOOL GetRecord(const CStlString& strCode, CIntArray& arrRecord);
 
+	static CStlString GetRecordString(const CIntArray& arrRecord);
 	static void GetRecordsString(const CIntxyArray& arrRecords, CStlString& strRecords);
 	static void GetRecordsPrintRecords(const CIntxyArray& arrRecords, CStlStrArray& records);
 

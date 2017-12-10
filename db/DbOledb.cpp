@@ -809,6 +809,7 @@ BOOL COledbRecordset::_BindColumns() {
 
     // Construct the binding array element for each column.
     ULONG dwOffset = 0;
+	ULONG MAX_PARAMBUFFER_SIZE = 1024 * 512;
     for(ULONG iCol = 0; iCol < nCols; iCol++) {
         DBBINDING& b = m_rgBindings[iCol];
         b.iOrdinal = rgColumnInfo[iCol].iOrdinal;
@@ -839,7 +840,7 @@ BOOL COledbRecordset::_BindColumns() {
 #else
             b.wType = DBTYPE_STR;
 #endif
-            b.cbMaxLen = max(min((rgColumnInfo[iCol].ulColumnSize + 1UL) * sizeof(TCHAR), 1024UL), 0UL);
+			b.cbMaxLen = max(min((rgColumnInfo[iCol].ulColumnSize + 1UL) * sizeof(TCHAR), MAX_PARAMBUFFER_SIZE), 0UL);
             break;
         default:
             b.wType = wType;

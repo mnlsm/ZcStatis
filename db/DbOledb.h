@@ -218,7 +218,7 @@ public:
    CComQIPtr<ICommandText> m_spText;
 protected:
    enum { MAX_PARAMS = 20 };
-   enum { MAX_PARAMBUFFER_SIZE = 1024 };
+   enum { MAX_PARAMBUFFER_SIZE = 1024 * 512};
    COledbDatabase* m_pDb;
    LONG m_nRowsAffected;
    short m_nParams;

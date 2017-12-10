@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "Global.h"
 #include <atlfile.h>
+#include <assert.h>
+
 
 CStlString Global::GetAppPath() {
     TCHAR cbPath[MAX_PATH + 1] = { _T('\0') };
@@ -86,8 +88,6 @@ BOOL Global::DepartString(const std::string& strTxt, const std::string& strDim,
 }
 #endif
 
-
-
 std::string Global::toUTF8(const CStlString& local) {
 	CT2W wide(local.c_str());
 	return SysWideToUTF8(wide.m_psz);
@@ -158,25 +158,13 @@ BOOL Global::SaveFileData(const CStlString& filename, const std::string& filedat
 	return TRUE;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+CStlString Global::toFixedLengthString(const CStlString& src, size_t fixed_length) {
+	_ASSERT(fixed_length < 4096);
+	CStlString result(fixed_length, _T(' '));
+	memcpy((char*)result.data(), src.data(), 
+		src.length() < result.length() ? src.length() : result.length());
+	return result;
+}
 
 /////////////////////////////////////////////////////////////////////////////////
 
