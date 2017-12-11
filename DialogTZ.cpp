@@ -284,6 +284,9 @@ BOOL CDialogTZ::ReLoadDataToShow(BOOL first) {
 			}
 		}
 		pRS->Close();
+		if (first) {
+			initComboxes();
+		}
 	}
 	CStlStrArray arrMatchs;
 	Global::DepartString(m_strMatchs, _T("\n"), arrMatchs);
