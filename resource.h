@@ -43,6 +43,7 @@
 #define IDC_BUEMPTY                     1021
 #define IDC_STQI                        1023
 #define IDC_EDIT_SEARCH                 1023
+#define IDC_BUSET                       1026
 #define IDC_STSHOWQI                    1027
 #define IDC_CORESULT1                   1078
 #define IDC_CORESULT2                   1079

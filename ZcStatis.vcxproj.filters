@@ -293,6 +293,9 @@
     <ClInclude Include="PrintWnd.h">
       <Filter>print</Filter>
     </ClInclude>
+    <ClInclude Include="ButtonMenu.h">
+      <Filter>ui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="res\ZcStatis.exe.manifest">

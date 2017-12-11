@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "DialogTZ.h"
 #include "Global.h"
+#include "Engine.h"
+
 
 CDialogTZ::CDialogTZ(IDbSystem *pDbSystem, IDbDatabase *pDbDatabase, 
 	const CStlString& qh, int gambleID) {
@@ -32,7 +34,7 @@ LRESULT CDialogTZ::OnCtlColor(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 LRESULT CDialogTZ::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
     CenterWindow();
 	initConctrols();
-	ReLoadDataToShow();
+	ReLoadDataToShow(true);
     return TRUE;
 }
 
@@ -59,6 +61,33 @@ LRESULT CDialogTZ::OnResultSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 	co.SetCurSel(0);
 	return 1L;
 }
+
+LRESULT CDialogTZ::OnRecommendMenu(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	if (wID == IDM_RECOMMEND_ONE) {
+		for (int i = 0; i < TOTO_COUNT; i++) {
+			UINT ctlID = IDC_CORESULT1 + i * 3;
+			CComboBox co = GetDlgItem(ctlID);
+			co.SetCurSel(1);
+			co = GetDlgItem(ctlID + 1);
+			co.SetCurSel(0);
+			co = GetDlgItem(ctlID + 2);
+			co.SetCurSel(0);
+		}
+	}
+	else if (wID == IDM_RECOMMEND_TWO) {
+		for (int i = 0; i < TOTO_COUNT; i++) {
+			UINT ctlID = IDC_CORESULT2 + i * 3;
+			CComboBox co = GetDlgItem(ctlID);
+			co.SetCurSel(1);
+			co = GetDlgItem(ctlID + 1);
+			co.SetCurSel(0);
+			co = GetDlgItem(ctlID - 1);
+			co.SetCurSel(0);
+		}
+	}
+	return 1L;
+}
+
 
 LRESULT CDialogTZ::OnClickedBuAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	CStlString strResults;
@@ -105,28 +134,59 @@ void CDialogTZ::initConctrols() {
 		CWindow wnd = GetDlgItem(IDC_BUADD);
 		wnd.SetWindowText(_T("更新"));
 	}
-    CComboBox coWnd = NULL;
-    for(int i = IDC_CORESULT1; i <= IDC_CORESULT42; i++) {
-        coWnd = GetDlgItem(i);
-        if(coWnd.IsWindow()) {
-			int mod = ((i - IDC_CORESULT1) % 3);
-			if (mod == 0) {
-				coWnd.AddString(_T(" "));
-				coWnd.AddString(_T("3"));
-				coWnd.AddString(_T("1"));
-				coWnd.AddString(_T("0"));
-			} else if (mod == 1) {
-				coWnd.AddString(_T(" "));
-				coWnd.AddString(_T("31"));
-				coWnd.AddString(_T("30"));
-				coWnd.AddString(_T("10"));
-			} else if (mod == 2) {
-				coWnd.AddString(_T(" "));
-				coWnd.AddString(_T("310"));
-			}
-        }
-    }
+	m_MenuButton = GetDlgItem(IDC_BUSET);
+	m_MenuButton.AddMenuItem(IDM_RECOMMEND_ONE, _T("单选"));
+	m_MenuButton.AddMenuItem(IDM_RECOMMEND_TWO, _T("双选"));
 }
+
+struct GvItem {
+	CStlString code;
+	double gv;
+};
+
+bool operator<(const GvItem &x, const GvItem &y) {
+	return x.gv > y.gv;
+}
+
+void CDialogTZ::initComboxes() {
+	CDoublexyArray arrPls, arrGvs;
+	CEngine::GetPLDatas(m_strPL, arrPls, arrGvs);
+
+	GvItem items[TOTO_COUNT][3];;
+	for (int i = 0; i < TOTO_COUNT; i++) {
+		for (int j = 0; j < 3; j++) {
+			if (j == 0) {
+				items[i][j].code = _T("3");
+			} else if (j == 1) {
+				items[i][j].code = _T("1");
+			} else {
+				items[i][j].code = _T("0");
+			}
+			items[i][j].gv = arrGvs[i][j];
+		}
+		GvItem* start = &items[i][0];
+		std::stable_sort(start, start + 3);
+	}
+	CComboBox coWnd = NULL;
+	for (int i = 0; i < TOTO_COUNT; i++) {
+		coWnd = GetDlgItem(i * 3 + IDC_CORESULT1);
+		coWnd.AddString(_T(" "));
+		coWnd.AddString(items[i][0].code.c_str());
+		coWnd.AddString(items[i][1].code.c_str());
+		coWnd.AddString(items[i][2].code.c_str());
+
+		coWnd = GetDlgItem(i * 3 + 1 + IDC_CORESULT1);
+		coWnd.AddString(_T(" "));
+		coWnd.AddString((items[i][0].code + items[i][1].code).c_str());
+		coWnd.AddString((items[i][0].code + items[i][2].code).c_str());
+		coWnd.AddString((items[i][1].code + items[i][2].code).c_str());
+
+		coWnd = GetDlgItem(i * 3 + 2 + IDC_CORESULT1);
+		coWnd.AddString(_T(" "));
+		coWnd.AddString((items[i][0].code + items[i][1].code + items[i][2].code).c_str());
+	}
+}
+
 
 BOOL CDialogTZ::ReadUserChoice(CStlString &strResults, CStringATL& strErrInfo) {
 	strResults.clear();
@@ -167,7 +227,7 @@ void CDialogTZ::ClearUserChoice() {
 	}
 }
 
-BOOL CDialogTZ::ReLoadDataToShow() {
+BOOL CDialogTZ::ReLoadDataToShow(BOOL first) {
 	m_wndQI.SetWindowText(m_strQH.c_str());
 	ClearUserChoice();
 	if (m_GambleID != -1) {
@@ -183,6 +243,10 @@ BOOL CDialogTZ::ReLoadDataToShow() {
 		}
 		pRS->Close();
 
+		if (first) {
+			initComboxes();
+		}
+
 		CStlStrArray arrResults;
 		Global::DepartString((LPCTSTR)strResults, _T(","), arrResults);
 		for (int i = IDC_CORESULT1; i <= IDC_CORESULT42; i = i + 3) {
@@ -193,6 +257,19 @@ BOOL CDialogTZ::ReLoadDataToShow() {
 				int index = coWnd.FindStringExact(0, arrResults[arrPos].c_str());
 				if (index >= 0) {
 					coWnd.SetCurSel(index);
+				} else {
+					if (arrResults[arrPos] == _T("31")) {
+						index = coWnd.FindStringExact(0, "13");
+						coWnd.SetCurSel(index);
+					} else if (arrResults[arrPos] == _T("30")) {
+						index = coWnd.FindStringExact(0, "03");
+						coWnd.SetCurSel(index);
+					} else if (arrResults[arrPos] == _T("10")) {
+						index = coWnd.FindStringExact(0, "01");
+						coWnd.SetCurSel(index);
+					}	else if (arrResults[arrPos] == _T("310")) {
+						coWnd.SetCurSel(1);
+					}
 				}
 			}
 		}
