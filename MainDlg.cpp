@@ -174,7 +174,10 @@ void CMainDlg::InitControls() {
 	m_lstStatis.InsertColumn(colIndex, "31连-30连-10连", LVCFMT_CENTER, 100);    //270
 	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
 
-	m_lstStatis.InsertColumn(colIndex, "赔率均衡统计(非均衡，均衡)", LVCFMT_CENTER, 300);    //270
+	m_lstStatis.InsertColumn(colIndex, "不均衡赔率", LVCFMT_CENTER, 80);    //270
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
+
+	m_lstStatis.InsertColumn(colIndex, "赔率分布统计", LVCFMT_CENTER, 150);    //270
 	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
 
 	//set sort type
@@ -267,6 +270,7 @@ void CMainDlg::ReloadStatisData() {
 			m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strCodeZongShu);
 			m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strCodeLianOne);
 			m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strCodeLianTwo);
+			m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strPLAvgCount);
 			m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strPLAvg);
 
 			pRS->MoveNext();
@@ -311,16 +315,17 @@ BOOL CMainDlg::GetPL(const CStringATL &strCode, const CStringATL &strPL1, DataRo
 	sprintf(dataRow.m_strGvJ.GetBuffer(255), "%.4f", commonFF.mGvj * 10 * 10 * 10 * 10 * 10 * 10);
 	dataRow.m_strGvJ.ReleaseBuffer();
 
-    
-	for (int i = 0; i < commonFF.mPLScopes.size(); i++) {
+ 	for (int i = 0; i < commonFF.mPLScopes.size(); i++) {
         CStringATL strTemp;
 		strTemp.Format("%02d-", commonFF.mPLScopes[i]);
 		dataRow.m_strPlSCOPE += strTemp;
     }
 	dataRow.m_strPlSCOPE = dataRow.m_strPlSCOPE.Left(dataRow.m_strPlSCOPE.GetLength() - 1);
-	dataRow.m_strPLAvg.Format("%02d-%02d-%02d , %02d-%02d-%02d",
+	dataRow.m_strPLAvg.Format("%02d-%02d-%02d-%02d-%02d-%02d",
 		commonFF.mPLAvgs[0], commonFF.mPLAvgs[1], commonFF.mPLAvgs[2],
 		commonFF.mPLAvgs[3], commonFF.mPLAvgs[4], commonFF.mPLAvgs[5]);
+	dataRow.m_strPLAvgCount.Format(_T("%d"),
+		commonFF.mPLAvgs[0] + commonFF.mPLAvgs[4] + commonFF.mPLAvgs[5]);
     return TRUE;
 }
 

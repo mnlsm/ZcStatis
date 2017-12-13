@@ -294,35 +294,22 @@ void CEngineLua::push_scriptfunc_params(lua_State *L, const CIntArray& record) {
 	lua_pushnumber(L, commFF.mGvj);
 	lua_settable(L, -3);
 
-	std::string plscope;
-	for (const auto& scope : commFF.mPLScopes) {
-		char cNum[20] = { '\0' };
-		sprintf(cNum, "%u", scope);
-		if (plscope.empty()) {
-			plscope = cNum;
-		}
-		else {
-			plscope = plscope + ',' + cNum;
-		}
-	}
 	lua_pushstring(L, "plscope");
-	lua_pushstring(L, plscope.c_str());
-	lua_settable(L, -3);
-
-	std::string plavg;
-	for (const auto& scope : commFF.mPLAvgs) {
-		char cNum[32] = { '\0' };
-		sprintf(cNum, "%u", scope);
-		if (plavg.empty()) {
-			plavg = cNum;
-		}
-		else {
-			plavg = plavg + ',' + cNum;
-		}
+	lua_newtable(L);
+	for (int i = 0; i < commFF.mPLScopes.size(); i++) {
+		lua_pushinteger(L, i + 1);
+		lua_pushinteger(L, commFF.mPLScopes[i]);
+		lua_settable(L, -3);
 	}
-	lua_pushstring(L, "plavg");
-	lua_pushstring(L, plavg.c_str());
 	lua_settable(L, -3);
 
+	lua_pushstring(L, "plavg");
+	lua_newtable(L);
+	for (int i = 0; i < commFF.mPLAvgs.size(); i++) {
+		lua_pushinteger(L, i + 1);
+		lua_pushinteger(L, commFF.mPLAvgs[i]);
+		lua_settable(L, -3);
+	}
+	lua_settable(L, -3);
 
 }

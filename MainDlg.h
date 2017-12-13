@@ -71,6 +71,7 @@ private:
 		CStringATL m_strPLSum;
 		CStringATL m_strGvJ;
 		CStringATL m_strPlSCOPE;
+		CStringATL m_strPLAvgCount;
 		CStringATL m_strPLAvg;
 	} DataRow;
 
