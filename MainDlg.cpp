@@ -174,6 +174,9 @@ void CMainDlg::InitControls() {
 	m_lstStatis.InsertColumn(colIndex, "31连-30连-10连", LVCFMT_CENTER, 100);    //270
 	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
 
+	m_lstStatis.InsertColumn(colIndex, "赔率均衡统计(非均衡，均衡)", LVCFMT_CENTER, 300);    //270
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
+
 	//set sort type
 	m_lstStatis.SetSortColumn(0);
 }
@@ -264,6 +267,7 @@ void CMainDlg::ReloadStatisData() {
 			m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strCodeZongShu);
 			m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strCodeLianOne);
 			m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strCodeLianTwo);
+			m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strPLAvg);
 
 			pRS->MoveNext();
 		}
@@ -291,7 +295,7 @@ BOOL CMainDlg::GetPL(const CStringATL &strCode, const CStringATL &strPL1, DataRo
 	CommonFilterFactors commonFF;
 	CEngine::CalcCommonFilterFactors(tempArr, arrPLData, arrGVData, m_arrPLSCOPE, commonFF);
 
-	dataRow.m_strCodeDuanDian.Format("%d", commonFF.mBreakCount);
+	dataRow.m_strCodeDuanDian.Format(_T("%d"), commonFF.mBreakCount);
 	dataRow.m_strCodeZongShu.Format("%02d-%02d-%02d", commonFF.mTotal3Count, commonFF.mTotal1Count, commonFF.mTotal0Count);
 	dataRow.m_strCodeLianOne.Format("%02d-%02d-%02d", commonFF.mLian3Count, commonFF.mLian1Count, commonFF.mLian0Count);
 	dataRow.m_strCodeLianTwo.Format("%02d-%02d-%02d", commonFF.mLian31Count, commonFF.mLian30Count, commonFF.mLian10Count);
@@ -314,7 +318,9 @@ BOOL CMainDlg::GetPL(const CStringATL &strCode, const CStringATL &strPL1, DataRo
 		dataRow.m_strPlSCOPE += strTemp;
     }
 	dataRow.m_strPlSCOPE = dataRow.m_strPlSCOPE.Left(dataRow.m_strPlSCOPE.GetLength() - 1);
-
+	dataRow.m_strPLAvg.Format("%02d-%02d-%02d , %02d-%02d-%02d",
+		commonFF.mPLAvgs[0], commonFF.mPLAvgs[1], commonFF.mPLAvgs[2],
+		commonFF.mPLAvgs[3], commonFF.mPLAvgs[4], commonFF.mPLAvgs[5]);
     return TRUE;
 }
 

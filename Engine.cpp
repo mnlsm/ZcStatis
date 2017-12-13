@@ -453,9 +453,20 @@ BOOL CEngine::CalcCommonFilterFactors(const CIntArray& record, const CDoublexyAr
 			double dCurGV = arrTemp1[nIndex];
 			commonFF.mPLSum += dCurPL;
 			std::stable_sort(arrTemp.begin(), arrTemp.end(), std::less<double>());
-			if (arrTemp[0] == dCurPL) commonFF.mPL1Count++;
-			else if (arrTemp[1] == dCurPL) commonFF.mPL2Count++;
-			else commonFF.mPL3Count++;
+			int avgGap = 0;
+			if (arrTemp[0] > 2.25) {
+				avgGap = 3;
+			}
+			if (arrTemp[0] == dCurPL) {
+				commonFF.mPL1Count++;
+				commonFF.mPLAvgs[0 + avgGap]++;
+			} else if (arrTemp[1] == dCurPL) {
+				commonFF.mPL2Count++;
+				commonFF.mPLAvgs[1 + avgGap]++;
+			} else {
+				commonFF.mPL3Count++;
+				commonFF.mPLAvgs[2 + avgGap]++;
+			}
 			commonFF.mGvj = commonFF.mGvj * dCurGV;
 			for (int j = 1; j < arrPLScope.size(); j++) {
 				if (dCurPL > arrPLScope[j - 1] && dCurPL <= arrPLScope[j])

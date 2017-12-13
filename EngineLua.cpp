@@ -308,4 +308,21 @@ void CEngineLua::push_scriptfunc_params(lua_State *L, const CIntArray& record) {
 	lua_pushstring(L, "plscope");
 	lua_pushstring(L, plscope.c_str());
 	lua_settable(L, -3);
+
+	std::string plavg;
+	for (const auto& scope : commFF.mPLAvgs) {
+		char cNum[32] = { '\0' };
+		sprintf(cNum, "%u", scope);
+		if (plavg.empty()) {
+			plavg = cNum;
+		}
+		else {
+			plavg = plavg + ',' + cNum;
+		}
+	}
+	lua_pushstring(L, "plavg");
+	lua_pushstring(L, plavg.c_str());
+	lua_settable(L, -3);
+
+
 }
