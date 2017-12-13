@@ -25,6 +25,12 @@
     <Filter Include="print">
       <UniqueIdentifier>{ff8e7a7a-ba3e-43a4-9707-d806f8fd8eb5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="sqlite3">
+      <UniqueIdentifier>{eb8970ed-c51e-4e24-a58d-4ace0d0ff941}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sqlite3\SQLiteCpp">
+      <UniqueIdentifier>{1d793640-db47-40d5-a608-e616eee5bf9a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="db\DbOledb.cpp">
@@ -168,6 +174,27 @@
     <ClCompile Include="EngineTJ.cpp">
       <Filter>engines</Filter>
     </ClCompile>
+    <ClCompile Include="sqlite3\sqlite3.c">
+      <Filter>sqlite3</Filter>
+    </ClCompile>
+    <ClCompile Include="sqlite3\SQLiteCpp\Backup.cpp">
+      <Filter>sqlite3\SQLiteCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="sqlite3\SQLiteCpp\Column.cpp">
+      <Filter>sqlite3\SQLiteCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="sqlite3\SQLiteCpp\Database.cpp">
+      <Filter>sqlite3\SQLiteCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="sqlite3\SQLiteCpp\Exception.cpp">
+      <Filter>sqlite3\SQLiteCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="sqlite3\SQLiteCpp\Statement.cpp">
+      <Filter>sqlite3\SQLiteCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="sqlite3\SQLiteCpp\Transaction.cpp">
+      <Filter>sqlite3\SQLiteCpp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="db\DbBase.h">
@@ -295,6 +322,36 @@
     </ClInclude>
     <ClInclude Include="ButtonMenu.h">
       <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3\sqlite3.h">
+      <Filter>sqlite3</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3\SQLiteCpp\Assertion.h">
+      <Filter>sqlite3\SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3\SQLiteCpp\Backup.h">
+      <Filter>sqlite3\SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3\SQLiteCpp\Column.h">
+      <Filter>sqlite3\SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3\SQLiteCpp\Database.h">
+      <Filter>sqlite3\SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3\SQLiteCpp\Exception.h">
+      <Filter>sqlite3\SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3\SQLiteCpp\SQLiteCpp.h">
+      <Filter>sqlite3\SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3\SQLiteCpp\Statement.h">
+      <Filter>sqlite3\SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3\SQLiteCpp\Transaction.h">
+      <Filter>sqlite3\SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3\SQLiteCpp\VariadicBind.h">
+      <Filter>sqlite3\SQLiteCpp</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

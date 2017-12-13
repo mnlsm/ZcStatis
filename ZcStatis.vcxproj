@@ -61,7 +61,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level2</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>./wtl91/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./wtl91/include;./sqlite3</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -96,7 +96,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat />
-      <AdditionalIncludeDirectories>./wtl91/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./wtl91/include;./sqlite3</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -268,6 +268,34 @@
     <ClCompile Include="MainDlg.cpp" />
     <ClCompile Include="MyPrintInfo.cpp" />
     <ClCompile Include="PrintWnd.cpp" />
+    <ClCompile Include="sqlite3\sqlite3.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="sqlite3\SQLiteCpp\Backup.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="sqlite3\SQLiteCpp\Column.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="sqlite3\SQLiteCpp\Database.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="sqlite3\SQLiteCpp\Exception.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="sqlite3\SQLiteCpp\Statement.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="sqlite3\SQLiteCpp\Transaction.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -315,6 +343,16 @@
     <ClInclude Include="MyPrintInfo.h" />
     <ClInclude Include="PrintWnd.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="sqlite3\sqlite3.h" />
+    <ClInclude Include="sqlite3\SQLiteCpp\Assertion.h" />
+    <ClInclude Include="sqlite3\SQLiteCpp\Backup.h" />
+    <ClInclude Include="sqlite3\SQLiteCpp\Column.h" />
+    <ClInclude Include="sqlite3\SQLiteCpp\Database.h" />
+    <ClInclude Include="sqlite3\SQLiteCpp\Exception.h" />
+    <ClInclude Include="sqlite3\SQLiteCpp\SQLiteCpp.h" />
+    <ClInclude Include="sqlite3\SQLiteCpp\Statement.h" />
+    <ClInclude Include="sqlite3\SQLiteCpp\Transaction.h" />
+    <ClInclude Include="sqlite3\SQLiteCpp\VariadicBind.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StlFiles.h" />
   </ItemGroup>
