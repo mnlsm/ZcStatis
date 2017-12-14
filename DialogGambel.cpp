@@ -654,7 +654,7 @@ void CDialogGambel::DoCalcResult(const DataRow& data) {
 	}
 	if (data.m_nCodesType == 0) {
 		pEngine->SetChoices((LPCTSTR)data.m_strCodes);
-	} else if (data.m_nCodesType == 0) {
+	} else if (data.m_nCodesType == 1) {
 		pEngine->SetDZRecords((LPCTSTR)data.m_strCodes);
 	} else {
 		strMsg.Format(_T("(%d)Î´ÖªºÅÂë¼¯ºÏ"), data.m_nID);
