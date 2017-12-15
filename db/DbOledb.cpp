@@ -809,7 +809,7 @@ BOOL COledbRecordset::_BindColumns() {
 
     // Construct the binding array element for each column.
     ULONG dwOffset = 0;
-	ULONG MAX_PARAMBUFFER_SIZE = 1024 * 512;
+	ULONG MAX_PARAMBUFFER_SIZE = 1024 * 1024;
     for(ULONG iCol = 0; iCol < nCols; iCol++) {
         DBBINDING& b = m_rgBindings[iCol];
         b.iOrdinal = rgColumnInfo[iCol].iOrdinal;
