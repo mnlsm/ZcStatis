@@ -134,7 +134,7 @@ BOOL Global::SaveFileData(const CStlString& filename, const std::string& filedat
 	CAtlFile afile;
 	DWORD dwLastError = 0;
 	HRESULT hr = afile.Create(filename.c_str(), GENERIC_WRITE,
-		FILE_SHARE_WRITE, OPEN_ALWAYS);
+		FILE_SHARE_WRITE, CREATE_ALWAYS);
 	if (FAILED(hr)) {
 		dwLastError = GetLastError();
 		return FALSE;

@@ -153,6 +153,7 @@ BOOL CEngine::CalculateAllResultImpl(void* ctx, CStlString& failed_reason) {
 		}
 	}
 	m_arrAllRecord.swap(tempAll);
+//	std::random_shuffle(m_arrAllRecord.begin(), m_arrAllRecord.end());
 	if (m_lMaxLose > 0) {
 		FillAllCoverIndex(m_arrAllRecord);
 		GreedyCalcRectRecord(m_arrCoverIndex, m_arrAllRecord);

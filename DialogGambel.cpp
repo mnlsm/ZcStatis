@@ -147,6 +147,7 @@ LRESULT CDialogGambel::OnClickedBuAddDanShi(WORD wNotifyCode, WORD wID, HWND hWn
 		return 1L;
 	}
 	pCmd->Close();
+	ReloadFangAnData();
 	return 1L;
 }
 
