@@ -410,6 +410,7 @@ void CDialogGambel::ReloadFangAnData() {
 		m_lstGambel.SetItemText(rowIndex, ++colIndex, strNum);
 		m_lstGambel.SetCheckState(rowIndex, (row.m_nInUse == 1));
 	}
+	::SetForegroundWindow(m_hWnd);
 }
 
 void CDialogGambel::AppendOutputText(const TCHAR* text) {
@@ -701,15 +702,18 @@ void CDialogGambel::DoCalcResult(const DataRow& data) {
 		//MessageBox(strMsg, _T("错误"), MB_ICONERROR | MB_OK);
 		return;
 	}
-	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
-	CStringATL strSQL = _T("UPDATE GAMBEL SET RESULT=? WHERE ID=?");
 	CStlString strResult;
 	CEngine::GetRecordsString(pEngine->GetResult(), strResult);
-	pCmd->Create(strSQL);
-	pCmd->SetParam(0, strResult);
-	pCmd->SetParam(1, &data.m_nID);
-	if (pCmd->Execute(NULL)) {
-		ReloadFangAnData();
+	const int max_size = 1024 * 1024 - 1;
+	if (strResult.size() < max_size) {
+		std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
+		CStringATL strSQL = _T("UPDATE GAMBEL SET RESULT=? WHERE ID=?");
+		pCmd->Create(strSQL);
+		pCmd->SetParam(0, strResult);
+		pCmd->SetParam(1, &data.m_nID);
+		if (pCmd->Execute(NULL)) {
+			ReloadFangAnData();
+		}
 	}
 	strMsg.Format(_T("[%d]计算完成, 共有%u(%u--->%u)注结果, 分布数据如下:\r\n"), 
 		data.m_nID, pEngine->GetResult().size(), 
