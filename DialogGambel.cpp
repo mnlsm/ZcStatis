@@ -278,6 +278,7 @@ LRESULT CDialogGambel::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam
 			menu.AppendMenu(MF_STRING, IDM_DELETE_SCRIPT, _T("删除脚本"));
 			menu.AppendMenu(MF_SEPARATOR);
 
+			menu.AppendMenu(MF_STRING, IDM_COPY_ROW, _T("复制方案"));
 			menu.AppendMenu(MF_STRING, IDM_DELETE_ROW, _T("删除方案"));
 			m_lstGambel.ClientToScreen(&pt);
 			UINT cmd = menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RETURNCMD, 
@@ -319,6 +320,8 @@ void CDialogGambel::DoListMenuCommand(UINT cmd, UINT nItem) {
 		DoDeleteScript(*pData);
 	} else if (cmd == IDM_DELETE_ROW) {
 		DoDeleteRow(*pData);
+	} else if (cmd == IDM_COPY_ROW) {
+		DoCopyRow(*pData);
 	}
 }
 
@@ -358,7 +361,7 @@ void CDialogGambel::ReloadFangAnData() {
 	ClearOutputText();
 	std::unique_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
 	CStringATL strSQL;
-	strSQL.Format(_T("select ID, INUSE, CODESTYPE, CODES, PLDATA, SCRIPT,")
+	strSQL.Format(_T("select ID, INUSE, CODESTYPE, CODES, PLDATA, MATCHS, SCRIPT,")
 		_T(" RESULT FROM GAMBEL WHERE QH='%s' order by ID asc"), m_strQH.c_str());
 	if (pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
 		while (!pRS->IsEOF()) {
@@ -368,8 +371,9 @@ void CDialogGambel::ReloadFangAnData() {
 			pRS->GetField(2, row.m_nCodesType);
 			pRS->GetField(3, row.m_strCodes);
 			pRS->GetField(4, row.m_strPL);
-			pRS->GetField(5, row.m_strScript);
-			pRS->GetField(6, row.m_strResult);
+			pRS->GetField(5, row.m_strMatchs);
+			pRS->GetField(6, row.m_strScript);
+			pRS->GetField(7, row.m_strResult);
 			m_arrDbData.push_back(row);
 			pRS->MoveNext();
 		}
@@ -385,8 +389,11 @@ void CDialogGambel::ReloadFangAnData() {
 		if (row.m_nCodesType == 0) {
 			m_lstGambel.SetItemText(rowIndex, ++colIndex, _T("复式"));
 			m_lstGambel.SetItemText(rowIndex, ++colIndex, row.m_strCodes);
-		} else {
+		} else if (row.m_nCodesType == 1) {
 			m_lstGambel.SetItemText(rowIndex, ++colIndex, _T("单式"));
+			m_lstGambel.SetItemText(rowIndex, ++colIndex, row.m_strCodes.Left(15) + _T(" ......"));
+		} else if (row.m_nCodesType == 2) {
+			m_lstGambel.SetItemText(rowIndex, ++colIndex, _T("复盘"));
 			m_lstGambel.SetItemText(rowIndex, ++colIndex, row.m_strCodes.Left(15) + _T(" ......"));
 		}
 
@@ -596,6 +603,11 @@ void CDialogGambel::DoDeleteResult(const DataRow& data) {
 }
 
 void CDialogGambel::DoDeleteRow(const DataRow& data) {
+	CStringATL strASK;
+	strASK.Format(_T("是否要删除方案(%d) ?"), data.m_nID);
+	if (MessageBox(strASK, "请确认", MB_ICONASTERISK | MB_YESNO) != IDYES) {
+		return;
+	}
 	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	CStringATL strSQL = _T("DELETE FROM GAMBEL WHERE ID=?");
 	pCmd->Create(strSQL);
@@ -604,6 +616,26 @@ void CDialogGambel::DoDeleteRow(const DataRow& data) {
 		ReloadFangAnData();
 	}
 }
+
+void CDialogGambel::DoCopyRow(const DataRow& data) {
+	CStringATL strSQL;
+	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
+	strSQL = _T("INSERT INTO GAMBEL (QH, INUSE, CODESTYPE, CODES, PLDATA, MATCHS, SCRIPT) VALUES(?,?,?,?,?,?,?)");
+	pCmd->Create(strSQL);
+	pCmd->SetParam(0, m_strQH);
+	long val = 0;
+	pCmd->SetParam(1, &val);
+	val = data.m_nCodesType;
+	pCmd->SetParam(2, &val);
+	pCmd->SetParam(3, data.m_strCodes);
+	pCmd->SetParam(4, data.m_strPL);
+	pCmd->SetParam(5, data.m_strMatchs);
+	pCmd->SetParam(6, data.m_strScript);
+	if (pCmd->Execute(NULL)) {
+		ReloadFangAnData();
+	}
+}
+
 
 void CDialogGambel::DoRowInUse(UINT uItem, BOOL inuse) {
 	int nInUse = inuse ? 1 : 0;

@@ -80,11 +80,12 @@ BOOL CEngineLua::IsAValidRecord(const CIntArray& record, CStlString& failed_reas
 			maxSameRecord = r;
 		}
 	}
-	if (!bRet) {
-		lua_State* lua_state = InitLua(failed_reason);
+	if (maxSame != TOTO_COUNT) {
+		CStlString failed_reason1;
+		lua_State* lua_state = InitLua(failed_reason1);
 		if (lua_state != NULL) {
-			if (IsAValidRecordImpl(record, lua_state, &failed_reason)) {
-				failed_reason = _T("filter by compress");
+			if (IsAValidRecordImpl(record, lua_state, &failed_reason1)) {
+				failed_reason1 = _T("filter by compress");
 			}
 		}
 		TermLua(lua_state);
@@ -93,8 +94,8 @@ BOOL CEngineLua::IsAValidRecord(const CIntArray& record, CStlString& failed_reas
 		CStlString codes = GetRecordString(maxSameRecord);
 		_stprintf(szInfo, _T("\r\nmax same record: codes=[%s], losed=%d\r\n"),
 			codes.c_str(),  TOTO_COUNT - maxSame);
-		failed_reason += szInfo;
-
+		failed_reason1 += szInfo;
+		failed_reason1 += failed_reason;
 	}
 	return bRet;
 }

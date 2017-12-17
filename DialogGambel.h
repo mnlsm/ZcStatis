@@ -13,6 +13,8 @@
 #define IDM_DELETE_SCRIPT	WM_APP + 205
 
 #define IDM_DELETE_ROW		WM_APP + 200
+#define IDM_COPY_ROW		WM_APP + 210
+
 class CDialogGambel :
 	public CAxDialogImpl<CDialogGambel>,
 	public CWinDataExchange<CDialogGambel>
@@ -91,6 +93,7 @@ private:
 		long m_nCodesType;
 		CStringATL m_strCodes;
 		CStringATL m_strPL;
+		CStringATL m_strMatchs;
 		CStringATL m_strScript;
 		CStringATL m_strResult;
 	} DataRow;
@@ -109,8 +112,10 @@ private:
 	void DoCopyScript(const DataRow& data);
 	void DoDeleteScript(const DataRow& data);
 
-	void DoDeleteRow(const DataRow& data);
 	void DoRowInUse(UINT uItem, BOOL inuse);
+
+	void DoCopyRow(const DataRow& data);
+	void DoDeleteRow(const DataRow& data);
 
 
 private:
