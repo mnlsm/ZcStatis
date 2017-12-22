@@ -9,6 +9,7 @@
 #include "Global.h"
 #include "Engine.h"
 #include "DialogGambel.h"
+#include "sqlite3/SQLiteCpp/SQLiteCpp.h"
 
 CMainDlg::CMainDlg() : m_lstStatis(this, 1) {
 	m_pDbSystem = NULL;
@@ -279,6 +280,15 @@ void CMainDlg::ReloadStatisData() {
 	pRS->Close();
 	m_lstStatis.DoSortItems(0, false);
 	return;
+}
+
+static void toSqliteDB(const CStringATL& qh, double bonus,
+	const CStringATL& codes, const CStringATL& pl, long sales) {
+	CStlString strAppPath = Global::GetAppPath();
+	CStlString strDbFilePath = strAppPath + _T("ZcStatis.db3");
+
+
+
 }
 
 
