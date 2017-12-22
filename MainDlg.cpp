@@ -9,7 +9,7 @@
 #include "Global.h"
 #include "Engine.h"
 #include "DialogGambel.h"
-#include "sqlite3/SQLiteCpp/SQLiteCpp.h"
+#include <SQLiteCpp/SQLiteCpp.h>
 
 CMainDlg::CMainDlg() : m_lstStatis(this, 1) {
 	m_pDbSystem = NULL;
@@ -196,6 +196,30 @@ void CMainDlg::InitializeStatisData() {
 	BOOL bRet = m_pDbDatabase->Open(NULL, (LPCTSTR)strConnect, _T(""), _T(""), DB_OPEN_READ_ONLY);
 }
 
+static void toSqliteDB(const CStringATL& qh, double bonus,
+	const CStringATL& codes, const CStringATL& pl, long sales, const CStringATL& strMatchs) {
+	using namespace SQLite;
+	CStlString strAppPath = Global::GetAppPath();
+	CStlString strDbFilePath = strAppPath + _T("ZcStatis.db3");
+	CStlString strSQL = _T("INSERT INTO PLDATA VALUES (@ID, @BONUS,@RESULT,@PLDATA,@SALES,@MATCHS)");
+	try {
+		Database db(strDbFilePath.c_str(), OPEN_READWRITE);
+		Statement sm(db, strSQL.c_str());
+		sm.reset();
+		sm.clearBindings();
+		sm.bind("@ID", (LPCTSTR)qh);
+		sm.bind("@BONUS", bonus);
+		sm.bind("@RESULT", (LPCTSTR)codes);
+		sm.bind("@PLDATA", (LPCTSTR)pl);
+		sm.bind("@SALES", sales);
+		sm.bind("@MATCHS", Global::toUTF8((LPCTSTR)strMatchs));
+		sm.exec();
+	}
+	catch (Exception& err) {
+		strSQL = err.getErrorStr();
+	}
+}
+
 void CMainDlg::ReloadStatisData() {
 	m_lstStatis.DeleteAllItems();
 
@@ -212,7 +236,7 @@ void CMainDlg::ReloadStatisData() {
 	}
 	pRS1->Close();
 
-	strSQL = _T("SELECT ID,BONUS,RESULT,PLDATA,SALES from PLDATA ORDER BY ID ASC");
+	strSQL = _T("SELECT ID,BONUS,RESULT,PLDATA,SALES,MATCHS from PLDATA ORDER BY ID ASC");
 	std::unique_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
 	if(pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
 		int iIndex = 0;
@@ -225,13 +249,17 @@ void CMainDlg::ReloadStatisData() {
 			CStringATL strPL;
 			CStringATL strBonus;
 			CStringATL strBonusAvg;
+			CStringATL strMatchs;
 
 			pRS->GetField(0, strQH);
 			pRS->GetField(1, fBonus);
 			pRS->GetField(2, strCode);
 			pRS->GetField(3, strPL);
 			pRS->GetField(4, lSales);
+			pRS->GetField(5, strMatchs);
 
+			
+			toSqliteDB(strQH, fBonus, strCode, strPL, lSales, strMatchs);
 			sprintf(strBonus.GetBuffer(255), "%.2f", fBonus);
 			strBonus.ReleaseBuffer();
 
@@ -282,14 +310,7 @@ void CMainDlg::ReloadStatisData() {
 	return;
 }
 
-static void toSqliteDB(const CStringATL& qh, double bonus,
-	const CStringATL& codes, const CStringATL& pl, long sales) {
-	CStlString strAppPath = Global::GetAppPath();
-	CStlString strDbFilePath = strAppPath + _T("ZcStatis.db3");
 
-
-
-}
 
 
 
