@@ -101,7 +101,7 @@ public:
 
 private:
 	std::vector<DataRow> m_arrDbData;
-
+	CStlString m_SearchCodes;
 
 private:
 	void DoListMenuCommand(UINT cmd, UINT nItem);

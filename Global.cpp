@@ -93,7 +93,7 @@ std::string Global::toUTF8(const CStlString& local) {
 	return SysWideToUTF8(wide.m_psz);
 }
 
-CStlString Global::formUTF8(const std::string& utf8) {
+CStlString Global::fromUTF8(const std::string& utf8) {
 	CW2T ret(SysUTF8ToWide(utf8).c_str());
 	return ret.m_psz;
 }

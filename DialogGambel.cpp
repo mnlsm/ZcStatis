@@ -118,7 +118,7 @@ LRESULT CDialogGambel::OnClickedBuAddDanShi(WORD wNotifyCode, WORD wID, HWND hWn
 		MessageBox("单注文件读取失败！", "错误", MB_ICONERROR | MB_OK);
 		return 1L;
 	}
-	CStlString strCodes = Global::formUTF8(filedata);
+	CStlString strCodes = Global::fromUTF8(filedata);
 	CStlString strPL, strMatchs;
 	CStringATL strSQL;
 	strSQL.Format(_T("SELECT PLDATA, MATCHS FROM PLDATA WHERE ID='%s'"), m_strQH.c_str());
@@ -345,6 +345,16 @@ void CDialogGambel::InitControls() {
 	strTemp.Format(_T("方案列表(%s):"), m_strQH.c_str());
 	CWindow wnd = GetDlgItem(IDC_STGAMBELS);
 	wnd.SetWindowText(strTemp);
+
+	CStringATL strSQL;
+	strSQL.Format(_T("SELECT RESULT FROM PLDATA WHERE ID='%s' ORDER BY ID ASC"), m_strQH.c_str());
+	SQLite::Statement sm(*m_pDatabase, strSQL);
+	if (sm.executeStep()) {
+		CStlString result = sm.getColumn(0).getString();
+		if (!result.empty()) {
+			m_edSearch.SetWindowText(result.c_str());
+		}
+	}
 }
 
 
@@ -364,8 +374,8 @@ void CDialogGambel::ReloadFangAnData() {
 		row.m_nCodesType = sm.getColumn(2).getInt();
 		row.m_strCodes = sm.getColumn(3).getString().c_str();
 		row.m_strPL = sm.getColumn(4).getString().c_str();
-		row.m_strMatchs = Global::formUTF8(sm.getColumn(5).getString()).c_str();
-		row.m_strScript = Global::formUTF8(sm.getColumn(6).getString()).c_str();
+		row.m_strMatchs = sm.getColumn(5).getString().c_str();
+		row.m_strScript = Global::fromUTF8(sm.getColumn(6).getString()).c_str();
 		row.m_strResult = sm.getColumn(7).getString().c_str();
 		m_arrDbData.push_back(row);
 	}
@@ -444,7 +454,7 @@ void CDialogGambel::DoEditCodes(const DataRow& data) {
 			MessageBox("单注文件读取失败！", "错误", MB_ICONERROR | MB_OK);
 			return;
 		}
-		CStlString strCodes = Global::formUTF8(filedata);
+		CStlString strCodes = Global::fromUTF8(filedata);
 		CStringATL strSQL = _T("UPDATE GAMBEL SET CODESTYPE=?, CODES=?, RESULT=? WHERE ID=?");
 		SQLite::Statement sm(*m_pDatabase, strSQL);
 		sm.bind(1, 1);
@@ -512,7 +522,7 @@ void CDialogGambel::DoEditScript(const DataRow& data) {
 		return;
 	}
 	*/
-	CStlString strScript = Global::formUTF8(filedata);
+	CStlString strScript = Global::fromUTF8(filedata);
 	CStringATL strSQL = _T("UPDATE GAMBEL SET SCRIPT=? WHERE ID=?");
 	SQLite::Statement sm(*m_pDatabase, strSQL);
 	sm.bindNoCopy(1, strScript);
@@ -611,7 +621,7 @@ void CDialogGambel::DoCopyRow(const DataRow& data) {
 	sm.bind(3, data.m_nCodesType);
 	sm.bindNoCopy(4, data.m_strCodes);
 	sm.bindNoCopy(5, data.m_strPL);
-	sm.bindNoCopy(6, data.m_strMatchs);
+	sm.bindNoCopy(6, (LPCTSTR)data.m_strMatchs);
 	sm.bindNoCopy(7, data.m_strScript);
 	if (sm.exec() > 0) {
 		ReloadFangAnData();

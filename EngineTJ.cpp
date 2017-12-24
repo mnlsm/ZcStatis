@@ -215,10 +215,12 @@ BOOL CEngine::IsFilterX(const CIntArray &tempArr, const std::string& strTJ, std:
 		//jugde valid para
 		if (arrPart.size() != 4) {
 			m_mapFilterX[strTJ] = fp;
+			OutputDebugStringA((strTJ + " error 0 lua_").c_str());
 			return FALSE;
 		}
 		if (!PathFileExists(arrPart[1].c_str())) {
 			m_mapFilterX[strTJ] = fp;
+			OutputDebugStringA((strTJ + " error 1 lua_").c_str());
 			return FALSE;
 		}
 		
@@ -226,10 +228,12 @@ BOOL CEngine::IsFilterX(const CIntArray &tempArr, const std::string& strTJ, std:
 		int end = _ttol(arrPart[3].c_str());
 		if (begin == -1 || end == -1) {
 			m_mapFilterX[strTJ] = fp;
+			OutputDebugStringA((strTJ + " error 2 lua_").c_str());
 			return FALSE;
 		}
 		if (end < begin) {
 			m_mapFilterX[strTJ] = fp;
+			OutputDebugStringA((strTJ + " error 3 lua_").c_str());
 			return FALSE;
 		}
 		fp.filepath = arrPart[1];
@@ -238,14 +242,17 @@ BOOL CEngine::IsFilterX(const CIntArray &tempArr, const std::string& strTJ, std:
 		std::string filedata;
 		if (!Global::ReadFileData(fp.filepath, filedata)) {
 			m_mapFilterX[strTJ] = fp;
+			OutputDebugStringA((strTJ + " error 4  lua_").c_str());
 			return FALSE;
 		}
 		if (!GetRecords(filedata, fp.arrRecords)) {
 			m_mapFilterX[strTJ] = fp;
+			OutputDebugStringA((strTJ + " error 5 lua_").c_str());
 			return FALSE;
 		}
 		fp.isValid = TRUE;
 		m_mapFilterX[strTJ] = fp;
+		OutputDebugStringA((strTJ + " prepared lua_").c_str());
 	}
 
 	const auto& item = m_mapFilterX.find(strTJ);

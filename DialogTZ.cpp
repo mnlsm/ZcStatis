@@ -84,6 +84,17 @@ LRESULT CDialogTZ::OnRecommendMenu(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 			co.SetCurSel(0);
 		}
 	}
+	else if (wID == IDM_RECOMMEND_THREE) {
+		for (int i = 0; i < TOTO_COUNT; i++) {
+			UINT ctlID = IDC_CORESULT3 + i * 3;
+			CComboBox co = GetDlgItem(ctlID);
+			co.SetCurSel(1);
+			co = GetDlgItem(ctlID - 1);
+			co.SetCurSel(0);
+			co = GetDlgItem(ctlID - 2);
+			co.SetCurSel(0);
+		}
+	}
 	return 1L;
 }
 
@@ -136,6 +147,7 @@ void CDialogTZ::initConctrols() {
 	m_MenuButton = GetDlgItem(IDC_BUSET);
 	m_MenuButton.AddMenuItem(IDM_RECOMMEND_ONE, _T("单选"));
 	m_MenuButton.AddMenuItem(IDM_RECOMMEND_TWO, _T("双选"));
+	m_MenuButton.AddMenuItem(IDM_RECOMMEND_THREE, _T("三选"));
 }
 
 struct GvItem {
@@ -236,7 +248,7 @@ BOOL CDialogTZ::ReLoadDataToShow(BOOL first) {
 		if (sm.executeStep()) {
 			strResults = sm.getColumn(0).getString().c_str();
 			m_strPL = sm.getColumn(1).getString().c_str();
-			m_strMatchs = Global::formUTF8(sm.getColumn(2).getString().c_str());
+			m_strMatchs = sm.getColumn(2).getString().c_str();
 		}
 
 		if (first) {
@@ -275,7 +287,7 @@ BOOL CDialogTZ::ReLoadDataToShow(BOOL first) {
 		SQLite::Statement sm(*m_pDatabase, strSQL);
 		if (sm.executeStep()) {
 			m_strPL = sm.getColumn(0).getString().c_str();
-			m_strMatchs = Global::formUTF8(sm.getColumn(0).getString()).c_str();
+			m_strMatchs = sm.getColumn(1).getString().c_str();
 		}
 		if (first) {
 			initComboxes();

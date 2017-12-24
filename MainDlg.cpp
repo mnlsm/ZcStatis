@@ -131,6 +131,9 @@ void CMainDlg::InitControls() {
 	m_lstStatis.InsertColumn(colIndex, "均奖(万)", LVCFMT_LEFT, 80);    //170
 	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_DOUBLE);
 
+	m_lstStatis.InsertColumn(colIndex, "任九奖金", LVCFMT_LEFT, 80);    //170
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_DOUBLE);
+
 	m_lstStatis.InsertColumn(colIndex, "号 码", LVCFMT_CENTER, 100);    //270
 	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
 
@@ -180,8 +183,31 @@ void CMainDlg::InitializeStatisData() {
 			SQLite::OPEN_READWRITE));
 }
 
+void addRen9Bonus(std::shared_ptr<SQLite::Database>& db) {
+	using namespace SQLite;
+	CStlString strTextFile = Global::GetAppPath() + _T("ren9.txt");
+
+	CStlString strSQL = _T("UPDATE PLDATA SET BONUS9=? WHERE ID=?");
+	SQLite::Statement sm(*db, strSQL);
+
+	std::string filedate;
+	Global::ReadFileData(strTextFile, filedate);
+	std::vector<CStlString> arrLines;
+	Global::DepartString(filedate, _T("\r\n"), arrLines);
+	for (const auto& line : arrLines) {
+		std::vector<CStlString> arrPart;
+		Global::DepartString(line, _T(";"), arrPart);
+		sm.reset();
+		sm.clearBindings();
+		sm.bind(1, _ttof(arrPart[1].c_str()));
+		sm.bindNoCopy(2, arrPart[0]);
+		sm.exec();
+	}
+
+}
 
 void CMainDlg::ReloadStatisData() {
+	//addRen9Bonus(m_pDatabase);
 	m_lstStatis.DeleteAllItems();
 
 	using namespace SQLite;
@@ -192,18 +218,19 @@ void CMainDlg::ReloadStatisData() {
 	m_arrPLSCOPE.push_back(6.0);
 	m_arrPLSCOPE.push_back(1000.0);
 
-	CStlString strSQL = _T("SELECT ID,BONUS,RESULT,PLDATA,SALES,MATCHS FROM PLDATA ORDER BY ID ASC");
+	CStlString strSQL = _T("SELECT ID,BONUS,RESULT,PLDATA,SALES,MATCHS,BONUS9 FROM PLDATA ORDER BY ID ASC");
 	Statement sm(*m_pDatabase, strSQL);
 	if (TRUE) {
 		int iIndex = 0;
 		while (sm.executeStep()) {
 			int colIndex = 0;
 			float fBonus = 0;
+			float fBonus9 = 0;
 			long lSales = 0;
 			CStringATL strQH;
 			CStringATL strCode;
 			CStringATL strPL;
-			CStringATL strBonus;
+			CStringATL strBonus, strBonus9;
 			CStringATL strBonusAvg;
 			CStringATL strMatchs;
 
@@ -213,9 +240,14 @@ void CMainDlg::ReloadStatisData() {
 			strPL = sm.getColumn(3).getString().c_str();
 			lSales = sm.getColumn(4).getUInt();
 			strMatchs = sm.getColumn(5).getString().c_str();
+			fBonus9 = sm.getColumn(6).getDouble();
 
 			sprintf(strBonus.GetBuffer(255), "%.2f", fBonus);
 			strBonus.ReleaseBuffer();
+
+			sprintf(strBonus9.GetBuffer(255), "%.2f", fBonus9);
+			strBonus9.ReleaseBuffer();
+
 
 			double avgBonus = lSales;
 			avgBonus = avgBonus / 20000000;
@@ -236,6 +268,7 @@ void CMainDlg::ReloadStatisData() {
 			iIndex = m_lstStatis.InsertItem(iIndex, strQH);
 			m_lstStatis.SetItemText(iIndex, ++colIndex, strBonus);
 			m_lstStatis.SetItemText(iIndex, ++colIndex, strBonusAvg);
+			m_lstStatis.SetItemText(iIndex, ++colIndex, strBonus9);
 			m_lstStatis.SetItemText(iIndex, ++colIndex, strCode);
 
 			DataRow dataRow;

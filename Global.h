@@ -16,7 +16,7 @@ public:
 	static void TrimBlank(CStlString& str);
 
 	static std::string toUTF8(const CStlString& local);
-	static CStlString formUTF8(const std::string& utf8);
+	static CStlString fromUTF8(const std::string& utf8);
 	
 	static BOOL ReadFileData(const CStlString& filename, std::string& filedata);
 	static BOOL SaveFileData(const CStlString& filename, const std::string& filedata, BOOL append);

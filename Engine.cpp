@@ -547,7 +547,7 @@ BOOL CEngine::GetRecords(const CStlString& strCodes, CIntxyArray& arrRecords) {
 	for (const auto& line : lines) {
 		CIntArray arrRecord;
 		for (const auto& code : line) {
-			if (code == _T('\r')) {
+			if (code == _T('\r') || code == _T('£¬') || code == _T('£»')) {
 				continue;
 			}
 			int iVal = code - _T('0');

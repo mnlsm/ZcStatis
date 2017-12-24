@@ -157,6 +157,7 @@ LRESULT CDialogDB::OnListQHSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 		m_strCode = sm.getColumn(2).getString().c_str();
 		m_strPL = sm.getColumn(3).getString().c_str();
 		lSales = sm.getColumn(4).getInt();
+		m_strMatchs = sm.getColumn(5).getString().c_str();
 		sprintf(m_strSales.GetBuffer(255), "%u", lSales);
 		m_strSales.ReleaseBuffer();
 	}
