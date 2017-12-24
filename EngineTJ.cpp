@@ -200,3 +200,77 @@ BOOL CEngine::IsFilterQ(const CIntArray &tempArr, const std::string& strTJ, std:
 	}
     return FALSE;
 }
+
+BOOL CEngine::IsFilterX(const CIntArray &tempArr, const std::string& strTJ, std::string *pStr) {
+	if (strTJ.find(_T("X")) != 0) {
+		return FALSE;
+	}
+
+	if (m_mapFilterX.find(strTJ) == m_mapFilterX.end()) {
+		FilterX_Params fp;
+		fp.tj = strTJ;
+		CStlStrArray arrPart;
+		TCHAR cbDim[] = _T("|");
+		Global::DepartString(strTJ, cbDim, arrPart);
+		//jugde valid para
+		if (arrPart.size() != 4) {
+			m_mapFilterX[strTJ] = fp;
+			return FALSE;
+		}
+		if (!PathFileExists(arrPart[1].c_str())) {
+			m_mapFilterX[strTJ] = fp;
+			return FALSE;
+		}
+		
+		int begin = _ttol(arrPart[2].c_str());
+		int end = _ttol(arrPart[3].c_str());
+		if (begin == -1 || end == -1) {
+			m_mapFilterX[strTJ] = fp;
+			return FALSE;
+		}
+		if (end < begin) {
+			m_mapFilterX[strTJ] = fp;
+			return FALSE;
+		}
+		fp.filepath = arrPart[1];
+		fp.range_begin = begin;
+		fp.range_end = end;
+		std::string filedata;
+		if (!Global::ReadFileData(fp.filepath, filedata)) {
+			m_mapFilterX[strTJ] = fp;
+			return FALSE;
+		}
+		if (!GetRecords(filedata, fp.arrRecords)) {
+			m_mapFilterX[strTJ] = fp;
+			return FALSE;
+		}
+		fp.isValid = TRUE;
+		m_mapFilterX[strTJ] = fp;
+	}
+
+	const auto& item = m_mapFilterX.find(strTJ);
+	if (item == m_mapFilterX.cend()) {
+		return FALSE;
+	}
+	const FilterX_Params& fp = item->second;
+	if (!fp.isValid) {
+		return FALSE;
+	}
+	const CIntxyArray& arrRecords = item->second.arrRecords;
+	for (const auto& record : arrRecords) {
+		if (record.size() != tempArr.size()) {
+			return FALSE;
+		}
+		int same_count = 0;
+		for (int i = 0; i < record.size(); i++) {
+			if (record[i] == tempArr[i]) {
+				same_count++;
+			}
+		}
+		if (same_count >= fp.range_begin && same_count <= fp.range_end) {
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+

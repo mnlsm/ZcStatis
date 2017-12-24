@@ -117,6 +117,8 @@ protected:
 	virtual BOOL IsFilterF(const CIntArray &tempArr, const std::string& strTJ, std::string *pStr = NULL);
 	virtual BOOL IsFilterW(const CIntArray &tempArr, const std::string& strTJ, std::string *pStr = NULL);
 	virtual BOOL IsFilterQ(const CIntArray &tempArr, const std::string& strTJ, std::string *pStr = NULL);
+	virtual BOOL IsFilterX(const CIntArray &tempArr, const std::string& strTJ, std::string *pStr = NULL);
+
 
 public:
 	static BOOL GetChoices(const CStlString& strChoices, CIntxyArray& arrChoices);
@@ -135,5 +137,26 @@ public:
 private:
 	static BOOL GetLianXu(const CIntArray& record, int &nMaxSP, int &nMaxSF, int &nMaxPF);
 
+private:
+	struct FilterX_Params {
+		FilterX_Params() {
+			clear();
+		}
+		CStlString tj;
+		bool isValid;
+		CStlString filepath;
+		int range_begin;
+		int range_end;
+		CIntxyArray arrRecords;
+
+		void clear() {
+			isValid = false;
+			filepath = _T("");
+			range_begin = -1;
+			range_end = -1;
+			arrRecords.clear();
+		}
+	};
+	std::map<std::string, FilterX_Params> m_mapFilterX;
 
 };

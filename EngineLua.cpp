@@ -219,6 +219,9 @@ BOOL CEngineLua::IsFilterTJ(const CIntArray& record, const CStlString& strTJ) {
 	if (IsFilterQ(record, strTJ)) {
 		return TRUE;
 	}
+	if (IsFilterX(record, strTJ)) {
+		return TRUE;
+	}
 	return FALSE;
 }
 

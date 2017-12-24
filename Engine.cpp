@@ -125,6 +125,7 @@ void CEngine::WriteRecordsToFile(const CStlString& filename, CIntxyArray &arrAll
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 BOOL CEngine::CalculateAllResultImpl(void* ctx, CStlString& failed_reason) {
 	ZeroMemory(m_arrRecordFenBu, TOTO_COUNT * 3 * sizeof(int));
+	m_mapFilterX.clear();
 	m_arrCoverIndex.clear();
 	m_arrResultRecord.clear();
 	if (!m_arrChoices.empty()) {
@@ -544,16 +545,19 @@ BOOL CEngine::GetRecords(const CStlString& strCodes, CIntxyArray& arrRecords) {
 	CStlStrArray lines;
 	Global::DepartString(strCodes, _T("\n"), lines);
 	for (const auto& line : lines) {
-		if (line.size() != TOTO_COUNT) {
-			return FALSE;
-		}
 		CIntArray arrRecord;
 		for (const auto& code : line) {
+			if (code == _T('\r')) {
+				continue;
+			}
 			int iVal = code - _T('0');
 			if (iVal != 3 && iVal != 1 && iVal != 0) {
 				return FALSE;
 			}
 			arrRecord.push_back(iVal);
+		}
+		if (arrRecord.size() != TOTO_COUNT) {
+			return FALSE;
 		}
 		arrRecords.push_back(arrRecord);
 	}
