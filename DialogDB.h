@@ -17,7 +17,7 @@ private:
     CDialogDB() {}
 
 public:
-    CDialogDB(IDbSystem *pDbSystem, IDbDatabase *pDbConnection) :
+	CDialogDB(std::shared_ptr<SQLite::Database> db) :
         m_lstQH(this, 1),
         m_edQH(this, 1),
         m_edCode(this, 1),
@@ -27,8 +27,7 @@ public:
         m_strCode.Empty();
         m_strBonus.Empty();
         m_strPL.Empty();
-        m_pDbDatabase = pDbConnection;
-        m_pDbSystem = pDbSystem;
+		m_pDatabase = db;
     }
 
     ~CDialogDB() {
@@ -93,8 +92,7 @@ private:
     void ClearDataShow();
 
 private:
-    IDbDatabase *m_pDbDatabase;
-    IDbSystem *m_pDbSystem;
+	std::shared_ptr<SQLite::Database> m_pDatabase;
 
 
 };

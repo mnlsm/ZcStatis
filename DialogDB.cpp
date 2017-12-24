@@ -12,22 +12,16 @@ void CDialogDB::LoadData() {
     m_lstQH.ResetContent();
 
     CStringATL strSQL = _T("SELECT ID FROM PLDATA ORDER BY ID DESC");
-    IDbRecordset *pRS = m_pDbSystem->CreateRecordset(m_pDbDatabase);
-    if(pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
-		while(!pRS->IsEOF()) {
-			CStringATL strID;
-			pRS->GetField(0, strID);
-			strID.TrimLeft();
-			strID.TrimRight();
-			if(!strID.IsEmpty()) {
-				m_lstQH.AddString(strID);
-			}
-			pRS->MoveNext();
+	SQLite::Statement sm(*m_pDatabase, strSQL);
+	while (sm.executeStep()) {
+		CStringATL strID = sm.getColumn(0).getString().c_str();
+		strID.TrimLeft();
+		strID.TrimRight();
+		if(!strID.IsEmpty()) {
+			m_lstQH.AddString(strID);
 		}
 	}
 
-    pRS->Close();
-    delete pRS;
 }
 
 
@@ -88,33 +82,26 @@ LRESULT CDialogDB::OnClickedAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
         }
     }
 
-    CStringATL strSQL =  _T("delete from PLDATA where ID = ?");
-    IDbCommand *pCmd1 = m_pDbSystem->CreateCommand(m_pDbDatabase);
-    pCmd1->Create(strSQL);
-    pCmd1->SetParam(0, m_strQH);
-    pCmd1->Execute(NULL);
-    pCmd1->Close();
-    delete pCmd1;
-
+    CStringATL strSQL =  _T("DELETE FROM PLDATA WHERE ID = ?");
+	SQLite::Statement sm(*m_pDatabase, strSQL);
+    sm.bindNoCopy(1, m_strQH);
+	sm.exec();
+ 
     float fBonus = _ttof(m_strBonus);
 	long lSales = _ttol(m_strSales);
     strSQL = _T("INSERT INTO PLDATA (ID, BONUS,RESULT,PLDATA,SALES,MATCHS) values(?,?,?,?,?,?)");
-    IDbCommand *pCmd = m_pDbSystem->CreateCommand(m_pDbDatabase);
-    pCmd->Create(strSQL);
-    pCmd->SetParam(0, m_strQH);
-    pCmd->SetParam(1, &fBonus);
+	SQLite::Statement sm1(*m_pDatabase, strSQL);
+	sm1.bindNoCopy(1, m_strQH);
+	sm1.bind(2, fBonus);
 	if (!m_strCode.IsEmpty()) {
-		pCmd->SetParam(2, m_strCode);
+		sm1.bindNoCopy(3, m_strCode);
 	} else {
-		pCmd->SetParam(2, "00000000000000");
+		sm1.bindNoCopy(3, "00000000000000");
 	}
-    pCmd->SetParam(3, m_strPL);
-	pCmd->SetParam(4, &lSales);
-	pCmd->SetParam(5, m_strMatchs);
-
-    pCmd->Execute(NULL);
-    pCmd->Close();
-    delete pCmd;
+	sm1.bindNoCopy(4, m_strPL);
+	sm1.bind(5, lSales);
+	sm1.bindNoCopy(6, m_strMatchs);
+	sm1.exec();
 
     if(m_lstQH.FindString(0, m_strQH) < 0)
         m_lstQH.AddString(m_strQH);
@@ -141,15 +128,10 @@ LRESULT CDialogDB::OnClickedDelete(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
     m_lstQH.GetText(nSel, strID.GetBuffer(1024));
     strID.ReleaseBuffer();
 
-    CStringATL strSQL =  _T("delete from PLDATA where ID = ?");
-    IDbCommand *pCmd = m_pDbSystem->CreateCommand(m_pDbDatabase);
-    pCmd->Create(strSQL);
-    pCmd->SetParam(0, strID);
-    pCmd->Execute(NULL);
-
-    pCmd->Close();
-    delete pCmd;
-
+    CStringATL strSQL =  _T("DELETE FROM PLDATA WHERE ID = ?");
+	SQLite::Statement sm(*m_pDatabase, strSQL);
+	sm.bindNoCopy(1, strID);
+    sm.exec();
     m_lstQH.DeleteString(nSel);
     return 0;
 }
@@ -163,26 +145,21 @@ LRESULT CDialogDB::OnListQHSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
     strID.ReleaseBuffer();
 
     CStringATL strSQL;
-    strSQL.Format(_T("select ID,BONUS,RESULT,PLDATA,SALES,MATCHS from PLDATA where ID='%s'"), strID);
-    IDbRecordset *pRS = m_pDbSystem->CreateRecordset(m_pDbDatabase);
-    if(pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
-		if(!pRS->IsEOF()) {
-			float fBonus = 0;
-			long lSales = 0;
-			pRS->GetField(0, m_strQH);
-			pRS->GetField(1, fBonus);
-			sprintf(m_strBonus.GetBuffer(255), "%.2f", fBonus);
-			m_strBonus.ReleaseBuffer();
-			pRS->GetField(2, m_strCode);
-			pRS->GetField(3, m_strPL);
-			pRS->GetField(4, lSales);
-			sprintf(m_strSales.GetBuffer(255), "%u", lSales);
-			m_strSales.ReleaseBuffer();
-			pRS->GetField(5, m_strMatchs);
-		}
+    strSQL.Format(_T("SELECT ID,BONUS,RESULT,PLDATA,SALES,MATCHS FROM PLDATA WHERE ID='%s'"), strID);
+	SQLite::Statement sm(*m_pDatabase, strSQL);
+	if (sm.executeStep()) {
+		float fBonus = 0;
+		long lSales = 0;
+		m_strQH = sm.getColumn(0).getString().c_str();
+		fBonus = sm.getColumn(1).getDouble();
+		sprintf(m_strBonus.GetBuffer(255), "%.2f", fBonus);
+		m_strBonus.ReleaseBuffer();
+		m_strCode = sm.getColumn(2).getString().c_str();
+		m_strPL = sm.getColumn(3).getString().c_str();
+		lSales = sm.getColumn(4).getInt();
+		sprintf(m_strSales.GetBuffer(255), "%u", lSales);
+		m_strSales.ReleaseBuffer();
 	}
-    pRS->Close();
-    delete pRS;
 
     DoDataExchange(FALSE);
 

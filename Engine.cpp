@@ -462,12 +462,15 @@ BOOL CEngine::CalcCommonFilterFactors(const CIntArray& record, const CDoublexyAr
 			if (arrTemp[0] == dCurPL) {
 				commonFF.mPL1Count++;
 				commonFF.mPLAvgs[0 + avgGap]++;
+				commonFF.mPLAvgsPos[i] = (avgGap == 0) ? 1 : 2;
 			} else if (arrTemp[1] == dCurPL) {
 				commonFF.mPL2Count++;
 				commonFF.mPLAvgs[1 + avgGap]++;
+				commonFF.mPLAvgsPos[i] = (avgGap == 0) ? 5 : 3;
 			} else {
 				commonFF.mPL3Count++;
 				commonFF.mPLAvgs[2 + avgGap]++;
+				commonFF.mPLAvgsPos[i] = (avgGap == 0) ? 6 : 4;
 			}
 			commonFF.mGvj = commonFF.mGvj * dCurGV;
 			for (int j = 1; j < arrPLScope.size(); j++) {

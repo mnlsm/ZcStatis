@@ -121,7 +121,6 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="db\DbOledb.cpp" />
     <ClCompile Include="DialogDB.cpp" />
     <ClCompile Include="DialogGambel.cpp" />
     <ClCompile Include="DialogTZ.cpp" />
@@ -305,8 +304,6 @@
   <ItemGroup>
     <ClInclude Include="atlctrlsext.h" />
     <ClInclude Include="ButtonMenu.h" />
-    <ClInclude Include="db\DbBase.h" />
-    <ClInclude Include="db\DbOledb.h" />
     <ClInclude Include="DialogDB.h" />
     <ClInclude Include="DialogGambel.h" />
     <ClInclude Include="DialogTZ.h" />

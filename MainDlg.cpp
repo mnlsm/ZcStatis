@@ -12,8 +12,6 @@
 #include <SQLiteCpp/SQLiteCpp.h>
 
 CMainDlg::CMainDlg() : m_lstStatis(this, 1) {
-	m_pDbSystem = NULL;
-	m_pDbDatabase = NULL;
 }
 
 BOOL CMainDlg::PreTranslateMessage(MSG* pMsg) {
@@ -91,15 +89,6 @@ LRESULT CMainDlg::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 }
 
 LRESULT CMainDlg::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-    if(m_pDbDatabase != NULL) {
-        if(m_pDbDatabase->IsOpen()) {
-            m_pDbDatabase->Close();
-        }
-        delete m_pDbDatabase;
-    }
-    if(m_pDbSystem != NULL) {
-        delete m_pDbSystem;
-    }
     DestroyWindow();
     ::PostQuitMessage(wID);
     return 1L;
@@ -107,7 +96,7 @@ LRESULT CMainDlg::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHand
 
 
 LRESULT CMainDlg::OnAddRecord(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-    CDialogDB dlg(m_pDbSystem, m_pDbDatabase);
+	CDialogDB dlg(m_pDatabase); 
     dlg.DoModal();
     ReloadStatisData();
     return 1L;
@@ -186,61 +175,28 @@ void CMainDlg::InitControls() {
 }
 
 void CMainDlg::InitializeStatisData() {
-	//connect db
-	m_pDbSystem = new COledbSystem();
-	m_pDbDatabase = m_pDbSystem->CreateDatabase();
-	CStlString strAppPath = Global::GetAppPath();
-	CStringATL strConnect = "Provider= Microsoft.Jet.OLEDB.4.0;";
-	strConnect += "User ID=Admin;";
-	strConnect = strConnect + CStringATL("Data Source=") + CStringATL(strAppPath.c_str()) + CStringATL("ZcStatis.mdb;");
-	BOOL bRet = m_pDbDatabase->Open(NULL, (LPCTSTR)strConnect, _T(""), _T(""), DB_OPEN_READ_ONLY);
+	CStlString strDbFilePath = Global::GetAppPath() + _T("ZcStatis.db3");
+	m_pDatabase.reset(new (std::nothrow) SQLite::Database(strDbFilePath.c_str(), 
+			SQLite::OPEN_READWRITE));
 }
 
-static void toSqliteDB(const CStringATL& qh, double bonus,
-	const CStringATL& codes, const CStringATL& pl, long sales, const CStringATL& strMatchs) {
-	using namespace SQLite;
-	CStlString strAppPath = Global::GetAppPath();
-	CStlString strDbFilePath = strAppPath + _T("ZcStatis.db3");
-	CStlString strSQL = _T("INSERT INTO PLDATA VALUES (@ID, @BONUS,@RESULT,@PLDATA,@SALES,@MATCHS)");
-	try {
-		Database db(strDbFilePath.c_str(), OPEN_READWRITE);
-		Statement sm(db, strSQL.c_str());
-		sm.reset();
-		sm.clearBindings();
-		sm.bind("@ID", (LPCTSTR)qh);
-		sm.bind("@BONUS", bonus);
-		sm.bind("@RESULT", (LPCTSTR)codes);
-		sm.bind("@PLDATA", (LPCTSTR)pl);
-		sm.bind("@SALES", sales);
-		sm.bind("@MATCHS", Global::toUTF8((LPCTSTR)strMatchs));
-		sm.exec();
-	}
-	catch (Exception& err) {
-		strSQL = err.getErrorStr();
-	}
-}
 
 void CMainDlg::ReloadStatisData() {
 	m_lstStatis.DeleteAllItems();
 
+	using namespace SQLite;
 	m_arrPLSCOPE.clear();
-	CStringATL strSQL = _T("select PLSCOPE from PLSCOPE");
-	std::unique_ptr<IDbRecordset> pRS1(m_pDbSystem->CreateRecordset(m_pDbDatabase));
-	if (pRS1->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
-		while (!pRS1->IsEOF()) {
-			double fPL = 0;
-			pRS1->GetField(0, fPL);
-			m_arrPLSCOPE.push_back(fPL);
-			pRS1->MoveNext();
-		}
-	}
-	pRS1->Close();
+	m_arrPLSCOPE.push_back(0.0);
+	m_arrPLSCOPE.push_back(2.25);
+	m_arrPLSCOPE.push_back(4.0);
+	m_arrPLSCOPE.push_back(6.0);
+	m_arrPLSCOPE.push_back(1000.0);
 
-	strSQL = _T("SELECT ID,BONUS,RESULT,PLDATA,SALES,MATCHS from PLDATA ORDER BY ID ASC");
-	std::unique_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
-	if(pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
+	CStlString strSQL = _T("SELECT ID,BONUS,RESULT,PLDATA,SALES,MATCHS FROM PLDATA ORDER BY ID ASC");
+	Statement sm(*m_pDatabase, strSQL);
+	if (TRUE) {
 		int iIndex = 0;
-		while (!pRS->IsEOF()) {
+		while (sm.executeStep()) {
 			int colIndex = 0;
 			float fBonus = 0;
 			long lSales = 0;
@@ -251,15 +207,13 @@ void CMainDlg::ReloadStatisData() {
 			CStringATL strBonusAvg;
 			CStringATL strMatchs;
 
-			pRS->GetField(0, strQH);
-			pRS->GetField(1, fBonus);
-			pRS->GetField(2, strCode);
-			pRS->GetField(3, strPL);
-			pRS->GetField(4, lSales);
-			pRS->GetField(5, strMatchs);
+			strQH = sm.getColumn(0).getString().c_str();
+			fBonus = sm.getColumn(1).getDouble();
+			strCode = sm.getColumn(2).getString().c_str();
+			strPL = sm.getColumn(3).getString().c_str();
+			lSales = sm.getColumn(4).getUInt();
+			strMatchs = sm.getColumn(5).getString().c_str();
 
-			
-			toSqliteDB(strQH, fBonus, strCode, strPL, lSales, strMatchs);
 			sprintf(strBonus.GetBuffer(255), "%.2f", fBonus);
 			strBonus.ReleaseBuffer();
 
@@ -302,10 +256,8 @@ void CMainDlg::ReloadStatisData() {
 			m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strPLAvgCount);
 			m_lstStatis.SetItemText(iIndex, ++colIndex, dataRow.m_strPLAvg);
 
-			pRS->MoveNext();
 		}
 	}
-	pRS->Close();
 	m_lstStatis.DoSortItems(0, false);
 	return;
 }
@@ -364,17 +316,13 @@ void CMainDlg::DoListMenuCommand(UINT cmd, UINT nItem) {
 	CStringATL strQH;
 	m_lstStatis.GetItemText(nItem, 0, strQH);
 	if (cmd == IDM_EDIT_FANGANS) {
-		CDialogGambel dlg(m_pDbSystem, m_pDbDatabase, (LPCTSTR)strQH);
+		CDialogGambel dlg(m_pDatabase, (LPCTSTR)strQH); 
 		dlg.DoModal();
 		return;
 	} else if (cmd == IDM_DELETE_PLDATA) {
-		std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
-		CStringATL strSQL = _T("DELETE FROM PLDATA WHERE ID=?");
-		pCmd->Create(strSQL);
-		pCmd->SetParam(0, strQH);
-		if (pCmd->Execute(NULL)) {
-			ReloadStatisData();
-		}
+		CStlString strSQL = _T("DELETE FROM PLDATA WHERE ID='");
+		strSQL = strSQL + (LPCTSTR)strQH + _T("'");
+		m_pDatabase->exec(strSQL);
 		return;
 	}
 }

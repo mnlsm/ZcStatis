@@ -89,9 +89,6 @@ private:
 	CDoubleArray m_arrPLSCOPE;
 
 private:
-	IDbSystem *m_pDbSystem;
-	IDbDatabase *m_pDbDatabase;
-
-
+	std::shared_ptr<SQLite::Database> m_pDatabase;
 
 };

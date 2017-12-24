@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="db">
-      <UniqueIdentifier>{aa54bf02-6dc2-445c-a2b7-c6526be53955}</UniqueIdentifier>
-    </Filter>
     <Filter Include="lua">
       <UniqueIdentifier>{4c54fc7f-f2c5-4b6b-bfaa-fded7b195b12}</UniqueIdentifier>
     </Filter>
@@ -33,9 +30,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="db\DbOledb.cpp">
-      <Filter>db</Filter>
-    </ClCompile>
     <ClCompile Include="lua\lbitlib.c">
       <Filter>lua</Filter>
     </ClCompile>
@@ -197,12 +191,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="db\DbBase.h">
-      <Filter>db</Filter>
-    </ClInclude>
-    <ClInclude Include="db\DbOledb.h">
-      <Filter>db</Filter>
-    </ClInclude>
     <ClInclude Include="lua\lctype.h">
       <Filter>lua</Filter>
     </ClInclude>

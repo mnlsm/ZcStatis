@@ -11,7 +11,7 @@ class CDialogTZ
 	: public CAxDialogImpl<CDialogTZ> {
 public:
 	enum { IDD = IDD_DIALOG_TZ };
-	CDialogTZ(IDbSystem *pDbSystem, IDbDatabase *pDbDatabase, const CStlString& qh, int gambleID = -1);
+	CDialogTZ(const std::shared_ptr<SQLite::Database>& db, const CStlString& qh, int gambleID = -1);
 
 	BEGIN_MSG_MAP(CDialogTZ)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
@@ -52,10 +52,9 @@ private:
 	CStlString m_strMatchs;
 
 	int m_GambleID;
-	IDbDatabase *m_pDbDatabase;
-	IDbSystem *m_pDbSystem;
-
+	std::shared_ptr<SQLite::Database> m_pDatabase;
 	BOOL m_bDataChanged;
+
 private:
 	CStatic m_wndQI;
 	CBrush m_brush;

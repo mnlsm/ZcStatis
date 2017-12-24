@@ -313,4 +313,13 @@ void CEngineLua::push_scriptfunc_params(lua_State *L, const CIntArray& record) {
 	}
 	lua_settable(L, -3);
 
+	lua_pushstring(L, "plavgpos");
+	lua_newtable(L);
+	for (int i = 0; i < commFF.mPLAvgsPos.size(); i++) {
+		lua_pushinteger(L, i + 1);
+		lua_pushinteger(L, commFF.mPLAvgsPos[i]);
+		lua_settable(L, -3);
+	}
+	lua_settable(L, -3);
+
 }

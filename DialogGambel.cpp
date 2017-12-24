@@ -10,13 +10,11 @@ static const CStlString DZ_FILTER = _T("*.dz");
 static const CStlString LUA_FILTER_NAME = _T("脚本文件(*.lua)");
 static const CStlString LUA_FILTER = _T("*.lua");
 
-CDialogGambel::CDialogGambel(IDbSystem *pDbSystem, IDbDatabase *pDbDatabase, 
-	const CStlString& qh) : 
-		m_lstGambel(this, 1), 
-		m_edOutput(this, 2),
-		m_edSearch(this, 3) {
-	m_pDbSystem = pDbSystem;
-	m_pDbDatabase = pDbDatabase;
+CDialogGambel::CDialogGambel(std::shared_ptr<SQLite::Database> db, const CStlString& qh) 
+	: m_lstGambel(this, 1), 
+	  m_edOutput(this, 2),
+	  m_edSearch(this, 3) {
+	m_pDatabase = db;
 	m_strQH = qh;
 
 	m_pPrintInfo.reset(new (std::nothrow) CMyPrintInfo());
@@ -121,38 +119,33 @@ LRESULT CDialogGambel::OnClickedBuAddDanShi(WORD wNotifyCode, WORD wID, HWND hWn
 		return 1L;
 	}
 	CStlString strCodes = Global::formUTF8(filedata);
-	CStringATL strSQL, strPL, strMatchs;
+	CStlString strPL, strMatchs;
+	CStringATL strSQL;
 	strSQL.Format(_T("SELECT PLDATA, MATCHS FROM PLDATA WHERE ID='%s'"), m_strQH.c_str());
-	std::unique_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
-	if (pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
-		if (!pRS->IsEOF()) {
-			pRS->GetField(0, strPL);
-			pRS->GetField(1, strMatchs);
-		}
+	SQLite::Statement sm(*m_pDatabase, strSQL);
+	if (sm.executeStep()) {
+		strPL = sm.getColumn(0).getString();
+		strMatchs = sm.getColumn(1).getString();
 	}
-	pRS->Close();
+
 	strSQL = _T("INSERT INTO GAMBEL (QH, INUSE, CODESTYPE, CODES, PLDATA, MATCHS) VALUES(?,?,?,?,?,?)");
-	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
-	pCmd->Create(strSQL);
-	pCmd->SetParam(0, m_strQH);
-	long val = 0;
-	pCmd->SetParam(1, &val);
-	val = 1;
-	pCmd->SetParam(2, &val);
-	pCmd->SetParam(3, strCodes);
-	pCmd->SetParam(4, strPL);
-	pCmd->SetParam(5, strMatchs);
-	if (!pCmd->Execute(NULL)) {
+	SQLite::Statement sm1(*m_pDatabase, strSQL);
+	sm1.bindNoCopy(1, m_strQH);
+	sm1.bind(2, 0);
+	sm1.bind(3, 1);
+	sm1.bindNoCopy(4, strCodes);
+	sm1.bindNoCopy(5, strPL);
+	sm1.bindNoCopy(6, strMatchs);
+	if (sm1.exec() <= 0) {
 		MessageBox("INSERT DB 失败！", "错误", MB_ICONERROR | MB_OK);
 		return 1L;
 	}
-	pCmd->Close();
 	ReloadFangAnData();
 	return 1L;
 }
 
 LRESULT CDialogGambel::OnClickedBuAddFuShi(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-	CDialogTZ dlg(m_pDbSystem, m_pDbDatabase, m_strQH);
+	CDialogTZ dlg(m_pDatabase, m_strQH);
 	dlg.DoModal();
 	if (dlg.IsDbDataChanged()) {
 		ReloadFangAnData();
@@ -352,33 +345,30 @@ void CDialogGambel::InitControls() {
 	strTemp.Format(_T("方案列表(%s):"), m_strQH.c_str());
 	CWindow wnd = GetDlgItem(IDC_STGAMBELS);
 	wnd.SetWindowText(strTemp);
-	
 }
+
+
 
 void CDialogGambel::ReloadFangAnData() {
 	m_arrDbData.clear();
 	m_lstGambel.DeleteAllItems();
 	ClearOutputText();
-	std::unique_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
 	CStringATL strSQL;
-	strSQL.Format(_T("select ID, INUSE, CODESTYPE, CODES, PLDATA, MATCHS, SCRIPT,")
-		_T(" RESULT FROM GAMBEL WHERE QH='%s' order by ID asc"), m_strQH.c_str());
-	if (pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
-		while (!pRS->IsEOF()) {
-			DataRow row;
-			pRS->GetField(0, row.m_nID);
-			pRS->GetField(1, row.m_nInUse);
-			pRS->GetField(2, row.m_nCodesType);
-			pRS->GetField(3, row.m_strCodes);
-			pRS->GetField(4, row.m_strPL);
-			pRS->GetField(5, row.m_strMatchs);
-			pRS->GetField(6, row.m_strScript);
-			pRS->GetField(7, row.m_strResult);
-			m_arrDbData.push_back(row);
-			pRS->MoveNext();
-		}
+	strSQL.Format(_T("SELECT ID, INUSE, CODESTYPE, CODES, PLDATA, MATCHS, SCRIPT,")
+		_T(" RESULT FROM GAMBEL WHERE QH='%s' ORDER BY ID ASC"), m_strQH.c_str());
+	SQLite::Statement sm(*m_pDatabase, strSQL);
+	while (sm.executeStep()) {
+		DataRow row;
+		row.m_nID = sm.getColumn(0).getInt();
+		row.m_nInUse = sm.getColumn(1).getInt();
+		row.m_nCodesType = sm.getColumn(2).getInt();
+		row.m_strCodes = sm.getColumn(3).getString().c_str();
+		row.m_strPL = sm.getColumn(4).getString().c_str();
+		row.m_strMatchs = Global::formUTF8(sm.getColumn(5).getString()).c_str();
+		row.m_strScript = Global::formUTF8(sm.getColumn(6).getString()).c_str();
+		row.m_strResult = sm.getColumn(7).getString().c_str();
+		m_arrDbData.push_back(row);
 	}
-	pRS->Close();
 
     CStringATL strNum;
 	UINT rowIndex = 0;
@@ -455,19 +445,17 @@ void CDialogGambel::DoEditCodes(const DataRow& data) {
 			return;
 		}
 		CStlString strCodes = Global::formUTF8(filedata);
-		std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 		CStringATL strSQL = _T("UPDATE GAMBEL SET CODESTYPE=?, CODES=?, RESULT=? WHERE ID=?");
-		pCmd->Create(strSQL);
-		long lVal = 1;
-		pCmd->SetParam(0, &lVal);
-		pCmd->SetParam(1, strCodes);
-		pCmd->SetParam(2, _T(""));
-		pCmd->SetParam(3, &data.m_nID);
-		if (pCmd->Execute(NULL)) {
+		SQLite::Statement sm(*m_pDatabase, strSQL);
+		sm.bind(1, 1);
+		sm.bindNoCopy(2, strCodes);
+		sm.bindNoCopy(3, _T(""));
+		sm.bind(4, data.m_nID);
+		if (sm.exec() > 0) {
 			ReloadFangAnData();
 		}
 	} else if (data.m_nCodesType == 0) {
-		CDialogTZ dlg(m_pDbSystem, m_pDbDatabase, m_strQH, data.m_nID);
+		CDialogTZ dlg(m_pDatabase, m_strQH, data.m_nID);
 		dlg.DoModal();
 		if (dlg.IsDbDataChanged()) {
 			ReloadFangAnData();
@@ -525,12 +513,11 @@ void CDialogGambel::DoEditScript(const DataRow& data) {
 	}
 	*/
 	CStlString strScript = Global::formUTF8(filedata);
-	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	CStringATL strSQL = _T("UPDATE GAMBEL SET SCRIPT=? WHERE ID=?");
-	pCmd->Create(strSQL);
-	pCmd->SetParam(0, strScript);
-	pCmd->SetParam(1, &data.m_nID);
-	if (pCmd->Execute(NULL)) {
+	SQLite::Statement sm(*m_pDatabase, strSQL);
+	sm.bindNoCopy(1, strScript);
+	sm.bind(2, data.m_nID);
+	if (sm.exec() > 0) {
 		ReloadFangAnData();
 	}
 }
@@ -554,12 +541,11 @@ void CDialogGambel::DoCopyScript(const DataRow& data) {
 }
 
 void CDialogGambel::DoDeleteScript(const DataRow& data) {
-	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	CStringATL strSQL = _T("UPDATE GAMBEL SET SCRIPT=? WHERE ID=?");
-	pCmd->Create(strSQL);
-	pCmd->SetParam(0, _T(""));
-	pCmd->SetParam(1, &data.m_nID);
-	if (pCmd->Execute(NULL)) {
+	SQLite::Statement sm(*m_pDatabase, strSQL);
+	sm.bind(1, _T(""));
+	sm.bind(2, data.m_nID);
+	if (sm.exec() > 0) {
 		ReloadFangAnData();
 	}
 }
@@ -593,12 +579,11 @@ void CDialogGambel::DoSaveResult(const DataRow& data) {
 }
 
 void CDialogGambel::DoDeleteResult(const DataRow& data) {
-	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	CStringATL strSQL = _T("UPDATE GAMBEL SET RESULT=? WHERE ID=?");
-	pCmd->Create(strSQL);
-	pCmd->SetParam(0, _T(""));
-	pCmd->SetParam(1, &data.m_nID);
-	if (pCmd->Execute(NULL)) {
+	SQLite::Statement sm(*m_pDatabase, strSQL);
+	sm.bind(1, _T(""));
+	sm.bind(2, data.m_nID);
+	if (sm.exec() > 0) {
 		ReloadFangAnData();
 	}
 }
@@ -609,30 +594,26 @@ void CDialogGambel::DoDeleteRow(const DataRow& data) {
 	if (MessageBox(strASK, "请确认", MB_ICONASTERISK | MB_YESNO) != IDYES) {
 		return;
 	}
-	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	CStringATL strSQL = _T("DELETE FROM GAMBEL WHERE ID=?");
-	pCmd->Create(strSQL);
-	pCmd->SetParam(0, &data.m_nID);
-	if (pCmd->Execute(NULL)) {
+	SQLite::Statement sm(*m_pDatabase, strSQL);
+	sm.bind(1, data.m_nID);
+	if (sm.exec() > 0) {
 		ReloadFangAnData();
 	}
 }
 
 void CDialogGambel::DoCopyRow(const DataRow& data) {
 	CStringATL strSQL;
-	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	strSQL = _T("INSERT INTO GAMBEL (QH, INUSE, CODESTYPE, CODES, PLDATA, MATCHS, SCRIPT) VALUES(?,?,?,?,?,?,?)");
-	pCmd->Create(strSQL);
-	pCmd->SetParam(0, m_strQH);
-	long val = 0;
-	pCmd->SetParam(1, &val);
-	val = data.m_nCodesType;
-	pCmd->SetParam(2, &val);
-	pCmd->SetParam(3, data.m_strCodes);
-	pCmd->SetParam(4, data.m_strPL);
-	pCmd->SetParam(5, data.m_strMatchs);
-	pCmd->SetParam(6, data.m_strScript);
-	if (pCmd->Execute(NULL)) {
+	SQLite::Statement sm(*m_pDatabase, strSQL);
+	sm.bindNoCopy(1, m_strQH);
+	sm.bind(2, 0);
+	sm.bind(3, data.m_nCodesType);
+	sm.bindNoCopy(4, data.m_strCodes);
+	sm.bindNoCopy(5, data.m_strPL);
+	sm.bindNoCopy(6, data.m_strMatchs);
+	sm.bindNoCopy(7, data.m_strScript);
+	if (sm.exec() > 0) {
 		ReloadFangAnData();
 	}
 }
@@ -655,12 +636,11 @@ void CDialogGambel::DoRowInUse(UINT uItem, BOOL inuse) {
 		return;
 	}
 	pData->m_nInUse = nInUse;
-	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	CStringATL strSQL = _T("UPDATE GAMBEL SET INUSE=? WHERE ID=?");
-	pCmd->Create(strSQL);
-	pCmd->SetParam(0, &pData->m_nInUse);
-	pCmd->SetParam(1, &pData->m_nID);
-	if (pCmd->Execute(NULL)) {
+	SQLite::Statement sm(*m_pDatabase, strSQL);
+	sm.bind(1, pData->m_nInUse);
+	sm.bind(2, pData->m_nID);
+	if (sm.exec()) {
 		//ReloadFangAnData();
 	}
 }
@@ -706,12 +686,11 @@ void CDialogGambel::DoCalcResult(const DataRow& data) {
 	CEngine::GetRecordsString(pEngine->GetResult(), strResult);
 	const int max_size = 1024 * 1024 - 1;
 	if (strResult.size() < max_size) {
-		std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 		CStringATL strSQL = _T("UPDATE GAMBEL SET RESULT=? WHERE ID=?");
-		pCmd->Create(strSQL);
-		pCmd->SetParam(0, strResult);
-		pCmd->SetParam(1, &data.m_nID);
-		if (pCmd->Execute(NULL)) {
+		SQLite::Statement sm(*m_pDatabase, strSQL);
+		sm.bindNoCopy(1, strResult);
+		sm.bind(2, data.m_nID);
+		if (sm.exec() > 0) {
 			ReloadFangAnData();
 		}
 	}

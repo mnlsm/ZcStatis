@@ -23,7 +23,7 @@ public:
 	enum { IDD = IDD_DIALOG_GAMBEL };
 
 public:
-	CDialogGambel(IDbSystem *pDbSystem, IDbDatabase *pDbDatabase, const CStlString& qh);
+	CDialogGambel(std::shared_ptr<SQLite::Database> db, const CStlString& qh);
 
 public:
 	BEGIN_DDX_MAP(CDialogGambel)
@@ -83,12 +83,13 @@ private:
 
 private:
 	CStlString m_strQH;
-	IDbDatabase *m_pDbDatabase;
-	IDbSystem *m_pDbSystem;
-
 private:
+	std::shared_ptr<SQLite::Database> m_pDatabase;
+
+public:
 	typedef struct DataRowTag {
 		long m_nID;
+		CStringATL m_strQH;
 		long m_nInUse;
 		long m_nCodesType;
 		CStringATL m_strCodes;
@@ -97,6 +98,8 @@ private:
 		CStringATL m_strScript;
 		CStringATL m_strResult;
 	} DataRow;
+
+private:
 	std::vector<DataRow> m_arrDbData;
 
 

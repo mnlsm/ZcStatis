@@ -4,10 +4,9 @@
 #include "Engine.h"
 
 
-CDialogTZ::CDialogTZ(IDbSystem *pDbSystem, IDbDatabase *pDbDatabase, 
+CDialogTZ::CDialogTZ(const std::shared_ptr<SQLite::Database>& db,
 	const CStlString& qh, int gambleID) {
-	m_pDbSystem = pDbSystem;
-	m_pDbDatabase = pDbDatabase;
+	m_pDatabase = db;
 	m_strQH = qh;
 	m_GambleID = gambleID;
 	m_bDataChanged = FALSE;
@@ -233,15 +232,12 @@ BOOL CDialogTZ::ReLoadDataToShow(BOOL first) {
 	if (m_GambleID != -1) {
 		CStringATL strSQL, strResults;
 		strSQL.Format(_T("SELECT CODES, PLDATA, MATCHS FROM GAMBEL WHERE ID=%d"), m_GambleID);
-		std::unique_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
-		if(pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
-			if (!pRS->IsEOF()) {
-				pRS->GetField(0, strResults);
-				pRS->GetField(1, m_strPL);
-				pRS->GetField(2, m_strMatchs);
-			}
+		SQLite::Statement sm(*m_pDatabase, strSQL);
+		if (sm.executeStep()) {
+			strResults = sm.getColumn(0).getString().c_str();
+			m_strPL = sm.getColumn(1).getString().c_str();
+			m_strMatchs = Global::formUTF8(sm.getColumn(2).getString().c_str());
 		}
-		pRS->Close();
 
 		if (first) {
 			initComboxes();
@@ -276,14 +272,11 @@ BOOL CDialogTZ::ReLoadDataToShow(BOOL first) {
 	} else {
 		CStringATL strSQL;
 		strSQL.Format(_T("SELECT PLDATA, MATCHS FROM PLDATA WHERE ID='%s'"), m_strQH.c_str());
-		std::unique_ptr<IDbRecordset> pRS(m_pDbSystem->CreateRecordset(m_pDbDatabase));
-		if(pRS->Open(strSQL, DB_OPEN_TYPE_FORWARD_ONLY)) {
-			if (!pRS->IsEOF()) {
-				pRS->GetField(0, m_strPL);
-				pRS->GetField(1, m_strMatchs);
-			}
+		SQLite::Statement sm(*m_pDatabase, strSQL);
+		if (sm.executeStep()) {
+			m_strPL = sm.getColumn(0).getString().c_str();
+			m_strMatchs = Global::formUTF8(sm.getColumn(0).getString()).c_str();
 		}
-		pRS->Close();
 		if (first) {
 			initComboxes();
 		}
@@ -303,28 +296,24 @@ BOOL CDialogTZ::ReLoadDataToShow(BOOL first) {
 BOOL CDialogTZ::DoUpdateDatabase(const CStlString &strResults) {
 	BOOL ret = FALSE;
 	CStringATL strSQL;
-	std::unique_ptr<IDbCommand> pCmd(m_pDbSystem->CreateCommand(m_pDbDatabase));
 	if (m_GambleID == -1) {
 		strSQL = _T("INSERT INTO GAMBEL (QH, INUSE, CODESTYPE, CODES, PLDATA, MATCHS) VALUES(?,?,?,?,?,?)");
-		pCmd->Create(strSQL);
-		pCmd->SetParam(0, m_strQH);
-		long val = 0;
-		pCmd->SetParam(1, &val);
-		pCmd->SetParam(2, &val);
-		pCmd->SetParam(3, strResults.c_str());
-		pCmd->SetParam(4, m_strPL);
-		pCmd->SetParam(5, m_strMatchs);
-		ret = pCmd->Execute(NULL);
+		SQLite::Statement sm(*m_pDatabase, strSQL);
+		sm.bindNoCopy(1, m_strQH);
+		sm.bind(2, 0);
+		sm.bind(3, 0);
+		sm.bindNoCopy(4, strResults);
+		sm.bindNoCopy(5, m_strPL);
+		sm.bindNoCopy(6, m_strMatchs);
+		ret = (sm.exec() > 0);
 	} else {                                 
 		strSQL.Format(_T("UPDATE GAMBEL SET CODESTYPE=?, CODES=?, RESULT=? WHERE ID=%d"), m_GambleID);
-		pCmd->Create(strSQL);
-		long val = 0;
-		pCmd->SetParam(0, &val);
-		pCmd->SetParam(1, strResults.c_str());
-		pCmd->SetParam(2, _T(""));
-		ret = pCmd->Execute(NULL);
+		SQLite::Statement sm(*m_pDatabase, strSQL);
+		sm.bind(1, 0);
+		sm.bindNoCopy(2, strResults);
+		sm.bindNoCopy(3, _T(""));
+		ret = (sm.exec() > 0);
 	}
-	pCmd->Close();
 	m_bDataChanged = TRUE;
 	return ret;
 }

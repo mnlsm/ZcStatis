@@ -41,7 +41,7 @@ extern CAppModule _Module;
 #include "atlctrlsext.h"
 
 #include "StlFiles.h" 
-#include "./db/DbOledb.h"
+#include <SQLiteCpp/SQLiteCpp.h>
 #include "./lua/lua.hpp"
 typedef int(*lua_CFunction) (lua_State *L);
 

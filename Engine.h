@@ -26,6 +26,8 @@ typedef struct CommonFilterFactorsTag {
 	double mGvj;
 	std::vector<int> mPLScopes;
 	std::vector<int> mPLAvgs;
+	std::vector<int> mPLAvgsPos;
+
 
 	void Clear() {
 		mTotal3Count = 0;
@@ -45,6 +47,7 @@ typedef struct CommonFilterFactorsTag {
 		mGvj = 0.0;
 		mPLScopes.clear();
 		mPLAvgs.resize(6, 0);
+		mPLAvgsPos.resize(TOTO_COUNT, -1);
 	}
 } CommonFilterFactors;
 
