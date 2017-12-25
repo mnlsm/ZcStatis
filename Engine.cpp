@@ -101,27 +101,6 @@ const CIntxyArray& CEngine::GetResult() {
 	return m_arrResultRecord;
 }
 
-/*
-void CEngine::WriteRecordsToFile(const CStlString& filename, CIntxyArray &arrAllRecord) {
-	CStlOutFile file;
-	try {
-		file.open(filename.c_str());
-		if (file.is_open()) {
-			CStringATL strTemp, strCount;
-			long count = 0;
-			for (CIntxyArray::iterator iter = arrAllRecord.begin(); iter != arrAllRecord.end(); iter++, count++) {
-				for (CIntArray::iterator intIter = iter->begin(); intIter != iter->end(); intIter++) {
-					file << *intIter;
-				}
-				file << _T("\n");
-			}
-		}
-	} catch (...) {
-	}
-	file.close();
-}
-*/
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 BOOL CEngine::CalculateAllResultImpl(void* ctx, CStlString& failed_reason) {
 	ZeroMemory(m_arrRecordFenBu, TOTO_COUNT * 3 * sizeof(int));
@@ -264,65 +243,7 @@ void CEngine::GreedyCalcRectRecord(CIntxyArray &F, CIntxyArray &G) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-BOOL CEngine::GetLianXu(const CIntArray& record, int &nMaxSP, int &nMaxSF, int &nMaxPF) {
-	if (record.size() != TOTO_COUNT) {
-		return FALSE;
-	}
-	CIntPair pairCurSP, pairCurSF, pairCurPF;
-	pairCurSP.first = 0;
-	pairCurSP.second = 0;
-	pairCurSF.first = 0;
-	pairCurSF.second = 0;
-	pairCurPF.first = 0;
-	pairCurPF.second = 0;
-	for (int i = 0; i < record.size(); i++) {
-		if (record[i] == 3) {
-			++pairCurSP.first;
-			++pairCurSF.first;
-			if (pairCurPF.first != 0 && pairCurPF.second != 0) {
-				if (nMaxPF < pairCurPF.first + pairCurPF.second)
-					nMaxPF = pairCurPF.first + pairCurPF.second;
-			}
-			pairCurPF.first = 0;
-			pairCurPF.second = 0;
-		}
-		if (record[i] == 1) {
-			++pairCurSP.second;
-			++pairCurPF.first;
-			if (pairCurSF.first != 0 && pairCurSF.second != 0) {
-				if (nMaxSF < pairCurSF.first + pairCurSF.second)
-					nMaxSF = pairCurSF.first + pairCurSF.second;
-			}
-			pairCurSF.first = 0;
-			pairCurSF.second = 0;
-		}
-		if (record[i] == 0) {
-			++pairCurSF.second;
-			++pairCurPF.second;
 
-			if (pairCurSP.first != 0 && pairCurSP.second != 0) {
-				if (nMaxSP < pairCurSP.first + pairCurSP.second)
-					nMaxSP = pairCurSP.first + pairCurSP.second;
-			}
-
-			pairCurSP.first = 0;
-			pairCurSP.second = 0;
-		}
-	}
-	if (pairCurSP.first != 0 && pairCurSP.second != 0) {
-		if (nMaxSP < pairCurSP.first + pairCurSP.second)
-			nMaxSP = pairCurSP.first + pairCurSP.second;
-	}
-	if (pairCurSF.first != 0 && pairCurSF.second != 0) {
-		if (nMaxSF < pairCurSF.first + pairCurSF.second)
-			nMaxSF = pairCurSF.first + pairCurSF.second;
-	}
-	if (pairCurPF.first != 0 && pairCurPF.second != 0) {
-		if (nMaxPF < pairCurPF.first + pairCurPF.second)
-			nMaxPF = pairCurPF.first + pairCurPF.second;
-	}
-	return TRUE;
-}
 
 BOOL CEngine::GetPLDatas(const CStlString& strPL, CDoublexyArray& arrPLData, CDoublexyArray& arrGVData) {
 	arrPLData.clear();
@@ -376,6 +297,66 @@ BOOL CEngine::GetPLDatas(const CStlString& strPL, CDoublexyArray& arrPLData, CDo
 	return TRUE;
 }
 
+BOOL CEngine::GetLianXu(const CIntArray& record, int &nMaxSP, int &nMaxSF, int &nMaxPF) {
+	if (record.size() != TOTO_COUNT) {
+		return FALSE;
+	}
+	CIntPair pairCurSP, pairCurSF, pairCurPF;
+	pairCurSP.first = 0;
+	pairCurSP.second = 0;
+	pairCurSF.first = 0;
+	pairCurSF.second = 0;
+	pairCurPF.first = 0;
+	pairCurPF.second = 0;
+	for (int i = 0; i < record.size(); i++) {
+		if (record[i] == 3) {
+			++pairCurSP.first;
+			++pairCurSF.first;
+			if (pairCurPF.first != 0 && pairCurPF.second != 0) {
+				if (nMaxPF < pairCurPF.first + pairCurPF.second)
+					nMaxPF = pairCurPF.first + pairCurPF.second;
+			}
+			pairCurPF.first = 0;
+			pairCurPF.second = 0;
+		} else if (record[i] == 1) {
+			++pairCurSP.second;
+			++pairCurPF.first;
+			if (pairCurSF.first != 0 && pairCurSF.second != 0) {
+				if (nMaxSF < pairCurSF.first + pairCurSF.second)
+					nMaxSF = pairCurSF.first + pairCurSF.second;
+			}
+			pairCurSF.first = 0;
+			pairCurSF.second = 0;
+		} else if (record[i] == 0) {
+			++pairCurSF.second;
+			++pairCurPF.second;
+
+			if (pairCurSP.first != 0 && pairCurSP.second != 0) {
+				if (nMaxSP < pairCurSP.first + pairCurSP.second)
+					nMaxSP = pairCurSP.first + pairCurSP.second;
+			}
+			pairCurSP.first = 0;
+			pairCurSP.second = 0;
+		} else {
+			nMaxSP = nMaxSF = nMaxPF = 0;
+			return TRUE;
+		}
+	}
+	if (pairCurSP.first != 0 && pairCurSP.second != 0) {
+		if (nMaxSP < pairCurSP.first + pairCurSP.second)
+			nMaxSP = pairCurSP.first + pairCurSP.second;
+	}
+	if (pairCurSF.first != 0 && pairCurSF.second != 0) {
+		if (nMaxSF < pairCurSF.first + pairCurSF.second)
+			nMaxSF = pairCurSF.first + pairCurSF.second;
+	}
+	if (pairCurPF.first != 0 && pairCurPF.second != 0) {
+		if (nMaxPF < pairCurPF.first + pairCurPF.second)
+			nMaxPF = pairCurPF.first + pairCurPF.second;
+	}
+	return TRUE;
+}
+
 BOOL CEngine::CalcCommonFilterFactors(const CIntArray& record, const CDoublexyArray& arrPLData,
 	const CDoublexyArray& arrGVData, const CDoubleArray& arrPLScope, CommonFilterFactors& commonFF) {
 	commonFF.Clear();
@@ -424,6 +405,10 @@ BOOL CEngine::CalcCommonFilterFactors(const CIntArray& record, const CDoublexyAr
 				if (l0 > commonFF.mLian0Count) {
 					commonFF.mLian0Count = l0;
 				}
+			} else {
+				commonFF.mLian3Count = commonFF.mLian1Count = commonFF.mLian0Count = 0;
+				commonFF.mBreakCount = 0;
+				break;
 			}
 		} else {
 			l3 = l1 = l0 = 0;
@@ -445,38 +430,45 @@ BOOL CEngine::CalcCommonFilterFactors(const CIntArray& record, const CDoublexyAr
 			arrSCOPE[i] = 0;
 		}
 		for (int i = 0; i < record.size(); i++) {
-			int nIndex = 0;
-			if (record[i] == 1)
+			int nIndex = -1;
+			if (record[i] == 3) {
+				nIndex = 0;
+			} else if (record[i] == 1) {
 				nIndex = 1;
-			else if (record[i] == 0)
+			} else if (record[i] == 0) {
 				nIndex = 2;
-			CDoubleArray arrTemp = arrPLData[i];
-			CDoubleArray arrTemp1 = arrGVData[i];
-			double dCurPL = arrTemp[nIndex];
-			double dCurGV = arrTemp1[nIndex];
-			commonFF.mPLSum += dCurPL;
-			std::stable_sort(arrTemp.begin(), arrTemp.end(), std::less<double>());
-			int avgGap = 0;
-			if ((arrTemp[2] - arrTemp[0]) < 2.0) {
-				avgGap = 3;
 			}
-			if (arrTemp[0] == dCurPL) {
-				commonFF.mPL1Count++;
-				commonFF.mPLAvgs[0 + avgGap]++;
-				commonFF.mPLAvgsPos[i] = (avgGap == 0) ? 1 : 2;
-			} else if (arrTemp[1] == dCurPL) {
-				commonFF.mPL2Count++;
-				commonFF.mPLAvgs[1 + avgGap]++;
-				commonFF.mPLAvgsPos[i] = (avgGap == 0) ? 5 : 3;
-			} else {
-				commonFF.mPL3Count++;
-				commonFF.mPLAvgs[2 + avgGap]++;
-				commonFF.mPLAvgsPos[i] = (avgGap == 0) ? 6 : 4;
-			}
-			commonFF.mGvj = commonFF.mGvj * dCurGV;
-			for (int j = 1; j < arrPLScope.size(); j++) {
-				if (dCurPL > arrPLScope[j - 1] && dCurPL <= arrPLScope[j])
-					arrSCOPE[j - 1]++;
+			if (nIndex >= 0) {
+				CDoubleArray arrTemp = arrPLData[i];
+				CDoubleArray arrTemp1 = arrGVData[i];
+				double dCurPL = arrTemp[nIndex];
+				double dCurGV = arrTemp1[nIndex];
+				commonFF.mPLSum += dCurPL;
+				std::stable_sort(arrTemp.begin(), arrTemp.end(), std::less<double>());
+				int avgGap = 0;
+				if ((arrTemp[2] - arrTemp[0]) < 2.0) {
+					avgGap = 3;
+				}
+				if (arrTemp[0] == dCurPL) {
+					commonFF.mPL1Count++;
+					commonFF.mPLAvgs[0 + avgGap]++;
+					commonFF.mPLAvgsPos[i] = (avgGap == 0) ? 1 : 2;
+				}
+				else if (arrTemp[1] == dCurPL) {
+					commonFF.mPL2Count++;
+					commonFF.mPLAvgs[1 + avgGap]++;
+					commonFF.mPLAvgsPos[i] = (avgGap == 0) ? 5 : 3;
+				}
+				else {
+					commonFF.mPL3Count++;
+					commonFF.mPLAvgs[2 + avgGap]++;
+					commonFF.mPLAvgsPos[i] = (avgGap == 0) ? 6 : 4;
+				}
+				commonFF.mGvj = commonFF.mGvj * dCurGV;
+				for (int j = 1; j < arrPLScope.size(); j++) {
+					if (dCurPL > arrPLScope[j - 1] && dCurPL <= arrPLScope[j])
+						arrSCOPE[j - 1]++;
+				}
 			}
 		}
 		int avg5 = commonFF.mPLAvgs[1];
@@ -485,7 +477,6 @@ BOOL CEngine::CalcCommonFilterFactors(const CIntArray& record, const CDoublexyAr
 		commonFF.mPLAvgs.erase(commonFF.mPLAvgs.begin() + 1);
 		commonFF.mPLAvgs.push_back(avg5);
 		commonFF.mPLAvgs.push_back(avg6);
-
 		if (arrPLScope.size() > 1) {
 			for (int i = 0; i < arrPLScope.size() - 1; i++) {
 				commonFF.mPLScopes.push_back(arrSCOPE[i]);

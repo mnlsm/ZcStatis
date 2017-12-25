@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <sstream>
 #include <map>
+#include <set>
 
 typedef std::basic_ifstream<TCHAR, std::char_traits<TCHAR>> Tifstream;
 typedef std::basic_ofstream<TCHAR, std::char_traits<TCHAR>> Tofstream;

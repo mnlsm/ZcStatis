@@ -4,6 +4,34 @@
 static const std::string dbgview_prefix = "lua_dbgtrace: ";
 static const std::string dbgview_exception = "lua_exception: ";
 
+static int lua_table_getfield(lua_State *L, const char *key, int defval) {
+	int result = defval;
+	lua_pushstring(L, key);
+	lua_gettable(L, -2);
+	if (lua_type(L, -1) == LUA_TNUMBER) {
+		result = lua_tointeger(L, -1);
+	}
+	lua_pop(L, 1);
+	return result;
+}
+
+static std::string lua_table_getfield(lua_State *L, const char *key,
+	const char *defval) {
+	std::string result;
+	lua_pushstring(L, key);
+	lua_gettable(L, -2);
+	if (lua_type(L, -1) == LUA_TSTRING) {
+		result = lua_tostring(L, -1);
+	}
+	else {
+		if (defval != NULL) {
+			result = defval;
+		}
+	}
+	lua_pop(L, 1);
+	return result;
+}
+
 int __cdecl CEngineLua::LUA_DbgTrace(lua_State *L) {
 	if (lua_type(L, 1) == LUA_TSTRING) {
 		std::string line = dbgview_prefix + lua_tostring(L, 1);
@@ -31,7 +59,7 @@ int __cdecl CEngineLua::LUA_IsFilterTJ(lua_State *L) {
 
 CEngineLua::CEngineLua(const CStlString& script) 
 	: m_strScript(script) {
-
+	m_nCalcRen9 = 0;
 }
 
 CEngineLua::~CEngineLua() {
@@ -45,6 +73,11 @@ BOOL CEngineLua::CalculateAllResult(CStlString& failed_reason) {
 		return FALSE;
 	}
 	result = CEngine::CalculateAllResultImpl(lua_state, failed_reason);
+	if (result) {
+		if (m_nCalcRen9 != 0) {
+			CalculateAllResult9(lua_state, failed_reason);
+		}
+	}
 	TermLua(lua_state);
 	return result;
 }
@@ -107,41 +140,14 @@ BOOL CEngineLua::IsAValidRecord(const CIntArray& record, CStlString& failed_reas
 		failed_reason1 += failed_reason;
 	}
 
-	failed_reason = failed_reason + _T("\r\nren9 stat begin");
+	failed_reason = failed_reason + _T("\r\n\r\nren9 stat begin");
 	for (auto& s9 : g9Stat) {
 		TCHAR szInfo[128] = { _T('\0') };
 		_stprintf(szInfo, _T("\r\nsame[%d] = [%d]"), s9.first, s9.second);
 		failed_reason = failed_reason + szInfo;
 	}
-	failed_reason = failed_reason + _T("\r\nren9 stat end");
+	failed_reason = failed_reason + _T("\r\nren9 stat end\r\n");
 	return bRet;
-}
-
-static int lua_table_getfield(lua_State *L, const char *key, int defval) {
-	int result = defval;
-	lua_pushstring(L, key);
-	lua_gettable(L, -2);
-	if (lua_type(L, -1) == LUA_TNUMBER) {
-		result = lua_tointeger(L, -1);
-	}
-	lua_pop(L, 1); 
-	return result;
-}
-
-static std::string lua_table_getfield(lua_State *L, const char *key, 
-		const char *defval) {
-	std::string result;
-	lua_pushstring(L, key);
-	lua_gettable(L, -2);
-	if (lua_type(L, -1) == LUA_TSTRING) {
-		result = lua_tostring(L, -1);
-	} else {
-		if (defval != NULL) {
-			result = defval;
-		}
-	}
-	lua_pop(L, 1);
-	return result;
 }
 
 BOOL CEngineLua::IsAValidRecordImpl(const CIntArray& record, void* ctx, CStlString* invalid_reason) {
@@ -203,14 +209,20 @@ lua_State* CEngineLua::InitLua(CStlString& failed_reason) {
 		lua_close(L);
 		return NULL;
 	}
-	lua_getglobal(L, "kMaxLose");
-	if(lua_type(L, -1) != LUA_TNUMBER) {
+	if (lua_getglobal(L, "kMaxLose") != LUA_TNUMBER) {
 		failed_reason = _T("kMaxLose invalid!");
 		lua_close(L);
 		return NULL;
 	}
 	m_lMaxLose = lua_tointeger(L, -1);
 	lua_pop(L, 1);
+
+	int topType = lua_getglobal(L, "kCalcRen9");
+	if (topType == LUA_TNUMBER) {
+		m_nCalcRen9 = lua_tointeger(L, -1);
+	}
+	lua_pop(L, 1);
+
 	return L;
 }
 
@@ -341,5 +353,85 @@ void CEngineLua::push_scriptfunc_params(lua_State *L, const CIntArray& record) {
 		lua_settable(L, -3);
 	}
 	lua_settable(L, -3);
-
 }
+
+
+BOOL CEngineLua::CalculateAllResult9(lua_State* L, CStlString& failed_reason) {
+	m_nCalcRen9 = 0;
+	m_arrAllRecord9.clear();
+	CIntxyArray allRecord9;
+	for (const auto& record : m_arrAllRecord) {
+		CIntArray arrRecordR9(TOTO_COUNT, 8);
+		GatherOneResult9(record, 0, 0, arrRecordR9, allRecord9);
+	}
+	TCHAR szTrace[256] = { _T('\0') };
+	_stprintf(szTrace, _T("allRecord9 first size=%d"), allRecord9.size());
+	OutputDebugString(szTrace);
+	std::stable_sort(allRecord9.begin(), allRecord9.end());
+	allRecord9.erase(std::unique(allRecord9.begin(), allRecord9.end()), allRecord9.end());
+	_stprintf(szTrace, _T("allRecord9 second size=%d"), allRecord9.size());
+	OutputDebugString(szTrace);
+	for (const auto& record : allRecord9) {
+		if (IsAValidRecord9(record, L, &failed_reason)) {
+			m_arrAllRecord9.push_back(record);
+		}
+	}
+	return TRUE;
+}
+
+BOOL CEngineLua::IsAValidRecord9(const CIntArray& record, void* ctx, CStlString* invalid_reason) {
+	BOOL result = TRUE;
+	lua_State *L = (lua_State *)ctx;
+	lua_getglobal(L, "IsFilterLua9");					// 获取函数，压入栈中  
+	push_scriptfunc_params(L, record);
+	int call_ret = lua_pcall(L, 1, 1, 0);			    // 调用函数，调用完成以后，会将返回值压入栈中，1表示参数个数，2表示返回结果个数。
+	if (call_ret != 0) {
+		std::string errtext = dbgview_exception + lua_tostring(L, -1);
+		OutputDebugStringA(errtext.c_str());
+		if (invalid_reason != NULL) {
+			*invalid_reason = CA2T(errtext.c_str()).m_psz;
+		}
+		lua_pop(L, 1);
+		return FALSE;
+	}
+	int ret_type = lua_type(L, -1);
+	if (ret_type != LUA_TTABLE) {
+		if (invalid_reason != NULL) {
+			*invalid_reason = _T("lua9 function invalid result!");
+		}
+		lua_pop(L, 1);
+		return FALSE;
+	}
+	int lua_ret = lua_table_getfield(L, "code", 0);
+	BOOL isValid = (lua_ret != 1);
+	if (!isValid) {
+		std::string err = lua_table_getfield(L, "info", "unknow");
+		if (invalid_reason != NULL) {
+			*invalid_reason = CA2T(err.c_str()).m_psz;
+		}
+	}
+	lua_pop(L, 1);
+	return isValid;
+}
+
+void CEngineLua::GatherOneResult9(const CIntArray& record, int index, int depth,
+	CIntArray& record9, CIntxyArray& allRecord9) {
+	if (depth > 9) {
+		int not8_count = 0;
+		for (const auto& code : record9) {
+			if (code != 8) {
+				not8_count++;
+			}
+		}
+		if (not8_count == 9) {
+			allRecord9.push_back(record9);
+		}
+		return;
+	}
+	for (int i = index; i < record.size(); i++) {
+		record9[index] = record[index];
+		GatherOneResult9(record, index + 1, depth + 1, record9, allRecord9);
+		record9[index] = 8;
+	}
+}
+

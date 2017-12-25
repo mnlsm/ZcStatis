@@ -1,6 +1,7 @@
 #pragma once
 #include "Engine.h"
 
+
 class CEngineLua : public CEngine {
 public:
 	CEngineLua(const CStlString& script);
@@ -13,6 +14,7 @@ public:
 
 protected:
 	virtual BOOL IsAValidRecordImpl(const CIntArray& record, void* ctx, CStlString* invalid_reason);
+
 
 protected:
 	lua_State* InitLua(CStlString& failed_reason);
@@ -28,8 +30,12 @@ private:
 protected:
 	CStlString m_strScript;
 
-public:
-
-
+private:
+	int m_nCalcRen9;
+	CIntxyArray m_arrAllRecord9;
+	
+	BOOL CalculateAllResult9(lua_State* L, CStlString& failed_reason);
+	void GatherOneResult9(const CIntArray& record, int index, int depth, CIntArray& record9, CIntxyArray& allRecord9);
+	BOOL IsAValidRecord9(const CIntArray& record, void* ctx, CStlString* invalid_reason);
 
 };

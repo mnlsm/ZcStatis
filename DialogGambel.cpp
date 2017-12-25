@@ -20,6 +20,8 @@ CDialogGambel::CDialogGambel(std::shared_ptr<SQLite::Database> db, const CStlStr
 	m_pPrintInfo.reset(new (std::nothrow) CMyPrintInfo());
 	m_pPrinter.reset(new (std::nothrow) CPrinter());
 	m_wndPreview.reset(new (std::nothrow) CPrintWnd());
+
+	CreateWorkDir();
 }
 
 LRESULT CDialogGambel::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
@@ -104,11 +106,7 @@ LRESULT CDialogGambel::OnClickedBuAddDanShi(WORD wNotifyCode, WORD wID, HWND hWn
 	_tcscat(szFilterName + DZ_FILTER_NAME.length() + 1, DZ_FILTER.c_str());
 	CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
 		szFilterName, m_hWnd);
-	CStlString strPath = Global::GetAppPath() + _T("gambel");
-	CreateDirectory(strPath.c_str(), NULL);
-	strPath = strPath + _T("\\") + m_strQH;
-	CreateDirectory(strPath.c_str(), NULL);
-	dlg.m_ofn.lpstrInitialDir = strPath.c_str();
+	dlg.m_ofn.lpstrInitialDir = m_strWorkDir;
 	if (dlg.DoModal() != IDOK) {
 		return 1L;
 	}
@@ -440,11 +438,7 @@ void CDialogGambel::DoEditCodes(const DataRow& data) {
 		_tcscat(szFilterName + DZ_FILTER_NAME.length() + 1, DZ_FILTER.c_str());
 		CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
 			szFilterName, m_hWnd);
-		CStlString strPath = Global::GetAppPath() + _T("gambel");
-		CreateDirectory(strPath.c_str(), NULL);
-		strPath = strPath + _T("\\") + m_strQH;
-		CreateDirectory(strPath.c_str(), NULL);
-		dlg.m_ofn.lpstrInitialDir = strPath.c_str();
+		dlg.m_ofn.lpstrInitialDir = m_strWorkDir;
 		if (dlg.DoModal() != IDOK) {
 			return;
 		}
@@ -480,23 +474,18 @@ void CDialogGambel::DoEditScript(const DataRow& data) {
 	_tcscat(szFilterName + LUA_FILTER_NAME.length() + 1, LUA_FILTER.c_str());
 	CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
 		szFilterName, m_hWnd);
-	CStlString strPath = Global::GetAppPath() + _T("gambel");
-	CreateDirectory(strPath.c_str(), NULL);
-	strPath = strPath + _T("\\") + m_strQH;
-	CreateDirectory(strPath.c_str(), NULL);
-	dlg.m_ofn.lpstrInitialDir = strPath.c_str();
+	dlg.m_ofn.lpstrInitialDir = m_strWorkDir;
 	CStringATL strInitFileName;
 	strInitFileName.Format(_T("%s_%d.lua"), m_strQH.c_str(), data.m_nID);
 	TCHAR szFileName[MAX_PATH + 1] = { _T('\0') };
 	_tcscpy(szFileName, strInitFileName);
 	dlg.m_ofn.lpstrFile = szFileName;
-	CStlString strFileFullName = strPath + _T("\\") + szFileName;
+	CStlString strFileFullName = m_strWorkDir + _T("\\") + szFileName;
 	DWORD dwFileAttributes = ::GetFileAttributes(strFileFullName.c_str());
 	if (dwFileAttributes == INVALID_FILE_ATTRIBUTES || 
 			(dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
 		Global::SaveFileData(strFileFullName, "", FALSE);
 	}
-
 	if (dlg.DoModal() != IDOK) {
 		return;
 	}
@@ -569,13 +558,8 @@ void CDialogGambel::DoSaveResult(const DataRow& data) {
 	_tcscat(szFilterName + DZ_FILTER_NAME.length() + 1, DZ_FILTER.c_str());
 	CFileDialog dlg(FALSE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
 		szFilterName, m_hWnd);
-	CStringATL strPath(Global::GetAppPath().c_str());
-	strPath += _T("gambel");
+	dlg.m_ofn.lpstrInitialDir = m_strWorkDir;
 	CStringATL strInitFileName;
-	CreateDirectory(strPath, NULL);
-	strPath = strPath + _T("\\") + m_strQH.c_str();
-	CreateDirectory(strPath, NULL);
-	dlg.m_ofn.lpstrInitialDir = strPath;
 	strInitFileName.Format(_T("%s_%d.dz"), m_strQH.c_str(), data.m_nID);
 	TCHAR szFileName[MAX_PATH + 1] = { _T('\0') };
 	_tcscpy(szFileName, strInitFileName);
@@ -721,4 +705,14 @@ void CDialogGambel::DoCalcResult(const DataRow& data) {
 		AppendOutputText(strMsg);
 	}
 	return;
+}
+
+void CDialogGambel::CreateWorkDir() {
+	CStringATL strPath(Global::GetAppPath().c_str());
+	strPath += _T("gambel");
+	CStringATL strInitFileName;
+	CreateDirectory(strPath, NULL);
+	strPath = strPath + _T("\\") + m_strQH.c_str();
+	CreateDirectory(strPath, NULL);
+	m_strWorkDir = strPath;
 }

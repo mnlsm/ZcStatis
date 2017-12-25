@@ -125,4 +125,9 @@ private:
 	std::unique_ptr<CMyPrintInfo> m_pPrintInfo;
 	std::unique_ptr<CPrinter> m_pPrinter;
 	std::unique_ptr<CPrintWnd> m_wndPreview;
+
+private:
+	CStringATL m_strWorkDir;
+	void CreateWorkDir();
+
 };
