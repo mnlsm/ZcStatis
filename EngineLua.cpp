@@ -58,6 +58,7 @@ BOOL CEngineLua::IsAValidRecord(const CIntArray& record, CStlString& failed_reas
 	}
 	int index = 0;
 	int maxSame = 0;
+	std::map<int, int> g9Stat;
 	CIntArray maxSameRecord;
 	for (const auto& r : m_arrAllRecord) {
 		++index;
@@ -75,11 +76,19 @@ BOOL CEngineLua::IsAValidRecord(const CIntArray& record, CStlString& failed_reas
 				codes.c_str(), index, TOTO_COUNT - samecount);
 			failed_reason += szInfo;
 		}
+		if (samecount >= 9) {
+			if (g9Stat.find(samecount) != g9Stat.end()) {
+				g9Stat[samecount]++;
+			} else {
+				g9Stat[samecount] = 1;
+			}
+		}
 		if (samecount > maxSame) {
 			maxSame = samecount;
 			maxSameRecord = r;
 		}
 	}
+	
 	if (maxSame != TOTO_COUNT) {
 		CStlString failed_reason1;
 		lua_State* lua_state = InitLua(failed_reason1);
@@ -97,6 +106,14 @@ BOOL CEngineLua::IsAValidRecord(const CIntArray& record, CStlString& failed_reas
 		failed_reason1 += szInfo;
 		failed_reason1 += failed_reason;
 	}
+
+	failed_reason = failed_reason + _T("\r\nren9 stat begin");
+	for (auto& s9 : g9Stat) {
+		TCHAR szInfo[128] = { _T('\0') };
+		_stprintf(szInfo, _T("\r\nsame[%d] = [%d]"), s9.first, s9.second);
+		failed_reason = failed_reason + szInfo;
+	}
+	failed_reason = failed_reason + _T("\r\nren9 stat end");
 	return bRet;
 }
 

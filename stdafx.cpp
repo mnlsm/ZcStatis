@@ -21,3 +21,9 @@
     rename( "ReplaceText", "ExcelReplaceText" ) \
     exclude( "IFont", "IPicture" ) raw_interface_only named_guids
 */
+#ifdef DEBUG
+#pragma comment(lib, "comsuppd.lib")
+#else
+#pragma comment(lib, "comsupp.lib")
+#endif
+
