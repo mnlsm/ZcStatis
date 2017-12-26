@@ -148,6 +148,27 @@ BOOL CEngineLua::IsAValidRecord(const CIntArray& record, CStlString& failed_reas
 		failed_reason = failed_reason + szInfo;
 	}
 	failed_reason = failed_reason + _T("\r\nren9 stat end\r\n");
+
+	failed_reason = failed_reason + _T("\r\n\r\nren9 search begin");
+	maxSame = 0;
+	index = 0;
+	for (const auto& r9 : m_arrAllRecord9) {
+		int samecount = 0;
+		for (int i = 0; i < TOTO_COUNT; i++) {
+			if (r9[i] == record[i]) {
+				samecount++;
+			}
+		}
+		if (samecount >= 9) {
+			CStlString codes = GetRecordString(r9);
+			TCHAR szInfo[128] = { _T('\0') };
+			_stprintf(szInfo, _T("\r\nfound record: codes=[%s], index=[%d]"), 
+				codes.c_str(), index);
+			failed_reason += szInfo;
+		}
+		++index;
+	}
+	failed_reason = failed_reason + _T("\r\n\r\nren9 search end");
 	return bRet;
 }
 

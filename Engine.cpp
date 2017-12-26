@@ -30,6 +30,12 @@ void CEngine::SetDZRecords(const CStlString& strRecords) {
 	SetDZRecords(arrRecords);
 }
 
+void CEngine::SetDZRecords9(const CStlString& strRecords) {
+	CIntxyArray arrRecords;
+	CEngine::GetRecords(strRecords, arrRecords);
+	m_arrAllRecord9 = arrRecords;
+}
+
 void CEngine::SetPL(const CStlString &pl) {
 	m_strPL = pl;
 	GetPLDatas(m_strPL, m_arrPLData, m_arrGVData);
@@ -542,7 +548,7 @@ BOOL CEngine::GetRecords(const CStlString& strCodes, CIntxyArray& arrRecords) {
 				continue;
 			}
 			int iVal = code - _T('0');
-			if (iVal != 3 && iVal != 1 && iVal != 0) {
+			if (iVal != 3 && iVal != 1 && iVal != 0 && iVal != 8) {
 				return FALSE;
 			}
 			arrRecord.push_back(iVal);

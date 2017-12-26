@@ -60,6 +60,7 @@ public:
 public:
 	void SetChoices(const CStlString& strChoices);
 	void SetDZRecords(const CStlString& strRecords);
+	void SetDZRecords9(const CStlString& strRecords);
 	void SetPL(const CStlString &pl);
 
 	void SetMaxLose(long lLose);

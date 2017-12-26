@@ -96,6 +96,9 @@ LRESULT CDialogGambel::OnClickedBuSearch(WORD wNotifyCode, WORD wID, HWND hWndCt
 		}
 		strOutput.Format(_T("·½°¸[%d]ËÑË÷½áÊø\r\n"), data.m_nID);
 		AppendOutputText(strOutput);
+
+
+
 	}
 	return 1L;
 }
