@@ -416,7 +416,7 @@ BOOL CEngineLua::IsAValidRecord9(const CIntArray& record, void* ctx, CStlString*
 
 void CEngineLua::GatherOneResult9(const CIntArray& record, int index, int depth,
 	CIntArray& record9, CIntxyArray& allRecord9) {
-	if (depth > 9) {
+	if (depth >= 9) {
 		int not8_count = 0;
 		for (const auto& code : record9) {
 			if (code != 8) {
@@ -430,7 +430,7 @@ void CEngineLua::GatherOneResult9(const CIntArray& record, int index, int depth,
 	}
 	for (int i = index; i < record.size(); i++) {
 		record9[index] = record[index];
-		GatherOneResult9(record, index + 1, depth + 1, record9, allRecord9);
+		GatherOneResult9(record, i + 1, depth + 1, record9, allRecord9);
 		record9[index] = 8;
 	}
 }

@@ -32,7 +32,6 @@ protected:
 
 private:
 	int m_nCalcRen9;
-	CIntxyArray m_arrAllRecord9;
 	
 	BOOL CalculateAllResult9(lua_State* L, CStlString& failed_reason);
 	void GatherOneResult9(const CIntArray& record, int index, int depth, CIntArray& record9, CIntxyArray& allRecord9);

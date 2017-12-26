@@ -363,7 +363,7 @@ void CDialogGambel::ReloadFangAnData() {
 	ClearOutputText();
 	CStringATL strSQL;
 	strSQL.Format(_T("SELECT ID, INUSE, CODESTYPE, CODES, PLDATA, MATCHS, SCRIPT,")
-		_T(" RESULT FROM GAMBEL WHERE QH='%s' ORDER BY ID ASC"), m_strQH.c_str());
+		_T(" RESULT, RESULT9 FROM GAMBEL WHERE QH='%s' ORDER BY ID ASC"), m_strQH.c_str());
 	SQLite::Statement sm(*m_pDatabase, strSQL);
 	while (sm.executeStep()) {
 		DataRow row;
@@ -375,6 +375,7 @@ void CDialogGambel::ReloadFangAnData() {
 		row.m_strMatchs = sm.getColumn(5).getString().c_str();
 		row.m_strScript = Global::fromUTF8(sm.getColumn(6).getString()).c_str();
 		row.m_strResult = sm.getColumn(7).getString().c_str();
+		row.m_strResult9 = sm.getColumn(8).getString().c_str();
 		m_arrDbData.push_back(row);
 	}
 
@@ -570,13 +571,24 @@ void CDialogGambel::DoSaveResult(const DataRow& data) {
 	CStlString strLoadPath = dlg.m_ofn.lpstrFile;
 	std::string utf8 = Global::toUTF8((LPCTSTR)data.m_strResult);
 	Global::SaveFileData(strLoadPath, utf8, FALSE);
+
+	utf8 = Global::toUTF8((LPCTSTR)data.m_strResult9);
+	if (!utf8.empty()) {
+		for (auto& code : utf8) {
+			if (code == _T('8')) {
+				code = '#';
+			}
+		}
+		Global::SaveFileData(strLoadPath + _T("9"), utf8, FALSE);
+	}
 }
 
 void CDialogGambel::DoDeleteResult(const DataRow& data) {
-	CStringATL strSQL = _T("UPDATE GAMBEL SET RESULT=? WHERE ID=?");
+	CStringATL strSQL = _T("UPDATE GAMBEL SET RESULT=?, RESULT9=? WHERE ID=?");
 	SQLite::Statement sm(*m_pDatabase, strSQL);
 	sm.bind(1, _T(""));
-	sm.bind(2, data.m_nID);
+	sm.bind(2, _T(""));
+	sm.bind(3, data.m_nID);
 	if (sm.exec() > 0) {
 		ReloadFangAnData();
 	}
@@ -673,21 +685,23 @@ void CDialogGambel::DoCalcResult(const DataRow& data) {
 	if (!pEngine->CalculateAllResult(reason)) {
 		strMsg.Format(_T("(%d)计算错误, 原因: %s"), data.m_nID, reason.c_str());
 		AppendOutputText(strMsg);
-		//MessageBox(strMsg, _T("错误"), MB_ICONERROR | MB_OK);
 		return;
 	}
-	CStlString strResult;
+	CStlString strResult, strResult9;
 	CEngine::GetRecordsString(pEngine->GetResult(), strResult);
+	CEngine::GetRecordsString(pEngine->GetResult9(), strResult9);
 	const int max_size = 1024 * 1024 - 1;
 	if (strResult.size() < max_size) {
-		CStringATL strSQL = _T("UPDATE GAMBEL SET RESULT=? WHERE ID=?");
+		CStringATL strSQL = _T("UPDATE GAMBEL SET RESULT=? , RESULT9=? WHERE ID=?");
 		SQLite::Statement sm(*m_pDatabase, strSQL);
 		sm.bindNoCopy(1, strResult);
-		sm.bind(2, data.m_nID);
+		sm.bindNoCopy(2, strResult9);
+		sm.bind(9, data.m_nID);
 		if (sm.exec() > 0) {
 			ReloadFangAnData();
 		}
 	}
+
 	strMsg.Format(_T("[%d]计算完成, 共有%u(%u--->%u)注结果, 分布数据如下:\r\n"), 
 		data.m_nID, pEngine->GetResult().size(), 
 		pEngine->GetInitRecordsCount(), pEngine->GetAllRecord().size());
@@ -704,6 +718,10 @@ void CDialogGambel::DoCalcResult(const DataRow& data) {
 			*(pos + 2), arrPLs[i + 2].c_str());
 		AppendOutputText(strMsg);
 	}
+
+	strMsg.Format(_T("\r\n\r\n[%d]计算完成, 共有(%u)注任9结果"),
+		data.m_nID, pEngine->GetResult9().size());
+	AppendOutputText(strMsg);
 	return;
 }
 

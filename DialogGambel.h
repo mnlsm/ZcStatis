@@ -97,6 +97,7 @@ public:
 		CStringATL m_strMatchs;
 		CStringATL m_strScript;
 		CStringATL m_strResult;
+		CStringATL m_strResult9;
 	} DataRow;
 
 private:

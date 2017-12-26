@@ -67,6 +67,7 @@ public:
 	void SetDZRecords(const CIntxyArray& arrRecords);
 
 	const CIntxyArray& GetResult();
+	virtual const CIntxyArray& GetResult9() { return m_arrAllRecord9; }
 	const CIntxyArray& GetAllRecord() { return m_arrAllRecord; }
 	const int* GetResultFenBu() { return (const int *)m_arrRecordFenBu; }
 	const int GetInitRecordsCount() { return m_iInitRecordCount; }
@@ -103,6 +104,8 @@ protected:
 
 	int m_iInitRecordCount;
 	int m_arrRecordFenBu[TOTO_COUNT * 3];
+
+	CIntxyArray m_arrAllRecord9;
 
 protected:
 	void SearchAllRecord(CIntxyArray::iterator iter, CIntArray &tempArr);
