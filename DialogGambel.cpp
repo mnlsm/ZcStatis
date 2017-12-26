@@ -692,11 +692,11 @@ void CDialogGambel::DoCalcResult(const DataRow& data) {
 	CEngine::GetRecordsString(pEngine->GetResult9(), strResult9);
 	const int max_size = 1024 * 1024 - 1;
 	if (strResult.size() < max_size) {
-		CStringATL strSQL = _T("UPDATE GAMBEL SET RESULT=? , RESULT9=? WHERE ID=?");
+		CStringATL strSQL = _T("UPDATE GAMBEL SET RESULT=?, RESULT9=? WHERE ID=?");
 		SQLite::Statement sm(*m_pDatabase, strSQL);
 		sm.bindNoCopy(1, strResult);
 		sm.bindNoCopy(2, strResult9);
-		sm.bind(9, data.m_nID);
+		sm.bind(3, data.m_nID);
 		if (sm.exec() > 0) {
 			ReloadFangAnData();
 		}

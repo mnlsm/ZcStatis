@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "EngineLua.h"
+#include "Global.h"
 
 static const std::string dbgview_prefix = "lua_dbgtrace: ";
 static const std::string dbgview_exception = "lua_exception: ";
@@ -209,6 +210,7 @@ lua_State* CEngineLua::InitLua(CStlString& failed_reason) {
 		lua_close(L);
 		return NULL;
 	}
+
 	if (lua_getglobal(L, "kMaxLose") != LUA_TNUMBER) {
 		failed_reason = _T("kMaxLose invalid!");
 		lua_close(L);
@@ -220,6 +222,12 @@ lua_State* CEngineLua::InitLua(CStlString& failed_reason) {
 	int topType = lua_getglobal(L, "kCalcRen9");
 	if (topType == LUA_TNUMBER) {
 		m_nCalcRen9 = lua_tointeger(L, -1);
+	}
+	lua_pop(L, 1);
+
+	if (lua_getglobal(L, "kRen9Pos") == LUA_TSTRING) {
+		std::string val = lua_tostring(L, -1);
+		ResetAllRen9Pos(val);
 	}
 	lua_pop(L, 1);
 
@@ -357,25 +365,21 @@ void CEngineLua::push_scriptfunc_params(lua_State *L, const CIntArray& record) {
 
 
 BOOL CEngineLua::CalculateAllResult9(lua_State* L, CStlString& failed_reason) {
-	m_nCalcRen9 = 0;
 	m_arrAllRecord9.clear();
-	CIntxyArray allRecord9;
-	for (const auto& record : m_arrAllRecord) {
+	for (const auto& group : m_arrRen9Pos) {
 		CIntArray arrRecordR9(TOTO_COUNT, 8);
-		GatherOneResult9(record, 0, 0, arrRecordR9, allRecord9);
-	}
-	TCHAR szTrace[256] = { _T('\0') };
-	_stprintf(szTrace, _T("allRecord9 first size=%d"), allRecord9.size());
-	OutputDebugString(szTrace);
-	std::stable_sort(allRecord9.begin(), allRecord9.end());
-	allRecord9.erase(std::unique(allRecord9.begin(), allRecord9.end()), allRecord9.end());
-	_stprintf(szTrace, _T("allRecord9 second size=%d"), allRecord9.size());
-	OutputDebugString(szTrace);
-	for (const auto& record : allRecord9) {
-		if (IsAValidRecord9(record, L, &failed_reason)) {
-			m_arrAllRecord9.push_back(record);
+		for (const auto& record : m_arrResultRecord) {
+			arrRecordR9.resize(TOTO_COUNT, 8);
+			for (const auto& pos : group) {
+				arrRecordR9[pos] = record[pos];
+			}
+			if (IsAValidRecord9(arrRecordR9, L, &failed_reason)) {
+				m_arrAllRecord9.push_back(arrRecordR9);
+			}
 		}
 	}
+	std::stable_sort(m_arrAllRecord9.begin(), m_arrAllRecord9.end());
+	m_arrAllRecord9.erase(std::unique(m_arrAllRecord9.begin(), m_arrAllRecord9.end()), m_arrAllRecord9.end());
 	return TRUE;
 }
 
@@ -429,9 +433,29 @@ void CEngineLua::GatherOneResult9(const CIntArray& record, int index, int depth,
 		return;
 	}
 	for (int i = index; i < record.size(); i++) {
-		record9[index] = record[index];
+		record9[i] = record[i];
 		GatherOneResult9(record, i + 1, depth + 1, record9, allRecord9);
-		record9[index] = 8;
+		record9[i] = 8;
 	}
 }
 
+void CEngineLua::ResetAllRen9Pos(const std::string& val) {
+	m_arrRen9Pos.clear();
+	std::vector<std::string> arrPos;
+	Global::DepartString(val, ",", arrPos);
+	for (const auto& line : arrPos) {
+		CIntArray arrIndex;
+		for (int i = 0; i < line.size(); i++) {
+			if (line[i] >= _T('1') && line[i] <= _T('9')) {
+				arrIndex.push_back(line[i] - _T('1'));
+			}
+			else if (line[i] == _T('A') || line[i] == _T('B')
+				|| line[i] == _T('C') || line[i] == _T('D') || line[i] == _T('E')) {
+				arrIndex.push_back(line[i] - _T('A') + 9);
+			}
+		}
+		if (arrIndex.size() == 9) {
+			m_arrRen9Pos.push_back(arrIndex);
+		}
+	}
+}
