@@ -25,6 +25,7 @@ typedef std::vector<CDoubleArray>	CDoublexyArray;
 
 typedef std::basic_string<TCHAR> CStlString;
 typedef std::vector<CStlString> CStlStrArray;
+typedef std::vector<CStlStrArray> CStlStrxyArray;
 typedef std::pair<int,int> CIntPair;
 
 #endif

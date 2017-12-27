@@ -147,7 +147,7 @@ LRESULT CDialogGambel::OnClickedBuAddDanShi(WORD wNotifyCode, WORD wID, HWND hWn
 }
 
 LRESULT CDialogGambel::OnClickedBuAddFuShi(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-	CDialogTZ dlg(m_pDatabase, m_strQH);
+	CDialogTZ dlg(m_pDatabase, (LPCTSTR)m_strWorkDir, m_strQH);
 	dlg.DoModal();
 	if (dlg.IsDbDataChanged()) {
 		ReloadFangAnData();
@@ -464,7 +464,7 @@ void CDialogGambel::DoEditCodes(const DataRow& data) {
 			ReloadFangAnData();
 		}
 	} else if (data.m_nCodesType == 0) {
-		CDialogTZ dlg(m_pDatabase, m_strQH, data.m_nID);
+		CDialogTZ dlg(m_pDatabase, (LPCTSTR)m_strWorkDir, m_strQH, data.m_nID);
 		dlg.DoModal();
 		if (dlg.IsDbDataChanged()) {
 			ReloadFangAnData();

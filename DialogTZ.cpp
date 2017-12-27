@@ -2,11 +2,12 @@
 #include "DialogTZ.h"
 #include "Global.h"
 #include "Engine.h"
+#include "EngineLua.h"
 
-
-CDialogTZ::CDialogTZ(const std::shared_ptr<SQLite::Database>& db,
+CDialogTZ::CDialogTZ(const std::shared_ptr<SQLite::Database>& db, const CStlString& strWorkDir,
 	const CStlString& qh, int gambleID) {
 	m_pDatabase = db;
+	m_strWorkDir = strWorkDir;
 	m_strQH = qh;
 	m_GambleID = gambleID;
 	m_bDataChanged = FALSE;
@@ -94,6 +95,8 @@ LRESULT CDialogTZ::OnRecommendMenu(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 			co = GetDlgItem(ctlID - 2);
 			co.SetCurSel(0);
 		}
+	} else if (wID == IDM_RECOMMEND_RECOMMEND_TWO) {
+		DoRecommendTwoChoice();
 	}
 	return 1L;
 }
@@ -148,6 +151,11 @@ void CDialogTZ::initConctrols() {
 	m_MenuButton.AddMenuItem(IDM_RECOMMEND_ONE, _T("单选"));
 	m_MenuButton.AddMenuItem(IDM_RECOMMEND_TWO, _T("双选"));
 	m_MenuButton.AddMenuItem(IDM_RECOMMEND_THREE, _T("三选"));
+
+	m_MenuButton.AddMenuItem(0, _T(""), MF_SEPARATOR);
+	m_MenuButton.AddMenuItem(IDM_RECOMMEND_RECOMMEND_TWO, _T("双选优化"));
+
+	
 }
 
 struct GvItem {
@@ -328,4 +336,81 @@ BOOL CDialogTZ::DoUpdateDatabase(const CStlString &strResults) {
 	}
 	m_bDataChanged = TRUE;
 	return ret;
+}
+
+static void gatherAllChoice(const CStlStrxyArray& arrChoiceXY, CStlStrxyArray& arrChoiceR, 
+	CStlStrArray& codes, int index) {
+	if (index >= TOTO_COUNT) {
+		if (codes.size() == TOTO_COUNT) {
+			arrChoiceR.push_back(codes);
+		}
+		return;
+	}
+
+	for (int i = index; i < arrChoiceXY.size(); i++) {
+		const CStlStrArray& temp = arrChoiceXY[i];
+		for (int j = 0; j < temp.size(); j++) {
+			codes.push_back(temp[j]);
+			gatherAllChoice(arrChoiceXY, arrChoiceR, codes, i + 1);
+			codes.pop_back();
+		}
+	}
+
+}
+
+void CDialogTZ::DoRecommendTwoChoice() {
+	CStringATL strLuaFile;
+	CStlString strScript, reason;
+	strLuaFile.Format(_T("%s\\%s_m2.lua"), m_strWorkDir.c_str(), m_strQH.c_str());
+	if (!PathFileExists(strLuaFile)) {
+		MessageBox("Lua脚本文件读取失败 0！", "错误", MB_ICONERROR | MB_OK);
+		return;
+	}
+	if (!Global::ReadFileData((LPCTSTR)strLuaFile, strScript) || strScript.empty()) {
+		MessageBox("Lua脚本文件读取失败 1！", "错误", MB_ICONERROR | MB_OK);
+		return;
+	}
+	CStlStrxyArray arrChoiceXY, arrChoiceR;
+	CStlStrArray codes;
+	for (int i = 0; i < TOTO_COUNT; i++) {
+		codes.clear();
+		UINT ctlID = IDC_CORESULT2 + i * 3;
+		CComboBox co = GetDlgItem(ctlID);
+		CStringATL code;
+		co.GetLBText(1, code);
+		codes.push_back((LPCTSTR)code);
+		code.Empty();
+		co.GetLBText(2, code);
+		codes.push_back((LPCTSTR)code);
+		arrChoiceXY.push_back(codes);
+	}
+	codes.clear();
+	std::map<CStlString, UINT> recommends;
+	gatherAllChoice(arrChoiceXY, arrChoiceR, codes, 0);
+	for (const auto& choice : arrChoiceR) {
+		CStlString line;
+		for (const auto& c : choice) {
+			line = line + c + _T(",");
+		}
+		line.erase(line.end() - 1);
+		recommends[line] = 0;
+	}
+
+	std::map<UINT, CStlStrArray, std::greater<UINT>> result;
+	for (auto& recomm : recommends) {
+		std::unique_ptr<CEngine> pEngine;
+		pEngine.reset(new CEngineLua(strScript));
+		pEngine->SetChoices(recomm.first);
+		pEngine->SetPL(m_strPL);
+		reason.clear();
+		if (pEngine->CalculateAllResult(reason)) {
+			recomm.second = pEngine->GetResult().size();
+			if (result.find(recomm.second) == result.end()) {
+				result[recomm.second] = CStlStrArray();
+			}
+			result[recomm.second].push_back(recomm.first);
+		}
+	}
+
+
 }

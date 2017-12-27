@@ -5,6 +5,8 @@
 #define IDM_RECOMMEND_ONE WM_APP + 9909
 #define IDM_RECOMMEND_TWO IDM_RECOMMEND_ONE + 1
 #define IDM_RECOMMEND_THREE IDM_RECOMMEND_TWO + 1
+#define IDM_RECOMMEND_RECOMMEND_TWO IDM_RECOMMEND_THREE + 1
+
 
 
 
@@ -13,7 +15,8 @@ class CDialogTZ
 	: public CAxDialogImpl<CDialogTZ> {
 public:
 	enum { IDD = IDD_DIALOG_TZ };
-	CDialogTZ(const std::shared_ptr<SQLite::Database>& db, const CStlString& qh, int gambleID = -1);
+	CDialogTZ(const std::shared_ptr<SQLite::Database>& db, const CStlString& strWorkDir, 
+		const CStlString& qh, int gambleID = -1);
 
 	BEGIN_MSG_MAP(CDialogTZ)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
@@ -22,7 +25,7 @@ public:
 		COMMAND_HANDLER(IDC_BUCLEAR, BN_CLICKED, OnClickedBuClear)
 		COMMAND_HANDLER(IDCANCEL, BN_CLICKED, OnClickedBuExit)
 		COMMAND_RANGE_CODE_HANDLER(IDC_CORESULT1, IDC_CORESULT42, CBN_SELCHANGE, OnResultSelChange)
-		COMMAND_RANGE_HANDLER(IDM_RECOMMEND_ONE, IDM_RECOMMEND_THREE, OnRecommendMenu)
+		COMMAND_RANGE_HANDLER(IDM_RECOMMEND_ONE, IDM_RECOMMEND_RECOMMEND_TWO, OnRecommendMenu)
 		CHAIN_MSG_MAP(CAxDialogImpl<CDialogTZ>)
 		REFLECT_NOTIFICATIONS()
 	END_MSG_MAP()
@@ -48,6 +51,8 @@ private:
 	void ClearUserChoice();
 	BOOL DoUpdateDatabase(const CStlString &strResults);
 
+	void DoRecommendTwoChoice();
+
 private:
 	CStlString m_strQH;
 	CStlString m_strPL;
@@ -57,9 +62,13 @@ private:
 	std::shared_ptr<SQLite::Database> m_pDatabase;
 	BOOL m_bDataChanged;
 
+	CStlString m_strWorkDir;
+
 private:
 	CStatic m_wndQI;
 	CBrush m_brush;
 	CButtonMenu m_MenuButton;
+
+
 	
 };
