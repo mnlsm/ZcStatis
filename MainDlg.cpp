@@ -186,28 +186,27 @@ void CMainDlg::InitializeStatisData() {
 void addRen9Bonus(std::shared_ptr<SQLite::Database>& db) {
 	using namespace SQLite;
 	CStlString strTextFile = Global::GetAppPath() + _T("ren9.txt");
-
-	CStlString strSQL = _T("UPDATE PLDATA SET BONUS9=? WHERE ID=?");
-	SQLite::Statement sm(*db, strSQL);
-
-	std::string filedate;
-	Global::ReadFileData(strTextFile, filedate);
-	std::vector<CStlString> arrLines;
-	Global::DepartString(filedate, _T("\r\n"), arrLines);
-	for (const auto& line : arrLines) {
-		std::vector<CStlString> arrPart;
-		Global::DepartString(line, _T(";"), arrPart);
-		sm.reset();
-		sm.clearBindings();
-		sm.bind(1, _ttof(arrPart[1].c_str()));
-		sm.bindNoCopy(2, arrPart[0]);
-		sm.exec();
+	if (PathFileExists(strTextFile.c_str())) {
+		CStlString strSQL = _T("UPDATE PLDATA SET BONUS9=? WHERE ID=?");
+		SQLite::Statement sm(*db, strSQL);
+		std::string filedate;
+		Global::ReadFileData(strTextFile, filedate);
+		std::vector<CStlString> arrLines;
+		Global::DepartString(filedate, _T("\r\n"), arrLines);
+		for (const auto& line : arrLines) {
+			std::vector<CStlString> arrPart;
+			Global::DepartString(line, _T(";"), arrPart);
+			sm.reset();
+			sm.clearBindings();
+			sm.bind(1, _ttof(arrPart[1].c_str()));
+			sm.bindNoCopy(2, arrPart[0]);
+			sm.exec();
+		}
 	}
-
 }
 
 void CMainDlg::ReloadStatisData() {
-	//addRen9Bonus(m_pDatabase);
+	addRen9Bonus(m_pDatabase);
 	m_lstStatis.DeleteAllItems();
 
 	using namespace SQLite;
