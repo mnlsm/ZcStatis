@@ -88,6 +88,7 @@ LRESULT CDialogGambel::OnClickedBuSearch(WORD wNotifyCode, WORD wID, HWND hWndCt
 		strOutput.Format(_T("方案[%d]搜索开始:\r\n"), data.m_nID);
 		AppendOutputText(strOutput);
 		pEngine->SetDZRecords((LPCTSTR)data.m_strResult);
+		pEngine->SetDZRecords9((LPCTSTR)data.m_strResult9);
 		pEngine->SetPL((LPCTSTR)data.m_strPL);
 		CStlString reason;
 		pEngine->IsAValidRecord(arrRecord, reason);

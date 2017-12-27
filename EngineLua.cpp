@@ -135,10 +135,10 @@ BOOL CEngineLua::IsAValidRecord(const CIntArray& record, CStlString& failed_reas
 
 		TCHAR szInfo[128] = { _T('\0') };
 		CStlString codes = GetRecordString(maxSameRecord);
-		_stprintf(szInfo, _T("\r\nmax same record: codes=[%s], losed=%d\r\n"),
-			codes.c_str(),  TOTO_COUNT - maxSame);
+		_stprintf(szInfo, _T("\r\nmax same record: codes=[%s], same=%d\r\n"),
+			codes.c_str(),  maxSame);
 		failed_reason1 += szInfo;
-		failed_reason1 += failed_reason;
+		failed_reason += failed_reason1;
 	}
 
 	failed_reason = failed_reason + _T("\r\n\r\nren9 stat begin");
@@ -152,6 +152,7 @@ BOOL CEngineLua::IsAValidRecord(const CIntArray& record, CStlString& failed_reas
 	failed_reason = failed_reason + _T("\r\n\r\nren9 search begin");
 	maxSame = 0;
 	index = 0;
+	maxSameRecord.clear();
 	for (const auto& r9 : m_arrAllRecord9) {
 		int samecount = 0;
 		for (int i = 0; i < TOTO_COUNT; i++) {
@@ -166,9 +167,18 @@ BOOL CEngineLua::IsAValidRecord(const CIntArray& record, CStlString& failed_reas
 				codes.c_str(), index);
 			failed_reason += szInfo;
 		}
+		if (samecount > maxSame) {
+			maxSame = samecount;
+			maxSameRecord = r9;
+		}
 		++index;
 	}
-	failed_reason = failed_reason + _T("\r\n\r\nren9 search end");
+	TCHAR szInfo[128] = { _T('\0') };
+	CStlString codes = GetRecordString(maxSameRecord);
+	_stprintf(szInfo, _T("\r\nmax same record: codes=[%s], same=%d"),
+		codes.c_str(), maxSame);
+	failed_reason += szInfo;
+	failed_reason = failed_reason + _T("\r\nren9 search end\r\n");
 	return bRet;
 }
 

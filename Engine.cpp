@@ -562,6 +562,9 @@ BOOL CEngine::GetRecords(const CStlString& strCodes, CIntxyArray& arrRecords) {
 }
 
 CStlString CEngine::GetRecordString(const CIntArray& record) {
+	if (record.size() != TOTO_COUNT) {
+		return _T("");
+	}
 	CStlString strRecord;
 	strRecord.resize(TOTO_COUNT, _T('\0'));
 	for (int i = 0; i < TOTO_COUNT; i++) {
