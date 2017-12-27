@@ -339,10 +339,12 @@ BOOL CDialogTZ::DoUpdateDatabase(const CStlString &strResults) {
 }
 
 static void gatherAllChoice(const CStlStrxyArray& arrChoiceXY, CStlStrxyArray& arrChoiceR, 
-	CStlStrArray& codes, int index) {
+	CStlStrArray& codes, int index, int& count2) {
 	if (index >= TOTO_COUNT) {
 		if (codes.size() == TOTO_COUNT) {
-			arrChoiceR.push_back(codes);
+			if (count2 == 8) {
+				arrChoiceR.push_back(codes);
+			}
 		}
 		return;
 	}
@@ -350,8 +352,14 @@ static void gatherAllChoice(const CStlStrxyArray& arrChoiceXY, CStlStrxyArray& a
 	for (int i = index; i < arrChoiceXY.size(); i++) {
 		const CStlStrArray& temp = arrChoiceXY[i];
 		for (int j = 0; j < temp.size(); j++) {
+			if (j == 0) {
+				count2++;
+			}
 			codes.push_back(temp[j]);
-			gatherAllChoice(arrChoiceXY, arrChoiceR, codes, i + 1);
+			gatherAllChoice(arrChoiceXY, arrChoiceR, codes, i + 1, count2);
+			if (j == 0) {
+				count2--;
+			}
 			codes.pop_back();
 		}
 	}
@@ -386,7 +394,8 @@ void CDialogTZ::DoRecommendTwoChoice() {
 	}
 	codes.clear();
 	std::map<CStlString, UINT> recommends;
-	gatherAllChoice(arrChoiceXY, arrChoiceR, codes, 0);
+	int count2 = 0;
+	gatherAllChoice(arrChoiceXY, arrChoiceR, codes, 0, count2);
 	for (const auto& choice : arrChoiceR) {
 		CStlString line;
 		for (const auto& c : choice) {
@@ -397,6 +406,7 @@ void CDialogTZ::DoRecommendTwoChoice() {
 	}
 
 	std::map<UINT, CStlStrArray, std::greater<UINT>> result;
+	UINT index = 0;
 	for (auto& recomm : recommends) {
 		std::unique_ptr<CEngine> pEngine;
 		pEngine.reset(new CEngineLua(strScript));
@@ -410,7 +420,19 @@ void CDialogTZ::DoRecommendTwoChoice() {
 			}
 			result[recomm.second].push_back(recomm.first);
 		}
+		strLuaFile.Format(_T("recomm: code=[%s], result[%u], index = %u"), 
+			recomm.first.c_str(), recomm.second, ++index);
+		OutputDebugStringA(strLuaFile);
 	}
 
-
+	strLuaFile.Format(_T("%s\\%s_m2.comm"), m_strWorkDir.c_str(), m_strQH.c_str());
+	strScript.clear();
+	for (const auto& item : result) {
+		CStringATL line;
+		for (const auto& code : item.second) {
+			line.Format(_T("%s    [%d]\n"), code.c_str(), item.first);
+			strScript += line;
+		}
+	}
+	Global::SaveFileData((LPCTSTR)strLuaFile, strScript, FALSE);
 }

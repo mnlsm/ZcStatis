@@ -1,5 +1,5 @@
---17194_26, kMaxLose=1, kCalcRen9=1                                       
-kMaxLose = 1;
+--17194_26, kMaxLose=0, kCalcRen9=1                                       
+kMaxLose = 0;
 local function trace(level, info) 
 	if(level > 0) then
 		dbgview_print(info);
@@ -7,9 +7,9 @@ local function trace(level, info)
 end
 
 local other_odds = {
-	"W&sina1024&6&10&30&3&31&3&10&0&31&10&31&31&0&31&10&31",
-	"W&laoniu1024&6&10&10&3&31&31&01&01&3&01&31&3&03&3&30&31",
-	"W&danlue&9&13&310&3&31&31&01&130&31&30&130&310&0&31&01&31",
+	"W&luosen&8&12&10&31&10&31&31&31&31&31&31&10&30&31&31&31",
+	--"W&laoniu1024&6&10&10&3&31&31&01&01&3&01&31&3&03&3&30&31",
+	--"W&danlue&9&13&310&3&31&31&01&130&31&30&130&310&0&31&01&31",
 };
 
 function IsFilterLua(params)
@@ -35,7 +35,7 @@ function IsFilterLua(params)
 		return ret;
 	end
 
-	if params.count1 < 1 or params.count1 > 5 then
+	if params.count1 < 1 or params.count1 > 6 then
 		ret.code = 1;
 		ret.info = trace_prefix .. "count1=" .. params.count1;
 		trace(1, ret.info);
@@ -71,7 +71,7 @@ function IsFilterLua(params)
 	end
 	
 	--
-	tj = "F|123456789ABCDE|30313101133303|4|9|";
+	tj = "F|123456789ABCDE|13113131030011|3|9|";
 	ret.code = IsFilterTJ(params.codes, tj);
 	if(ret.code == 1) then
 		ret.info = trace_prefix .. tj;
@@ -94,7 +94,7 @@ function IsFilterLua(params)
 		return ret;
 	end
 	
-	if(params.pl3 < 1) or (params.pl3 > 5) then
+	if(params.pl3 < 1) or (params.pl3 > 6) then
 		ret.code = 1;
 		ret.info = trace_prefix .. "pl3=" .. params.pl3;
 		trace(1, ret.info);
@@ -106,7 +106,7 @@ function IsFilterLua(params)
 	local hotSum = plavg[1] + plavg[2] + plavg[3];
 	local coldSum = plavg[4] + plavg[5] + plavg[6];
 	local neverTrue = false;
-
+--[[
 	local plb635 = (params.pl1 == 6 and params.pl2 == 3 and params.pl3 == 5);
 	local plb644 = (params.pl1 == 6 and params.pl2 == 4 and params.pl3 == 4);
 	local plb653 = (params.pl1 == 6 and params.pl2 == 5 and params.pl3 == 3);
@@ -136,6 +136,36 @@ function IsFilterLua(params)
 		trace(1, ret.info);
 		return ret;
 	end
+--]]	
+	if (plavg[1] < 5 or plavg[1] > 7) then
+		ret.code = 1;
+		ret.info = trace_prefix .. "plavg[1]=(" .. plavg[1] .. ")";
+		trace(1, ret.info);
+		return ret;
+	end
+
+	if (plavg[3] < 2) then
+		ret.code = 1;
+		ret.info = trace_prefix .. "lavg[3]=(" .. plavg[3] .. ")";
+		trace(1, ret.info);
+		return ret;
+	end
+
+	if (plavg[6] > 2) then
+		ret.code = 1;
+		ret.info = trace_prefix .. "plavg[6]=(" .. plavg[6] .. ")";
+		trace(1, ret.info);
+		return ret;
+	end
+	
+	if(hotSum < 8) then
+		ret.code = 1;
+		ret.info = trace_prefix .. "hotSum=(" .. hotSum .. ")";
+		trace(1, ret.info);
+		return ret;
+	end
+	
+	
 	
 	for i,v in ipairs(other_odds) do
 		tj = v;
