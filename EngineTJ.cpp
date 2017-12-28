@@ -300,6 +300,10 @@ void CEngine::doFilterG(const CStlString& strG) {
 		Global::TrimBlank(num);
 		setCounts.insert(_ttoi(num.c_str()));
 	}
+	TCHAR szLog[256] = { _T('\0') };
+	_stprintf(szLog, "lua_doFilterG: tj = [%s]",strG.c_str());
+	OutputDebugString(szLog);
+
 	CIntxyArray *pNew = new (std::nothrow) CIntxyArray();
 	if (pNew == NULL) return;
 	int nCurMaxLose = m_lMaxLose;
@@ -307,12 +311,18 @@ void CEngine::doFilterG(const CStlString& strG) {
 	CIntxyArray &xyAll = m_arrAllRecord;
 	CIntxyArray arrCoverIndex;
 	CIntArray arrTemp;
-	int i = 0;
+	std::map<size_t, size_t> cover_statis;
 	for (CIntxyArray::iterator iter = xyAll.begin(); 
-			iter != xyAll.end(); iter++, i++) {
+			iter != xyAll.end(); iter++) {
 		GetCoverIndexArr(iter, xyAll, arrTemp);
-		if (arrTemp.size() > 0) {
+		size_t cover_count = arrTemp.size();
+		if (cover_count > 0) {
 			arrCoverIndex.push_back(arrTemp);
+			cover_count = cover_count - 1;
+			if (cover_statis.find(cover_count) == cover_statis.end()) {
+				cover_statis[cover_count] = 0;
+			}
+			cover_statis[cover_count]++;
 		} else {
 			break;
 		}
@@ -321,14 +331,22 @@ void CEngine::doFilterG(const CStlString& strG) {
 		m_lMaxLose = nCurMaxLose;
 		return;
 	}
-	for (i = 0; i < arrCoverIndex.size(); i++) {
+	
+	OutputDebugString("\r\n");
+	for (const auto& cs : cover_statis) {
+		_stprintf(szLog, "lua_doFilterG: cover28[%u] = [%u]", 
+			cs.first, cs.second);
+		OutputDebugString(szLog);
+	}
+	OutputDebugString("\r\n");
+
+	for (int i = 0; i < arrCoverIndex.size(); i++) {
 		int iCount = arrCoverIndex[i].size() - 1;
 		if (setCounts.find(iCount) != setCounts.end()) {
 			pNew->push_back(xyAll[i]);
 		} else {
-			TCHAR szLog[256] = { _T('\0') };
 			_stprintf(szLog, "lua_doFilterG: not found iCount=[%d]", iCount);
-			OutputDebugString(szLog);
+			//OutputDebugString(szLog);
 		}
 	}
 	m_arrAllRecord.swap(*pNew);
