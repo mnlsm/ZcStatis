@@ -6,6 +6,7 @@
 --FILTER_RECOMM_XY_END
                                        
 kMaxLose = 0;
+--kCheck28 = "G|0,1,2,3,4,5,6,7,8,9,10|";
 local function trace(level, info) 
 	if(level > 0) then
 		dbgview_print(info);
@@ -114,6 +115,7 @@ function IsFilterLua(params)
 	local hotSum = plavg[1] + plavg[2] + plavg[3];
 	local coldSum = plavg[4] + plavg[5] + plavg[6];
 	local neverTrue = false;
+
 --[[
 	local plb635 = (params.pl1 == 6 and params.pl2 == 3 and params.pl3 == 5);
 	local plb644 = (params.pl1 == 6 and params.pl2 == 4 and params.pl3 == 4);

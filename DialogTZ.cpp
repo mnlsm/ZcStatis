@@ -8,6 +8,7 @@ CDialogTZ::CDialogTZ(const std::shared_ptr<SQLite::Database>& db, const CStlStri
 	const CStlString& qh, int gambleID) {
 	m_pDatabase = db;
 	m_strWorkDir = strWorkDir;
+	m_strRecommDir = m_strWorkDir + _T("\\recomm");
 	m_strQH = qh;
 	m_GambleID = gambleID;
 	m_bDataChanged = FALSE;
@@ -480,7 +481,7 @@ static void filterChoiceR(CStlStrxyArray& arrChoiceR, CStringATL strScript) {
 void CDialogTZ::DoRecommendTwoChoice() {
 	CStringATL strLuaFile;
 	CStlString strScript, reason;
-	strLuaFile.Format(_T("%s\\%s_m2.lua"), m_strWorkDir.c_str(), m_strQH.c_str());
+	strLuaFile.Format(_T("%s\\%s_m2.lua"), m_strRecommDir.c_str(), m_strQH.c_str());
 	if (!PathFileExists(strLuaFile)) {
 		MessageBox("Lua脚本文件读取失败 0！", "错误", MB_ICONERROR | MB_OK);
 		return;
@@ -520,6 +521,7 @@ void CDialogTZ::DoRecommendTwoChoice() {
 	}
 
 	std::map<UINT, CStlStrArray, std::greater<UINT>> result;
+	CIntxyArray resultDZ;
 	UINT index = 0;
 	for (auto& recomm : recommends) {
 		std::unique_ptr<CEngine> pEngine;
@@ -528,18 +530,22 @@ void CDialogTZ::DoRecommendTwoChoice() {
 		pEngine->SetPL(m_strPL);
 		reason.clear();
 		if (pEngine->CalculateAllResult(reason)) {
-			recomm.second = pEngine->GetResult().size();
+			const CIntxyArray& curResult = pEngine->GetResult();
+			recomm.second = curResult.size();
 			if (result.find(recomm.second) == result.end()) {
 				result[recomm.second] = CStlStrArray();
 			}
 			result[recomm.second].push_back(recomm.first);
+			resultDZ.insert(resultDZ.end(), curResult.begin(), curResult.end());
+			std::stable_sort(resultDZ.begin(), resultDZ.end());
+			resultDZ.erase(std::unique(resultDZ.begin(), resultDZ.end()), resultDZ.end());
 		}
 		strLuaFile.Format(_T("recomm: code=[%s], result[%u], index = %u"), 
 			recomm.first.c_str(), recomm.second, ++index);
 		OutputDebugStringA(strLuaFile);
 	}
 
-	strLuaFile.Format(_T("%s\\%s_m2.comm"), m_strWorkDir.c_str(), m_strQH.c_str());
+	strLuaFile.Format(_T("%s\\%s_m2.comm"), m_strRecommDir.c_str(), m_strQH.c_str());
 	strScript.clear();
 	for (const auto& item : result) {
 		CStringATL line;
@@ -549,4 +555,13 @@ void CDialogTZ::DoRecommendTwoChoice() {
 		}
 	}
 	Global::SaveFileData((LPCTSTR)strLuaFile, strScript, FALSE);
+
+	strLuaFile.Format(_T("recomm: resultDZ count = [%u]"), resultDZ.size());
+	OutputDebugStringA(strLuaFile);
+
+	//保存单注
+	strLuaFile.Format(_T("%s\\%s_m2.DZ"), m_strWorkDir.c_str(), m_strQH.c_str());
+	CEngine::GetRecordsString(resultDZ, strScript);
+	std::string utf8 = Global::toUTF8(strScript);
+	Global::SaveFileData((LPCTSTR)strLuaFile, utf8, FALSE);
 }

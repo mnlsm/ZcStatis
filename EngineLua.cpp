@@ -217,7 +217,21 @@ BOOL CEngineLua::IsAValidRecordImpl(const CIntArray& record, void* ctx, CStlStri
 	return isValid;
 }
 
+void CEngineLua::FilterG() {
+	CStringATL strLog;
+	strLog.Format(_T("lua_FilterG Begin, allrecord count=[%d]"), m_arrAllRecord.size());
+	OutputDebugString(strLog);
+	if (!m_strCheck28.empty()) {
+		strLog = _T("lua_doFilterG Call!");
+		OutputDebugString(strLog);
+		doFilterG(m_strCheck28);
+	}
+	strLog.Format(_T("lua_FilterG End, allrecord count=[%d]"), m_arrAllRecord.size());
+	OutputDebugString(strLog);
+}
+
 lua_State* CEngineLua::InitLua(CStlString& failed_reason) {
+	m_strCheck28.clear();
 	lua_State* L = luaL_newstate();
 	if (L == NULL) {
 		failed_reason = _T("luaL_newstate failed!");
@@ -248,6 +262,11 @@ lua_State* CEngineLua::InitLua(CStlString& failed_reason) {
 		return NULL;
 	}
 	m_lMaxLose = lua_tointeger(L, -1);
+	lua_pop(L, 1);
+
+	if (lua_getglobal(L, "kCheck28") == LUA_TSTRING) {
+		m_strCheck28 = lua_tostring(L, -1);
+	}
 	lua_pop(L, 1);
 
 	int topType = lua_getglobal(L, "kCalcRen9");

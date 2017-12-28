@@ -63,6 +63,7 @@ private:
 	BOOL m_bDataChanged;
 
 	CStlString m_strWorkDir;
+	CStlString m_strRecommDir;
 
 private:
 	CStatic m_wndQI;

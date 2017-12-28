@@ -737,4 +737,7 @@ void CDialogGambel::CreateWorkDir() {
 	strPath = strPath + _T("\\") + m_strQH.c_str();
 	CreateDirectory(strPath, NULL);
 	m_strWorkDir = strPath;
+	CStringATL strRecommDir = m_strWorkDir + _T("\\recomm");
+	CreateDirectory(strRecommDir, NULL);
+
 }

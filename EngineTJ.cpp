@@ -281,3 +281,57 @@ BOOL CEngine::IsFilterX(const CIntArray &tempArr, const std::string& strTJ, std:
 	return TRUE;
 }
 
+void CEngine::doFilterG(const CStlString& strG) {
+	if (strG.size() <= 0) return;
+	CStlStrArray arrPart, arrCounts;
+	if (!Global::DepartString(strG, _T("|"), arrPart)) {
+		return;
+	}
+	if (arrPart.size() != 2) return;
+	Global::TrimBlank(arrPart[0]);
+	Global::TrimBlank(arrPart[1]);
+	if (arrPart[0] != "G") return;
+	if (!Global::DepartString(arrPart[1], _T(","), arrCounts)) {
+		return;
+	}
+	if (arrCounts.size() == 0) return;
+	std::set<int> setCounts;
+	for (auto& num : arrCounts) {
+		Global::TrimBlank(num);
+		setCounts.insert(_ttoi(num.c_str()));
+	}
+	CIntxyArray *pNew = new (std::nothrow) CIntxyArray();
+	if (pNew == NULL) return;
+	int nCurMaxLose = m_lMaxLose;
+	m_lMaxLose = 1;
+	CIntxyArray &xyAll = m_arrAllRecord;
+	CIntxyArray arrCoverIndex;
+	CIntArray arrTemp;
+	int i = 0;
+	for (CIntxyArray::iterator iter = xyAll.begin(); 
+			iter != xyAll.end(); iter++, i++) {
+		GetCoverIndexArr(iter, xyAll, arrTemp);
+		if (arrTemp.size() > 0) {
+			arrCoverIndex.push_back(arrTemp);
+		} else {
+			break;
+		}
+	}
+	if (arrCoverIndex.size() != xyAll.size()) {
+		m_lMaxLose = nCurMaxLose;
+		return;
+	}
+	for (i = 0; i < arrCoverIndex.size(); i++) {
+		int iCount = arrCoverIndex[i].size() - 1;
+		if (setCounts.find(iCount) != setCounts.end()) {
+			pNew->push_back(xyAll[i]);
+		} else {
+			TCHAR szLog[256] = { _T('\0') };
+			_stprintf(szLog, "lua_doFilterG: not found iCount=[%d]", iCount);
+			OutputDebugString(szLog);
+		}
+	}
+	m_arrAllRecord.swap(*pNew);
+	m_lMaxLose = nCurMaxLose;
+	return;
+}

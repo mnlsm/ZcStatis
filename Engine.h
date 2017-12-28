@@ -84,6 +84,7 @@ public:
 protected:
 	virtual BOOL CalculateAllResultImpl(void* ctx, CStlString& failed_reason);
 	virtual BOOL IsAValidRecordImpl(const CIntArray& record, void* ctx, CStlString* invalid_reason);
+	virtual void FilterG(){};
 
 //for suoshui
 protected:							
@@ -122,7 +123,7 @@ protected:
 	virtual BOOL IsFilterW(const CIntArray &tempArr, const std::string& strTJ, std::string *pStr = NULL);
 	virtual BOOL IsFilterQ(const CIntArray &tempArr, const std::string& strTJ, std::string *pStr = NULL);
 	virtual BOOL IsFilterX(const CIntArray &tempArr, const std::string& strTJ, std::string *pStr = NULL);
-
+	virtual void doFilterG(const CStlString& strG);
 
 public:
 	static BOOL GetChoices(const CStlString& strChoices, CIntxyArray& arrChoices);
