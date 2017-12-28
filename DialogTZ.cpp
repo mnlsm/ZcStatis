@@ -337,7 +337,7 @@ BOOL CDialogTZ::DoUpdateDatabase(const CStlString &strResults) {
 	m_bDataChanged = TRUE;
 	return ret;
 }
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 static void gatherAllChoice(const CStlStrxyArray& arrChoiceXY, CStlStrxyArray& arrChoiceR, 
 	CStlStrArray& codes, int index, int& count2) {
 	if (index >= TOTO_COUNT) {
@@ -348,7 +348,6 @@ static void gatherAllChoice(const CStlStrxyArray& arrChoiceXY, CStlStrxyArray& a
 		}
 		return;
 	}
-
 	for (int i = index; i < arrChoiceXY.size(); i++) {
 		const CStlStrArray& temp = arrChoiceXY[i];
 		for (int j = 0; j < temp.size(); j++) {
@@ -363,8 +362,120 @@ static void gatherAllChoice(const CStlStrxyArray& arrChoiceXY, CStlStrxyArray& a
 			codes.pop_back();
 		}
 	}
+}
+
+static void filterChoiceR(CStlStrxyArray& arrChoiceR, CStringATL strScript) {
+	const CStringATL tj_begin_mark = _T("--FILTER_RECOMM_XY_BEGIN");
+	const CStringATL tj_end_mark = _T("--FILTER_RECOMM_XY_END");
+
+	int pos = strScript.Find(tj_begin_mark);
+	if (pos == -1) {
+		return;
+	}
+	pos += tj_begin_mark.GetLength();
+	int pos1 = strScript.Find(tj_end_mark);
+	if (pos1 < pos) {
+		return;
+	}
+	strScript = strScript.Mid(pos, pos1 - pos);
+	strScript.Trim();
+	strScript.Replace(_T("\r"), _T(""));
+	strScript.Replace(_T("-"), _T(""));
+
+	struct FilterX_Params {
+		FilterX_Params() {
+			clear();
+		}
+		int range_begin;
+		int range_end;
+		std::map<UINT, std::set<CStlString>> mapPosCodes;
+		void clear() {
+			range_begin = -1;
+			range_end = -1;
+			mapPosCodes.clear();
+		}
+	};
+
+	std::vector<FilterX_Params> fps;
+	CStlStrArray arrLines, arrPart;
+	Global::DepartString((LPCTSTR)strScript, _T("\n"), arrLines);
+	for (auto& line : arrLines) {
+		FilterX_Params fp;
+		Global::TrimBlank(line);
+		Global::DepartString(line, _T("|"), arrPart);
+		if (arrPart.size() != 5) continue;
+		Global::TrimBlank(arrPart[0]);
+		Global::TrimBlank(arrPart[1]);
+		Global::TrimBlank(arrPart[2]);
+		Global::TrimBlank(arrPart[3]);
+		Global::TrimBlank(arrPart[4]);
+		if (arrPart[0] != _T("F")) continue;
+		CStlString& strIndexs = arrPart[1];
+		CIntArray arrIndex;
+		for (int i = 0; i < strIndexs.size(); i++) {
+			if (strIndexs[i] >= _T('1') && strIndexs[i] <= _T('9')) {
+				arrIndex.push_back(strIndexs[i] - _T('1'));
+			}
+			else if (strIndexs[i] == _T('A') || strIndexs[i] == _T('B')
+				|| strIndexs[i] == _T('C') || strIndexs[i] == _T('D') || strIndexs[i] == _T('E'))
+				arrIndex.push_back(strIndexs[i] - _T('A') + 9);
+			else break;
+		}
+		CStlStrArray codes, codes1;
+		Global::DepartString(arrPart[2], _T(","), codes);
+		if (arrIndex.size() != codes.size()) continue;
+		for (auto& code : codes) {
+			Global::TrimBlank(code);
+			CStlString bak = code;
+			std::reverse(bak.begin(), bak.end());
+			codes1.push_back(bak);
+		}
+		for (int i = 0; i < arrIndex.size(); i++) {
+			if (fp.mapPosCodes.find(arrIndex[i]) == fp.mapPosCodes.end()) {
+				fp.mapPosCodes[arrIndex[i]] = std::set<CStlString>();
+			}
+			fp.mapPosCodes[arrIndex[i]].insert(codes[i]);
+			fp.mapPosCodes[arrIndex[i]].insert(codes1[i]);
+		}
+		fp.range_begin = _ttol(arrPart[3].c_str());
+		fp.range_end = _ttol(arrPart[4].c_str());
+		if (fp.range_begin < 0 || fp.range_end < 0) continue;
+		if (fp.range_begin > fp.range_end) continue;
+		fps.push_back(fp);
+	}
+	for (pos = arrChoiceR.size() - 1; pos >= 0; pos--) {
+		CStlStrArray& record = arrChoiceR[pos];
+		bool isFiltered = false;
+		for (const auto& tj : fps) {
+			int match_count = 0;
+			for (const auto& pc : tj.mapPosCodes) {
+				CStlString& record_code = record[pc.first];
+				for (const auto& tj_code : pc.second) {
+					if (record_code.find(tj_code) != CStlString::npos) {
+						match_count++;
+					}
+				}
+			}
+			if (match_count < tj.range_begin || match_count > tj.range_end) {
+				isFiltered = true;
+				break;
+			}
+		}
+		if (isFiltered) {
+			arrChoiceR.erase(arrChoiceR.begin() + pos);
+		}
+	}
+
+
+
+
+
+
+
+
 
 }
+
 
 void CDialogTZ::DoRecommendTwoChoice() {
 	CStringATL strLuaFile;
@@ -396,6 +507,9 @@ void CDialogTZ::DoRecommendTwoChoice() {
 	std::map<CStlString, UINT> recommends;
 	int count2 = 0;
 	gatherAllChoice(arrChoiceXY, arrChoiceR, codes, 0, count2);
+	filterChoiceR(arrChoiceR, strScript.c_str());
+	strLuaFile.Format(_T("recomm: arrChoiceR size=[%u]"), arrChoiceR.size());
+	OutputDebugStringA(strLuaFile);
 	for (const auto& choice : arrChoiceR) {
 		CStlString line;
 		for (const auto& c : choice) {
