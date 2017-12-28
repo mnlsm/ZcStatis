@@ -1,4 +1,10 @@
---17194_26, kMaxLose=0, kCalcRen9=1                                       
+--17194_26, recomm kMaxLose=0, kCalcRen9=0
+--FILTER_RECOMM_XY_BEGIN
+--F|247|31,31,31|3|3|
+--F|27|31,31|2|2|
+--F|689CD|0,0,0,0,0|0|2|
+--FILTER_RECOMM_XY_END
+                                       
 kMaxLose = 0;
 local function trace(level, info) 
 	if(level > 0) then
@@ -8,6 +14,8 @@ end
 
 local other_odds = {
 	"W&luosen&8&12&10&31&10&31&31&31&31&31&31&10&30&31&31&31",
+	"W&huomiao1024&6&12&10&3&01&3&30&30&31&31&3&01&30&31&3&01",
+	"W&dlhm1_1152&4&12&310&3&10&30&31&3&31&3&3&10&30&31&3&310",
 	--"W&laoniu1024&6&10&10&3&31&31&01&01&3&01&31&3&03&3&30&31",
 	--"W&danlue&9&13&310&3&31&31&01&130&31&30&130&310&0&31&01&31",
 };
@@ -101,8 +109,8 @@ function IsFilterLua(params)
 		return ret;
 	end
 
-	local gvjMin = 0.15;
-	local gvjMax = 5.00;
+	local gvjMin = 0.12;
+	local gvjMax = 10.00;
 	local hotSum = plavg[1] + plavg[2] + plavg[3];
 	local coldSum = plavg[4] + plavg[5] + plavg[6];
 	local neverTrue = false;
