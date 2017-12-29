@@ -649,7 +649,7 @@ void CEngine::StatisRen9() {
 	CStringATL strLog;
 	strLog.Format(_T("lua_StatisRen9 Begin, allrecord count=[%u]"), s_mapAllRen9Pos.size());
 	OutputDebugString(strLog);
-	std::map<CStlString, size_t> mapStatis;
+	std::multimap<size_t, CStlString> mapStatis;
 	for (const auto& poss : s_mapAllRen9Pos) {
 		const auto& group = poss.second;
 		std::set<CStlString> setTemp;
@@ -661,12 +661,14 @@ void CEngine::StatisRen9() {
 			}
 			setTemp.insert(temp);
 		}
-		mapStatis[poss.first] = setTemp.size();
+		mapStatis.insert(std::pair<size_t, CStlString>(setTemp.size(), poss.first));
 	}
+	size_t allcount = 0;
 	for (const auto& stat : mapStatis) {
-		strLog.Format(_T("lua_StatisRen9 Item: [%s]=[%u]"), stat.first.c_str(), stat.second);
+		strLog.Format(_T("lua_StatisRen9 Item: [%s]=[%u]"), stat.second.c_str(), stat.first);
 		OutputDebugString(strLog);
+		allcount += stat.first;
 	}
-	strLog.Format(_T("lua_StatisRen9 End, allrecord count=[%u]"), mapStatis.size());
+	strLog.Format(_T("lua_StatisRen9 End, allrecord count=[%u]"), allcount);
 	OutputDebugString(strLog);
 }
