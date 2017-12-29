@@ -512,8 +512,21 @@ void CEngineLua::ResetAllRen9Pos(const std::string& val) {
 	Global::DepartString(val, ",", arrPos);
 	for (auto& line : arrPos) {
 		Global::TrimBlank(line);
-		if (line.size() == 9) {
-			m_arrCalcRen9Pos.push_back(line);
+		if (!line.empty()) {
+			for (const auto& item : s_mapAllRen9Pos) {
+				int match_count = 0;
+				for (const auto& c : line) {
+					if (item.first.find(c) != std::string::npos) {
+						match_count++;
+					}
+				}
+				if (match_count == line.size()) {
+					m_arrCalcRen9Pos.push_back(item.first);
+				}
+			}
 		}
 	}
+	std::stable_sort(m_arrCalcRen9Pos.begin(), m_arrCalcRen9Pos.end());
+	m_arrCalcRen9Pos.erase(std::unique(m_arrCalcRen9Pos.begin(), m_arrCalcRen9Pos.end()), 
+		m_arrCalcRen9Pos.end());
 }
