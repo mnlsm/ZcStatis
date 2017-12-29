@@ -33,11 +33,11 @@ protected:
 
 private:
 	int m_nCalcRen9;
-	CIntxyArray m_arrRen9Pos;
+	CStlStrArray m_arrCalcRen9Pos;
 
 	void ResetAllRen9Pos(const std::string& val);
 	BOOL CalculateAllResult9(lua_State* L, CStlString& failed_reason);
 	void GatherOneResult9(const CIntArray& record, int index, int depth, CIntArray& record9, CIntxyArray& allRecord9);
-	BOOL IsAValidRecord9(const CIntArray& record, void* ctx, CStlString* invalid_reason);
+	BOOL IsAValidRecord9(const CIntArray& record, void* ctx, const CStlString& line, CStlString* invalid_reason);
 
 };

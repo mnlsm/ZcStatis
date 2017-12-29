@@ -2,6 +2,8 @@
 #include "Engine.h"
 #include "Global.h"
 
+std::map<CStlString, CIntArray> CEngine::s_mapAllRen9Pos;
+
 CEngine::CEngine() {
     m_lMaxRate = 8;
     m_lMaxLimit = 10000000;
@@ -13,6 +15,8 @@ CEngine::CEngine() {
 	m_arrPLScope.push_back(4.0);
 	m_arrPLScope.push_back(6.0);
 	m_arrPLScope.push_back(1000.0);
+
+	CEngine::InitAllRen9Pos();
 }
 
 CEngine::~CEngine() {
@@ -150,6 +154,8 @@ BOOL CEngine::CalculateAllResultImpl(void* ctx, CStlString& failed_reason) {
 	else {
 		m_arrResultRecord = m_arrAllRecord;
 	}
+
+	StatisRen9();
 	return TRUE;
 }
 
@@ -608,4 +614,59 @@ void CEngine::GetRecordsPrintRecords(const CIntxyArray& arrRecords, CStlStrArray
 	}
 }
 
+void CEngine::gatherAllRen9Pos(const CIntArray& source, CIntArray& tempArr, int start, int depth) {
+	if (depth >= 9) {
+		CStlString mark(9, _T('\0'));
+		for (int k = 0; k < tempArr.size(); k++) {
+			int pos = tempArr[k];
+			if (pos < 9) {
+				mark[k] = _T('0') + (pos + 1);
+			} else {
+				mark[k] = _T('A') + (pos - 9);
+			}
+		}
+		s_mapAllRen9Pos[mark] = tempArr;
+		return;
+	}
+	for (int i = start; i < TOTO_COUNT; i++) {
+		tempArr.push_back(source[i]);
+		gatherAllRen9Pos(source, tempArr, i + 1, depth + 1);
+		tempArr.pop_back();
+	}
+}
 
+void CEngine::InitAllRen9Pos() {
+	if (s_mapAllRen9Pos.empty()) {
+		CIntArray source, tempArr;
+		for (int i = 0; i < TOTO_COUNT; i++) {
+			source.push_back(i);
+		}
+		gatherAllRen9Pos(source, tempArr, 0, 0);
+	}
+}
+
+void CEngine::StatisRen9() {
+	CStringATL strLog;
+	strLog.Format(_T("lua_StatisRen9 Begin, allrecord count=[%u]"), s_mapAllRen9Pos.size());
+	OutputDebugString(strLog);
+	std::map<CStlString, size_t> mapStatis;
+	for (const auto& poss : s_mapAllRen9Pos) {
+		const auto& group = poss.second;
+		std::set<CStlString> setTemp;
+		for (const auto& record : m_arrResultRecord) {
+			CStlString temp;
+			for (const auto& pos : group) {
+				TCHAR c = _T('0') + record[pos];
+				temp.append(1, c);
+			}
+			setTemp.insert(temp);
+		}
+		mapStatis[poss.first] = setTemp.size();
+	}
+	for (const auto& stat : mapStatis) {
+		strLog.Format(_T("lua_StatisRen9 Item: [%s]=[%u]"), stat.first.c_str(), stat.second);
+		OutputDebugString(strLog);
+	}
+	strLog.Format(_T("lua_StatisRen9 End, allrecord count=[%u]"), mapStatis.size());
+	OutputDebugString(strLog);
+}

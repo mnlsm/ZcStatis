@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "resource.h"
 #include "MainDlg.h"
+#include "Engine.h"
 
 CAppModule _Module;
 

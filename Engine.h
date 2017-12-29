@@ -164,4 +164,12 @@ private:
 	};
 	std::map<std::string, FilterX_Params> m_mapFilterX;
 
+public:
+	static void InitAllRen9Pos();
+
+protected:
+	static std::map<CStlString, CIntArray> s_mapAllRen9Pos;
+	static void gatherAllRen9Pos(const CIntArray& source, CIntArray& tempArr,
+		int start, int depth);
+	void StatisRen9();
 };

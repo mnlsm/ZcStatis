@@ -277,6 +277,9 @@ lua_State* CEngineLua::InitLua(CStlString& failed_reason) {
 	}
 	lua_pop(L, 1);
 
+	if (m_nCalcRen9 != 0) {
+		CEngine::InitAllRen9Pos();
+	}
 	if (lua_getglobal(L, "kRen9Pos") == LUA_TSTRING) {
 		std::string val = lua_tostring(L, -1);
 		ResetAllRen9Pos(val);
@@ -418,14 +421,19 @@ void CEngineLua::push_scriptfunc_params(lua_State *L, const CIntArray& record) {
 
 BOOL CEngineLua::CalculateAllResult9(lua_State* L, CStlString& failed_reason) {
 	m_arrAllRecord9.clear();
-	for (const auto& group : m_arrRen9Pos) {
+	for (const auto& poss : m_arrCalcRen9Pos) {
+		const auto& poss_iter = s_mapAllRen9Pos.find(poss);
+		if (poss_iter == s_mapAllRen9Pos.end()){
+			continue;
+		}
+		const auto& group = poss_iter->second;
 		CIntArray arrRecordR9(TOTO_COUNT, 8);
 		for (const auto& record : m_arrResultRecord) {
 			arrRecordR9.resize(TOTO_COUNT, 8);
 			for (const auto& pos : group) {
 				arrRecordR9[pos] = record[pos];
 			}
-			if (IsAValidRecord9(arrRecordR9, L, &failed_reason)) {
+			if (IsAValidRecord9(arrRecordR9, L, poss, &failed_reason)) {
 				m_arrAllRecord9.push_back(arrRecordR9);
 			}
 		}
@@ -435,11 +443,18 @@ BOOL CEngineLua::CalculateAllResult9(lua_State* L, CStlString& failed_reason) {
 	return TRUE;
 }
 
-BOOL CEngineLua::IsAValidRecord9(const CIntArray& record, void* ctx, CStlString* invalid_reason) {
+BOOL CEngineLua::IsAValidRecord9(const CIntArray& record, void* ctx, 
+		const CStlString& line, CStlString* invalid_reason) {
 	BOOL result = TRUE;
 	lua_State *L = (lua_State *)ctx;
 	lua_getglobal(L, "IsFilterLua9");					// 获取函数，压入栈中  
+
 	push_scriptfunc_params(L, record);
+	//增加ren9位置信息
+	lua_pushstring(L, "ren9pos");
+	lua_pushstring(L, line.c_str());
+	lua_settable(L, -3);
+
 	int call_ret = lua_pcall(L, 1, 1, 0);			    // 调用函数，调用完成以后，会将返回值压入栈中，1表示参数个数，2表示返回结果个数。
 	if (call_ret != 0) {
 		std::string errtext = dbgview_exception + lua_tostring(L, -1);
@@ -492,22 +507,13 @@ void CEngineLua::GatherOneResult9(const CIntArray& record, int index, int depth,
 }
 
 void CEngineLua::ResetAllRen9Pos(const std::string& val) {
-	m_arrRen9Pos.clear();
+	m_arrCalcRen9Pos.clear();
 	std::vector<std::string> arrPos;
 	Global::DepartString(val, ",", arrPos);
-	for (const auto& line : arrPos) {
-		CIntArray arrIndex;
-		for (int i = 0; i < line.size(); i++) {
-			if (line[i] >= _T('1') && line[i] <= _T('9')) {
-				arrIndex.push_back(line[i] - _T('1'));
-			}
-			else if (line[i] == _T('A') || line[i] == _T('B')
-				|| line[i] == _T('C') || line[i] == _T('D') || line[i] == _T('E')) {
-				arrIndex.push_back(line[i] - _T('A') + 9);
-			}
-		}
-		if (arrIndex.size() == 9) {
-			m_arrRen9Pos.push_back(arrIndex);
+	for (auto& line : arrPos) {
+		Global::TrimBlank(line);
+		if (line.size() == 9) {
+			m_arrCalcRen9Pos.push_back(line);
 		}
 	}
 }
