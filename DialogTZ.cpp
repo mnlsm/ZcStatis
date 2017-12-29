@@ -560,7 +560,7 @@ void CDialogTZ::DoRecommendTwoChoice() {
 	OutputDebugStringA(strLuaFile);
 
 	//±£´æµ¥×¢
-	strLuaFile.Format(_T("%s\\%s_m2.DZ"), m_strWorkDir.c_str(), m_strQH.c_str());
+	strLuaFile.Format(_T("%s\\%s_m2.dz"), m_strWorkDir.c_str(), m_strQH.c_str());
 	CEngine::GetRecordsString(resultDZ, strScript);
 	std::string utf8 = Global::toUTF8(strScript);
 	Global::SaveFileData((LPCTSTR)strLuaFile, utf8, FALSE);

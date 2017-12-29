@@ -338,8 +338,8 @@ void CDialogGambel::InitControls() {
 	int colIndex = 0;
 	m_lstGambel.InsertColumn(colIndex++, "编号", LVCFMT_LEFT, 65);    //70
 	m_lstGambel.InsertColumn(colIndex++, "投注类型", LVCFMT_CENTER, 65);    //70
-	m_lstGambel.InsertColumn(colIndex++, "投注数据", LVCFMT_LEFT, 380);    //70
-	m_lstGambel.InsertColumn(colIndex++, "脚本数据", LVCFMT_LEFT, 220);    //70
+	m_lstGambel.InsertColumn(colIndex++, "投注数据", LVCFMT_LEFT, 220);    //70
+	m_lstGambel.InsertColumn(colIndex++, "脚本数据", LVCFMT_LEFT, 380);    //70
 	m_lstGambel.InsertColumn(colIndex++, "结果数据", LVCFMT_LEFT, 100);    //70
 	m_lstGambel.InsertColumn(colIndex++, "结果个数", LVCFMT_CENTER, 100);    //70
 
