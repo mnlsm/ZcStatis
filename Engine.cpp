@@ -120,7 +120,8 @@ BOOL CEngine::CalculateAllResultImpl(void* ctx, CStlString& failed_reason) {
 	if (!m_arrChoices.empty()) {
 		m_arrAllRecord.clear();
 		CIntArray tempArr;  //temp data
-		SearchAllRecord(m_arrChoices.begin(), tempArr);
+		SearchAllRecord(m_arrChoices.begin(), m_arrChoices.end(), 
+			tempArr, m_arrAllRecord);
 	}
 	else { //»•÷ÿ
 		std::stable_sort(m_arrAllRecord.begin(), m_arrAllRecord.end());
@@ -128,6 +129,8 @@ BOOL CEngine::CalculateAllResultImpl(void* ctx, CStlString& failed_reason) {
 	}
 	m_iInitRecordCount = m_arrAllRecord.size();
 	CIntxyArray tempAll;
+
+	CIntArray arrRecordTest;
 	for (const auto& record : m_arrAllRecord) {
 		if (IsAValidRecordImpl(record, ctx, NULL)) {
 			for (size_t i = 0; i < record.size(); i++) {
@@ -164,15 +167,17 @@ BOOL CEngine::IsAValidRecordImpl(const CIntArray& record, void* ctx, CStlString*
 }
 
 
-void CEngine::SearchAllRecord(CIntxyArray::iterator choice_iter, CIntArray &tempArr) {
+void CEngine::SearchAllRecord(CIntxyArray::iterator choice_iter, CIntxyArray::iterator iter_end, 
+		CIntArray &tempArr, CIntxyArray& arrAllRecord) {
 	//finish DiGui
-	if (choice_iter == m_arrChoices.end()) {
-		m_arrAllRecord.push_back(tempArr);
+	if (choice_iter == iter_end) {
+		arrAllRecord.push_back(tempArr);
+		//m_arrAllRecord.push_back(tempArr);
 		return;
 	}
 	for (CIntArray::iterator codeIter = choice_iter->begin(); codeIter != choice_iter->end(); ++codeIter) {
 		tempArr.push_back(*codeIter);
-		SearchAllRecord(choice_iter + 1, tempArr);
+		SearchAllRecord(choice_iter + 1, iter_end, tempArr, arrAllRecord);
 		tempArr.pop_back();
 	}
 }
@@ -549,23 +554,37 @@ BOOL CEngine::GetRecords(const CStlString& strCodes, CIntxyArray& arrRecords) {
 	arrRecords.clear();
 	CStlStrArray lines;
 	Global::DepartString(strCodes, _T("\n"), lines);
-	for (const auto& line : lines) {
+	for (auto& line : lines) {
+		CStringATL temp = line.c_str();
+		temp.Trim();
+		temp.Replace(_T(";"), _T(","));
+		temp.Replace(_T("&"), _T(","));
+		temp.Replace(_T("\r"), _T(""));
+		temp.Replace(_T("\""), _T(""));
+		temp.Replace(_T("'"), _T(""));
+		line = temp;
 		CIntArray arrRecord;
-		for (const auto& code : line) {
-			if (code == _T('\r') || code == _T('£¨') || code == _T('£ª')) {
-				continue;
+		if (line.find(_T(",")) != CStlString::npos) {
+			CIntxyArray arrChoices;
+			if (GetChoices(line, arrChoices)) {
+				SearchAllRecord(arrChoices.begin(), arrChoices.end(), arrRecord, arrRecords);
 			}
-			int iVal = code - _T('0');
-			if (iVal != 3 && iVal != 1 && iVal != 0 && iVal != 8) {
+		} else if (line.size() == TOTO_COUNT) {
+			for (const auto& code : line) {
+				int iVal = code - _T('0');
+				if (iVal != 3 && iVal != 1 && iVal != 0 && iVal != 8) {
+					return FALSE;
+				}
+				arrRecord.push_back(iVal);
+			}
+			if (arrRecord.size() != TOTO_COUNT) {
 				return FALSE;
 			}
-			arrRecord.push_back(iVal);
+			arrRecords.push_back(arrRecord);
 		}
-		if (arrRecord.size() != TOTO_COUNT) {
-			return FALSE;
-		}
-		arrRecords.push_back(arrRecord);
 	}
+	std::stable_sort(arrRecords.begin(), arrRecords.end());
+	arrRecords.erase(std::unique(arrRecords.begin(), arrRecords.end()), arrRecords.end());
 	return TRUE;
 }
 
@@ -645,30 +664,4 @@ void CEngine::InitAllRen9Pos() {
 	}
 }
 
-void CEngine::StatisRen9() {
-	CStringATL strLog;
-	strLog.Format(_T("lua_StatisRen9 Begin, allrecord count=[%u]"), s_mapAllRen9Pos.size());
-	OutputDebugString(strLog);
-	std::multimap<size_t, CStlString> mapStatis;
-	for (const auto& poss : s_mapAllRen9Pos) {
-		const auto& group = poss.second;
-		std::set<CStlString> setTemp;
-		for (const auto& record : m_arrResultRecord) {
-			CStlString temp;
-			for (const auto& pos : group) {
-				TCHAR c = _T('0') + record[pos];
-				temp.append(1, c);
-			}
-			setTemp.insert(temp);
-		}
-		mapStatis.insert(std::pair<size_t, CStlString>(setTemp.size(), poss.first));
-	}
-	size_t allcount = 0;
-	for (const auto& stat : mapStatis) {
-		strLog.Format(_T("lua_StatisRen9 Item: [%s]=[%u]"), stat.second.c_str(), stat.first);
-		OutputDebugString(strLog);
-		allcount += stat.first;
-	}
-	strLog.Format(_T("lua_StatisRen9 End, allrecord count=[%u]"), allcount);
-	OutputDebugString(strLog);
-}
+

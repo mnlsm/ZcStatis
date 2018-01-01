@@ -694,7 +694,7 @@ void CDialogGambel::DoCalcResult(const DataRow& data) {
 	CStlString strResult, strResult9;
 	CEngine::GetRecordsString(pEngine->GetResult(), strResult);
 	CEngine::GetRecordsString(pEngine->GetResult9(), strResult9);
-	const int max_size = 1024 * 1024 - 1;
+	const int max_size = 100 * 1024 * 1024 - 1;
 	if (strResult.size() < max_size) {
 		CStringATL strSQL = _T("UPDATE GAMBEL SET RESULT=?, RESULT9=? WHERE ID=?");
 		SQLite::Statement sm(*m_pDatabase, strSQL);

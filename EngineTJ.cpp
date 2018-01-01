@@ -151,17 +151,26 @@ BOOL CEngine::IsFilterW(const CIntArray &tempArr, const std::string& strTJ, std:
         CIntArray arrOneChoice;
         std::string strChoices = arrPart[i];
         Global::TrimBlank(strChoices);
-        for(int j = 0; j < strChoices.size(); j++) {
-            int iChoiceValue = strChoices[j] - _T('0');
-            if(iChoiceValue == 0 || iChoiceValue == 1 || iChoiceValue == 3)
-                arrOneChoice.push_back(iChoiceValue);
-            else return FALSE;
-        }
+		if (strChoices == "#") {
+			arrOneChoice.push_back(3);
+			arrOneChoice.push_back(1);
+			arrOneChoice.push_back(0);
+		} else {
+			for (int j = 0; j < strChoices.size(); j++) {
+				int iChoiceValue = strChoices[j] - _T('0');
+				if (iChoiceValue == 0 || iChoiceValue == 1 || iChoiceValue == 3)
+					arrOneChoice.push_back(iChoiceValue);
+				else return FALSE;
+			}
+		}
         arrOtherChoice.push_back(arrOneChoice);
     }
     if(arrOtherChoice.size() != tempArr.size()) return FALSE;
     int iSameCount = 0;
     for(int i = 0; i < arrOtherChoice.size(); i++) {
+		if (tempArr[i] == 8) {
+			iSameCount++;
+		}
         if(std::find(arrOtherChoice[i].begin(), arrOtherChoice[i].end(), tempArr[i])
                 != arrOtherChoice[i].end())
             iSameCount++;

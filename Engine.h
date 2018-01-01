@@ -85,6 +85,7 @@ protected:
 	virtual BOOL CalculateAllResultImpl(void* ctx, CStlString& failed_reason);
 	virtual BOOL IsAValidRecordImpl(const CIntArray& record, void* ctx, CStlString* invalid_reason);
 	virtual void FilterG(){};
+	virtual void StatisRen9() {};
 
 //for suoshui
 protected:							
@@ -110,7 +111,8 @@ protected:
 	CIntxyArray m_arrAllRecord9;
 
 protected:
-	void SearchAllRecord(CIntxyArray::iterator iter, CIntArray &tempArr);
+	static void SearchAllRecord(CIntxyArray::iterator iter, CIntxyArray::iterator iter_end, 
+		CIntArray &tempArr, CIntxyArray& arrAllRecord);
 	bool FillAllCoverIndex(CIntxyArray &xyAll);
 	void GetCoverIndexArr(CIntxyArray::iterator iter, CIntxyArray &arrSource, CIntArray &arrResult);
 	void GreedyCalcRectRecord(CIntxyArray &F, CIntxyArray &G);
@@ -171,5 +173,4 @@ protected:
 	static std::map<CStlString, CIntArray> s_mapAllRen9Pos;
 	static void gatherAllRen9Pos(const CIntArray& source, CIntArray& tempArr,
 		int start, int depth);
-	void StatisRen9();
 };

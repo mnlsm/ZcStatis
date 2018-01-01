@@ -76,7 +76,9 @@ BOOL CEngineLua::CalculateAllResult(CStlString& failed_reason) {
 	result = CEngine::CalculateAllResultImpl(lua_state, failed_reason);
 	if (result) {
 		if (m_nCalcRen9 != 0) {
+			OutputDebugString(_T("lua_CalcRen9 Begin"));
 			CalculateAllResult9(lua_state, failed_reason);
+			OutputDebugString(_T("lua_CalcRen9 End"));
 		}
 	}
 	TermLua(lua_state);
@@ -231,6 +233,39 @@ void CEngineLua::FilterG() {
 	strLog.Format(_T("lua_FilterG End, allrecord count=[%d]"), m_arrAllRecord.size());
 	OutputDebugString(strLog);
 }
+
+void CEngineLua::StatisRen9() {
+	if (m_nCalcRen9 == 0) {
+		return;
+	}
+	CStringATL strLog;
+	strLog.Format(_T("lua_StatisRen9 Begin, allrecord count=[%u]"), s_mapAllRen9Pos.size());
+	OutputDebugString(strLog);
+	std::multimap<size_t, CStlString> mapStatis;
+	for (const auto& poss : s_mapAllRen9Pos) {
+		const auto& group = poss.second;
+		std::set<CStlString> setTemp;
+		for (const auto& record : m_arrResultRecord) {
+			CStlString temp;
+			for (const auto& pos : group) {
+				TCHAR c = _T('0') + record[pos];
+				temp.append(1, c);
+			}
+			setTemp.insert(temp);
+		}
+		mapStatis.insert(std::pair<size_t, CStlString>(setTemp.size(), poss.first));
+	}
+	size_t allcount = 0;
+	for (const auto& stat : mapStatis) {
+		strLog.Format(_T("lua_StatisRen9 Item: [%s]=[%u]"), stat.second.c_str(), stat.first);
+		OutputDebugString(strLog);
+		allcount += stat.first;
+	}
+	strLog.Format(_T("lua_StatisRen9 End, allrecord count=[%u]"), allcount);
+	OutputDebugString(strLog);
+}
+
+
 
 lua_State* CEngineLua::InitLua(CStlString& failed_reason) {
 	m_strCheck28.clear();
@@ -421,6 +456,8 @@ void CEngineLua::push_scriptfunc_params(lua_State *L, const CIntArray& record) {
 
 BOOL CEngineLua::CalculateAllResult9(lua_State* L, CStlString& failed_reason) {
 	m_arrAllRecord9.clear();
+	CStringATL strLog = _T("lua_Calc9 Begin");
+	OutputDebugString(strLog);
 	for (const auto& poss : m_arrCalcRen9Pos) {
 		const auto& poss_iter = s_mapAllRen9Pos.find(poss);
 		if (poss_iter == s_mapAllRen9Pos.end()){
@@ -428,18 +465,29 @@ BOOL CEngineLua::CalculateAllResult9(lua_State* L, CStlString& failed_reason) {
 		}
 		const auto& group = poss_iter->second;
 		CIntArray arrRecordR9(TOTO_COUNT, 8);
+		size_t old_count = m_arrAllRecord9.size();
 		for (const auto& record : m_arrResultRecord) {
 			arrRecordR9.resize(TOTO_COUNT, 8);
 			for (const auto& pos : group) {
 				arrRecordR9[pos] = record[pos];
 			}
-			if (IsAValidRecord9(arrRecordR9, L, poss, &failed_reason)) {
-				m_arrAllRecord9.push_back(arrRecordR9);
+			const auto& fIter = std::find(m_arrAllRecord9.begin(), 
+				m_arrAllRecord9.end(), arrRecordR9);
+			if (fIter == m_arrAllRecord9.end()) {
+				if (IsAValidRecord9(arrRecordR9, L, poss, &failed_reason)) {
+					m_arrAllRecord9.push_back(arrRecordR9);
+				}
 			}
 		}
+		strLog.Format(_T("lua_Calc9 Item[%s], count=[%d]"), 
+			poss.c_str(), m_arrAllRecord9.size() - old_count);
+		OutputDebugString(strLog);
 	}
 	std::stable_sort(m_arrAllRecord9.begin(), m_arrAllRecord9.end());
 	m_arrAllRecord9.erase(std::unique(m_arrAllRecord9.begin(), m_arrAllRecord9.end()), m_arrAllRecord9.end());
+
+	strLog.Format(_T("lua_Calc9 End, allrecord count=[%d]"), m_arrAllRecord9.size());
+	OutputDebugString(strLog);
 	return TRUE;
 }
 
@@ -520,7 +568,7 @@ void CEngineLua::ResetAllRen9Pos(const std::string& val) {
 						match_count++;
 					}
 				}
-				if (match_count == line.size()) {
+				if (match_count == line.size() || match_count == 9) {
 					m_arrCalcRen9Pos.push_back(item.first);
 				}
 			}

@@ -342,10 +342,8 @@ BOOL CDialogTZ::DoUpdateDatabase(const CStlString &strResults) {
 static void gatherAllChoice(const CStlStrxyArray& arrChoiceXY, CStlStrxyArray& arrChoiceR, 
 	CStlStrArray& codes, int index, int& count2) {
 	if (index >= TOTO_COUNT) {
-		if (codes.size() == TOTO_COUNT) {
-			if (count2 == 8) {
-				arrChoiceR.push_back(codes);
-			}
+		if (codes.size() == TOTO_COUNT && count2 == 10) {
+			arrChoiceR.push_back(codes);
 		}
 		return;
 	}
@@ -400,6 +398,9 @@ static void filterChoiceR(CStlStrxyArray& arrChoiceR, CStringATL strScript) {
 	std::vector<FilterX_Params> fps;
 	CStlStrArray arrLines, arrPart;
 	Global::DepartString((LPCTSTR)strScript, _T("\n"), arrLines);
+	if (arrLines.size() == 0) {
+		return;
+	}
 	for (auto& line : arrLines) {
 		FilterX_Params fp;
 		Global::TrimBlank(line);
@@ -444,6 +445,9 @@ static void filterChoiceR(CStlStrxyArray& arrChoiceR, CStringATL strScript) {
 		if (fp.range_begin > fp.range_end) continue;
 		fps.push_back(fp);
 	}
+	if (fps.size() == 0) {
+		return;
+	}
 	for (pos = arrChoiceR.size() - 1; pos >= 0; pos--) {
 		CStlStrArray& record = arrChoiceR[pos];
 		bool isFiltered = false;
@@ -466,14 +470,6 @@ static void filterChoiceR(CStlStrxyArray& arrChoiceR, CStringATL strScript) {
 			arrChoiceR.erase(arrChoiceR.begin() + pos);
 		}
 	}
-
-
-
-
-
-
-
-
 
 }
 

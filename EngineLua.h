@@ -15,6 +15,7 @@ public:
 protected:
 	virtual BOOL IsAValidRecordImpl(const CIntArray& record, void* ctx, CStlString* invalid_reason);
 	virtual void FilterG();
+	virtual void StatisRen9();
 
 protected:
 	lua_State* InitLua(CStlString& failed_reason);

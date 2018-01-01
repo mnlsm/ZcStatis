@@ -29,6 +29,7 @@ void Global::TrimString(CStlString& str, TCHAR a) {
 void Global::TrimBlank(CStlString& str) {
     TrimString(str, _T(' '));
     TrimString(str, _T('\t'));
+	TrimString(str, _T('\r'));
 }
 
 BOOL Global::DepartString(const CStlString& strTxt, const CStlString& strDim, CStlStrArray &arrPart) {
@@ -54,7 +55,10 @@ BOOL Global::DepartString(const CStlString& strTxt, const CStlString& strDim, CS
                 arrPart.push_back(token);
             }
         }
-    }
+	} else if(offset == 0) {
+		arrPart.push_back(strTxt);
+		//return FALSE;
+	}
     return TRUE;
 }
 
