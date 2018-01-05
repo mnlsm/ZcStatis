@@ -6,11 +6,18 @@
 #include "MainDlg.h"
 #include "Engine.h"
 
+#include "Global.h"
+#include "libxls/XlsReader.h"
 CAppModule _Module;
 
 //http://odds.500.com/europe_sfc.shtml
 int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 {
+
+	CStlString fn = Global::GetAppPath() + _T("odds\\18002.xls");
+	//using namespace xls;
+	//WorkBook wb(fn);
+	//xlsString name = wb.GetSheetName(0);
 	CMessageLoop theLoop;
 	_Module.AddMessageLoop(&theLoop);
 

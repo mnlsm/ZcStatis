@@ -4,6 +4,7 @@
 #include "DialogDB.h"
 #include "Global.h"
 
+#include "libxls/XlsReader.h"
 #include "mso.tlh"
 #include "vbe6ext.tlh"
 #include "excel.tlh"
@@ -177,6 +178,9 @@ LRESULT CDialogDB::OnClickedExcel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
         return 1L;
     }
     CStlString fn = Global::GetAppPath() + _T("odds\\") + (LPCTSTR)m_strQH + _T(".xls");
+	//using namespace xls;
+	//WorkBook wb(fn);
+
 	CComPtr<Excel::_Application> pExcelApp;
 	try {
         CT2OLE fn_ole(fn.c_str());

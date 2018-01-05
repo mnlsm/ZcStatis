@@ -28,6 +28,9 @@
     <Filter Include="sqlite3\SQLiteCpp">
       <UniqueIdentifier>{1d793640-db47-40d5-a608-e616eee5bf9a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="libxls">
+      <UniqueIdentifier>{ed5dc61a-4300-46ec-a9e9-3b14e3769988}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lua\lbitlib.c">
@@ -189,6 +192,27 @@
     <ClCompile Include="sqlite3\SQLiteCpp\Transaction.cpp">
       <Filter>sqlite3\SQLiteCpp</Filter>
     </ClCompile>
+    <ClCompile Include="libxls\endian.c">
+      <Filter>libxls</Filter>
+    </ClCompile>
+    <ClCompile Include="libxls\getopt.c">
+      <Filter>libxls</Filter>
+    </ClCompile>
+    <ClCompile Include="libxls\ole.c">
+      <Filter>libxls</Filter>
+    </ClCompile>
+    <ClCompile Include="libxls\xls.c">
+      <Filter>libxls</Filter>
+    </ClCompile>
+    <ClCompile Include="libxls\xls2csv.c">
+      <Filter>libxls</Filter>
+    </ClCompile>
+    <ClCompile Include="libxls\XlsReader.cpp">
+      <Filter>libxls</Filter>
+    </ClCompile>
+    <ClCompile Include="libxls\xlstool.c">
+      <Filter>libxls</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua\lctype.h">
@@ -340,6 +364,33 @@
     </ClInclude>
     <ClInclude Include="sqlite3\SQLiteCpp\VariadicBind.h">
       <Filter>sqlite3\SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="libxls\brdb.c.h">
+      <Filter>libxls</Filter>
+    </ClInclude>
+    <ClInclude Include="libxls\brdb.h">
+      <Filter>libxls</Filter>
+    </ClInclude>
+    <ClInclude Include="libxls\endian.h">
+      <Filter>libxls</Filter>
+    </ClInclude>
+    <ClInclude Include="libxls\ole.h">
+      <Filter>libxls</Filter>
+    </ClInclude>
+    <ClInclude Include="libxls\xls.h">
+      <Filter>libxls</Filter>
+    </ClInclude>
+    <ClInclude Include="libxls\XlsReader.h">
+      <Filter>libxls</Filter>
+    </ClInclude>
+    <ClInclude Include="libxls\xlsstruct.h">
+      <Filter>libxls</Filter>
+    </ClInclude>
+    <ClInclude Include="libxls\xlstool.h">
+      <Filter>libxls</Filter>
+    </ClInclude>
+    <ClInclude Include="libxls\xlstypes.h">
+      <Filter>libxls</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
