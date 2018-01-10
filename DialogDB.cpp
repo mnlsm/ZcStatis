@@ -4,10 +4,11 @@
 #include "DialogDB.h"
 #include "Global.h"
 
-#include "libxls/XlsReader.h"
 #include "mso.tlh"
 #include "vbe6ext.tlh"
 #include "excel.tlh"
+
+#include "BasicExcel.hpp"
 
 void CDialogDB::LoadData() {
     m_lstQH.ResetContent();
@@ -178,8 +179,14 @@ LRESULT CDialogDB::OnClickedExcel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
         return 1L;
     }
     CStlString fn = Global::GetAppPath() + _T("odds\\") + (LPCTSTR)m_strQH + _T(".xls");
-	//using namespace xls;
-	//WorkBook wb(fn);
+	using namespace YExcel;
+	BasicExcel BE;
+	if (BE.Load(fn.c_str())) {
+		BE.GetWorksheet(1);
+	}
+
+
+
 
 	CComPtr<Excel::_Application> pExcelApp;
 	try {

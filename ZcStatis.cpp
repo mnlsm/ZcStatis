@@ -7,14 +7,35 @@
 #include "Engine.h"
 
 #include "Global.h"
-#include "libxls/XlsReader.h"
+#include "BasicExcel.hpp"
 CAppModule _Module;
 
 //http://odds.500.com/europe_sfc.shtml
 int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 {
 
-	CStlString fn = Global::GetAppPath() + _T("odds\\18002.xls");
+	CStlString fn = Global::GetAppPath() + _T("odds\\18002_1.xls");
+	using namespace YExcel;
+	BasicExcel BE;
+	if (BE.Load(fn.c_str()) && BE.GetTotalWorkSheets() > 0) {
+		Worksheet* ws = BE.GetRawWorksheet(0);
+		auto& cells = ws->mergedCells_.mergedCellsVector_;
+		for (auto cell : cells) {
+			std::string buffer;
+			buffer.resize(cell.DataSize(), '\0');
+			cell.Read((char*)buffer.data());
+			Sleep(0);
+		}
+
+		/*
+		std::ostringstream os;
+		BEW->Print(os);
+		std::string info = os.str();
+		wchar_t* name = BEW->GetUnicodeSheetName();
+		int rowCount = BEW->GetTotalRows();
+		Sleep(0);
+		*/
+	}
 	//using namespace xls;
 	//WorkBook wb(fn);
 	//xlsString name = wb.GetSheetName(0);
