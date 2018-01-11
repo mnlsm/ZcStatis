@@ -1471,7 +1471,7 @@ public:
 					USHORT XFRecordIndex_;
 					double value_;
 
-				private:
+				public:
 					union
 					{
 						LONGINT intvalue_;
@@ -1691,6 +1691,12 @@ public:
 	ULONG DataSize();
 	ULONG RecordSize();
 
+	void UpdateLabels(Workbook* workbook);
+	bool getLabel(int row, int col, std::string& val);
+	bool getLongInt(int row, int col, LONGINT& val);
+	bool getDouble(int row, int col, double& val);
+	LONGINT getMaxRowIndex();
+
 	BOF bof_;
 	Index index_;
 	ColInfos colinfos_;
@@ -1699,6 +1705,18 @@ public:
 	Window2 window2_;
 	MergedCells mergedCells_;
 	YEOF eof_;
+	std::map<UINT, std::vector<Record>> unknowRecords_;
+
+	typedef CellTable::RowBlock::CellBlock::LabelSST LabelCellBase;
+	typedef CellTable::RowBlock::CellBlock::Number NumberCell;
+	typedef CellTable::RowBlock::CellBlock::Blank BlankCell;
+
+	struct LabelCell : LabelCellBase {
+		std::string text;
+	};
+	std::vector<LabelCell> labels_;
+	std::vector<NumberCell> numbers_;
+	std::vector<BlankCell> blanks_;
 };
 
 double GetDoubleFromRKValue(LONG rkValue);	///< Convert a rk value to a double.

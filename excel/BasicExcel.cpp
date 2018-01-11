@@ -1,9 +1,9 @@
+#include "../stdafx.h"
 #include "ExcelFormat.h"
 
 #ifdef _MSC_VER
 #include <malloc.h>	// for alloca()
 #endif
-
 
 #ifdef _WIN32
 
@@ -3459,6 +3459,10 @@ Worksheet::Worksheet()
 ULONG Worksheet::Read(const char* data)
 {
 	ULONG bytesRead = 0;
+	labels_.clear();
+	numbers_.clear();
+	blanks_.clear();
+	unknowRecords_.clear();
 
 	try {
 		short code;
@@ -3466,6 +3470,9 @@ ULONG Worksheet::Read(const char* data)
 
 		while(code != CODE::YEOF)
 		{
+			LabelCell lc; 
+			NumberCell nc;
+			BlankCell bc;
 			switch(code)
 			{
 				case CODE::BOF:
@@ -3496,6 +3503,20 @@ ULONG Worksheet::Read(const char* data)
 					bytesRead += mergedCells_.Read(data+bytesRead);
 					break;
 
+				case CODE::LABELSST:
+					bytesRead += lc.Read(data + bytesRead);
+					labels_.push_back(lc);
+					break;
+
+				case CODE::NUMBER:
+					bytesRead += nc.Read(data + bytesRead);
+					numbers_.push_back(nc);
+					break;
+
+				case CODE::BLANK:
+					bytesRead += bc.Read(data + bytesRead);
+					blanks_.push_back(bc);
+					break;
 //				case CODE::SXFORMULA:
 //					bytesRead += 4;	// skip SXFORMULA record
 //					break;
@@ -3510,6 +3531,11 @@ ULONG Worksheet::Read(const char* data)
 				default:
 					Record rec;
 					bytesRead += rec.Read(data+bytesRead);
+					if (unknowRecords_.find(code) == unknowRecords_.end()) {
+						unknowRecords_[code] = std::vector<Record>();
+					}
+					unknowRecords_[code].push_back(rec);
+					break;
 			}
 
 			LittleEndian::Read(data, code, bytesRead, 2);
@@ -3520,6 +3546,21 @@ ULONG Worksheet::Read(const char* data)
 		bytesRead += e._bytesRead;
 	}
 
+	/*
+	vector<LargeString>& ss = excel_->workbook_.sst_.strings_;
+	if (ss[rCellBlocks[j]->_union.labelsst_->SSTRecordIndex_].unicode_ & 1) {
+		wstr = ss[rCellBlocks[j]->_union.labelsst_->SSTRecordIndex_].wname_;
+		wstr.resize(wstr.size() + 1);
+		wstr.back() = L'\0';
+		cells_[row][col].Set(&*(wstr.begin()));
+	}
+	else {
+		str = ss[rCellBlocks[j]->_union.labelsst_->SSTRecordIndex_].name_;
+		str.resize(str.size() + 1);
+		str.back() = '\0';
+		cells_[row][col].Set(&*(str.begin()));
+	}
+	*/
 	return bytesRead;
 }
 
@@ -3557,6 +3598,78 @@ ULONG Worksheet::DataSize()
 	return dataSize;
 }
 ULONG Worksheet::RecordSize() {return DataSize();}
+
+void Worksheet::UpdateLabels(Workbook* workbook) {
+	vector<LargeString>& ss = workbook->sst_.strings_;
+	for (auto& label : labels_) {
+		int SSTRecordIndex = label.SSTRecordIndex_;
+		if ((ss[SSTRecordIndex].unicode_ & 1) != 0) {
+			if (!ss[SSTRecordIndex].wname_.empty()) {
+				std::wstring wtext(&ss[SSTRecordIndex].wname_.front(), ss[SSTRecordIndex].wname_.size());
+				label.text = ATL::CW2A(wtext.c_str()).m_psz;
+			}
+		}
+		else {
+			if (!ss[SSTRecordIndex].name_.empty()) {
+				label.text.assign(&ss[SSTRecordIndex].name_.front(), ss[SSTRecordIndex].name_.size());
+			}
+		}
+	}
+}
+
+bool Worksheet::getLabel(int row, int col, std::string& val) {
+	val.clear();
+	for (const auto& label : labels_) {
+		if (label.rowIndex_ == row && col == label.colIndex_) {
+			val = label.text;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool Worksheet::getLongInt(int row, int col, LONGINT& val) {
+	val = 0l;
+	for (const auto& number : numbers_) {
+		if (number.rowIndex_ == row && number.colIndex_ == col) {
+			val = (LONGINT)number.value_;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool Worksheet::getDouble(int row, int col, double& val) {
+	val = 0l;
+	for (const auto& number : numbers_) {
+		if (number.rowIndex_ == row && col == number.colIndex_) {
+			val = number.intdouble_.doublevalue_;
+			return true;
+		}
+	}
+	return false;
+}
+
+LONGINT Worksheet::getMaxRowIndex() {
+	LONGINT row = -1;
+	for (const auto& label : labels_) {
+		if (label.rowIndex_ > row) {
+			row = label.rowIndex_;
+		}
+	}
+	for (const auto& number : numbers_) {
+		if (number.rowIndex_ > row) {
+			row = number.rowIndex_;
+		}
+	}
+	for (const auto& blank : blanks_) {
+		if (blank.rowIndex_ > row) {
+			row = blank.rowIndex_;
+		}
+	}
+	return row;
+}
+
 /************************************************************************************************************/
 
 /************************************************************************************************************/
@@ -5158,6 +5271,9 @@ BasicExcelWorksheet* BasicExcel::GetWorksheet(int sheetIndex)
 }
 
 Worksheet* BasicExcel::GetRawWorksheet(int sheetIndex) {
+	if (worksheets_.empty()) {
+		return NULL;
+	}
 	return &(worksheets_[sheetIndex]);
 }
 
@@ -5511,6 +5627,7 @@ size_t BasicExcel::Read(const char* data, size_t dataSize)
 			case WORKSHEET:
 				worksheets_.push_back(Worksheet());
 				bytesRead += worksheets_.back().Read(data+bytesRead);
+				worksheets_.back().UpdateLabels(&workbook_);
 				break;
 
 			case CHART:

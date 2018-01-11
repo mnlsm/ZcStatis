@@ -4,10 +4,6 @@
 #include "DialogDB.h"
 #include "Global.h"
 
-#include "mso.tlh"
-#include "vbe6ext.tlh"
-#include "excel.tlh"
-
 #include "BasicExcel.hpp"
 
 void CDialogDB::LoadData() {
@@ -105,49 +101,49 @@ LRESULT CDialogDB::OnClickedAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 	sm1.bindNoCopy(6, m_strMatchs);
 	sm1.exec();
 
-    if(m_lstQH.FindString(0, m_strQH) < 0)
-        m_lstQH.AddString(m_strQH);
+	if (m_lstQH.FindString(0, m_strQH) < 0)
+		m_lstQH.AddString(m_strQH);
 
 	ClearDataShow();
-    return 0;
+	return 0;
 }
 
 LRESULT CDialogDB::OnClickedExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-    EndDialog(wID);
-    return 0;
+	EndDialog(wID);
+	return 0;
 }
 
 LRESULT CDialogDB::OnClickedClear(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	ClearDataShow();
-    return 0;
+	return 0;
 }
 
 LRESULT CDialogDB::OnClickedDelete(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-    int nSel = m_lstQH.GetCurSel();
-    if(nSel < 0) return 1L;
+	int nSel = m_lstQH.GetCurSel();
+	if (nSel < 0) return 1L;
 
-    CStringATL strID;
-    m_lstQH.GetText(nSel, strID.GetBuffer(1024));
-    strID.ReleaseBuffer();
+	CStringATL strID;
+	m_lstQH.GetText(nSel, strID.GetBuffer(1024));
+	strID.ReleaseBuffer();
 
-    CStringATL strSQL =  _T("DELETE FROM PLDATA WHERE ID = ?");
+	CStringATL strSQL = _T("DELETE FROM PLDATA WHERE ID = ?");
 	SQLite::Statement sm(*m_pDatabase, strSQL);
 	sm.bindNoCopy(1, strID);
-    sm.exec();
-    m_lstQH.DeleteString(nSel);
-    return 0;
+	sm.exec();
+	m_lstQH.DeleteString(nSel);
+	return 0;
 }
 
 LRESULT CDialogDB::OnListQHSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-    int nSel = m_lstQH.GetCurSel();
-    if(nSel < 0) return 1L;
+	int nSel = m_lstQH.GetCurSel();
+	if (nSel < 0) return 1L;
 
-    CStringATL strID;
-    m_lstQH.GetText(nSel, strID.GetBuffer(1024));
-    strID.ReleaseBuffer();
+	CStringATL strID;
+	m_lstQH.GetText(nSel, strID.GetBuffer(1024));
+	strID.ReleaseBuffer();
 
-    CStringATL strSQL;
-    strSQL.Format(_T("SELECT ID,BONUS,RESULT,PLDATA,SALES,MATCHS FROM PLDATA WHERE ID='%s'"), strID);
+	CStringATL strSQL;
+	strSQL.Format(_T("SELECT ID,BONUS,RESULT,PLDATA,SALES,MATCHS FROM PLDATA WHERE ID='%s'"), strID);
 	SQLite::Statement sm(*m_pDatabase, strSQL);
 	if (sm.executeStep()) {
 		float fBonus = 0;
@@ -164,178 +160,107 @@ LRESULT CDialogDB::OnListQHSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 		m_strSales.ReleaseBuffer();
 	}
 
-    DoDataExchange(FALSE);
+	DoDataExchange(FALSE);
 
-    return 0;
+	return 0;
 
 }
 
 
 LRESULT CDialogDB::OnClickedExcel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-    DoDataExchange(TRUE);
-    int nLenQH = m_strQH.GetLength();
-    if(nLenQH != 5) {
-        MessageBox("ÆÚºÅÊäÈë´íÎó£¬Çë¼ì²é£¡", "´íÎó", MB_ICONERROR|MB_OK);
-        return 1L;
-    }
-    CStlString fn = Global::GetAppPath() + _T("odds\\") + (LPCTSTR)m_strQH + _T(".xls");
+	DoDataExchange(TRUE);
+	const std::string dmVS = "    VS    ";
+	CStlString rateStr, matchStr;
+	int nLenQH = m_strQH.GetLength();
+	if (nLenQH != 5) {
+		MessageBox("ÆÚºÅÊäÈë´íÎó£¬Çë¼ì²é£¡", "´íÎó", MB_ICONERROR | MB_OK);
+		return 1L;
+	}
+	CStlString fn = Global::GetAppPath() + _T("odds\\") + (LPCTSTR)m_strQH + _T(".xls");
 	using namespace YExcel;
 	BasicExcel BE;
-	if (BE.Load(fn.c_str())) {
-		BE.GetWorksheet(1);
+	if (!BE.Load(fn.c_str())) {
+		MessageBox("´ò¿ªxlsÎÄ¼þÊ§°Ü£¡ 0", "´íÎó", MB_ICONERROR | MB_OK);
+		return 1L;
 	}
 
+	Worksheet* ws = BE.GetRawWorksheet(0);
+	if (ws == NULL) {
+		MessageBox("´ò¿ªxlsÎÄ¼þÊ§°Ü£¡ 1", "´íÎó", MB_ICONERROR | MB_OK);
+		return 1L;
+	}
+
+	const LONGINT maxRowIndex = ws->getMaxRowIndex();
+	for (LONGINT row = 2; row < maxRowIndex; row = row + 2) {
+		CStlString strMatchPrefix(16, ' ');
+		int matchNameState = 0;
+		TCHAR szR[20] = { _T('\0') };
+		LONGINT matchNo = -1;
+		std::string text;
+
+		ws->getLongInt(row, 0, matchNo);
+		if (matchNo != -1) {
+			_stprintf(szR, _T("%02u."), matchNo);
+			TCHAR* dataPos = (TCHAR*)strMatchPrefix.data();
+			memcpy(dataPos, szR, _tcslen(szR) * sizeof(TCHAR));
+			matchNameState++;
+		} else {
+			continue;
+		}
 
 
-
-	CComPtr<Excel::_Application> pExcelApp;
-	try {
-        CT2OLE fn_ole(fn.c_str());
-
-        Excel::_ApplicationPtr pExcelApp1;
-        HRESULT hr = pExcelApp1.CreateInstance(L"Excel.Application");
-        if(FAILED(hr)) {
-            MessageBox("Excel Com ³õÊ¼»¯Ê§°Ü 0£¡", "´íÎó", MB_ICONERROR|MB_OK);
-            return 1L;
-        }
-        pExcelApp = pExcelApp1.GetInterfacePtr();
-
-        //HRESULT hr = pExcelApp.CoCreateInstance(L"Excel.Application", NULL);
-        if(FAILED(hr)) {
-            MessageBox("Excel Com ³õÊ¼»¯Ê§°Ü 0£¡", "´íÎó", MB_ICONERROR|MB_OK);
-            return 1L;
-        }
-        CComPtr<Excel::Workbooks> pWorkbooks;
-        hr = pExcelApp->get_Workbooks(&pWorkbooks);
-        if(FAILED(hr)) {
-            MessageBox("Excel Com ³õÊ¼»¯Ê§°Ü 1£¡", "´íÎó", MB_ICONERROR|MB_OK);
-            return 1L;
-        }
-        CComPtr<Excel::_Workbook> pWorkbook;
-		hr = pWorkbooks->raw_Open(CComBSTR(fn_ole.m_psz), vtMissing, vtMissing,
-                                  vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
-                                  vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
-                                  0, &pWorkbook);
-        if(FAILED(hr) || pWorkbook.p == NULL) {
-            MessageBox("Excel Com ³õÊ¼»¯Ê§°Ü 2£¡", "´íÎó", MB_ICONERROR|MB_OK);
-            return 1L;
-        }
-        CComPtr<Excel::Sheets> pSheets;
-        hr = pWorkbook->get_Sheets(&pSheets);
-        if(FAILED(hr) || pSheets.p == NULL) {
-            MessageBox("Excel Com ³õÊ¼»¯Ê§°Ü 5£¡", "´íÎó", MB_ICONERROR|MB_OK);
-            return 1L;
-        }
-        long sheet_count = 0;
-        hr = pSheets->get_Count(&sheet_count);
-        if(FAILED(hr) || sheet_count <= 0) {
-            MessageBox("Excel Com ³õÊ¼»¯Ê§°Ü 6£¡", "´íÎó", MB_ICONERROR|MB_OK);
-            return 1L;
-        }
-        CStlString rateStr, matchStr;
-		const std::string dmVS = "    VS    ";
-        for(long j = 0; j < sheet_count; j++) {
-            CComPtr<IDispatch> pIDispath;
-            CComVariant vIndex(j + 1);
-            hr = pSheets->get_Item(vIndex, &pIDispath);
-            if(FAILED(hr) || pIDispath.p == NULL) {
-                MessageBox("Excel Com ³õÊ¼»¯Ê§°Ü 7£¡", "´íÎó", MB_ICONERROR|MB_OK);
-                return 1L;
-            }
-            CComQIPtr<Excel::_Worksheet> pWorksheet(pIDispath);
-            CComBSTR sheet_name;
-            hr = pWorksheet->get_Name(&sheet_name);
-            if(FAILED(hr) || sheet_name == NULL) {
-                MessageBox("Excel Com ³õÊ¼»¯Ê§°Ü 8£¡", "´íÎó", MB_ICONERROR|MB_OK);
-                return 1L;
-            }
-			if (wcscmp(sheet_name.m_str, L"Sheet1") != 0) {
-				continue;
+		ws->getLabel(row, 4, text);
+		if (!text.empty()) {
+			int teamNameLen = text.size();
+			if (teamNameLen < strMatchPrefix.size() - 3) {
+				matchNameState++;
+				TCHAR* dataPos = (TCHAR*)strMatchPrefix.data() + strMatchPrefix.size() - teamNameLen;
+				memcpy(dataPos, text.c_str(), teamNameLen * sizeof(TCHAR));
 			}
-            CComPtr<Excel::Range> pRootCells;
-            hr = pWorksheet->get_UsedRange(0, &pRootCells);
-            if(FAILED(hr) || pRootCells.p == NULL) {
-                MessageBox("Excel Com ³õÊ¼»¯Ê§°Ü 9£¡", "´íÎó", MB_ICONERROR|MB_OK);
-                return 1L;
-            }
-            long root_cell_count = pRootCells->GetCount();
-            Excel::RangePtr rows = pRootCells->GetRows();
-            long row_count = rows->GetCount();
-            for(int i = 3; i <= row_count; i = i + 2) {
-				CComVariant rowIndex(i);
-				CStlString strMatchPrefix(16, ' ');
-				int matchNameState = 0;
-				for(int j = 1; j < 11; j++) {
-                    CComVariant colIndex(j);
-                    Excel::RangePtr cell_item = pRootCells->GetItem(rowIndex, colIndex);
-					if (cell_item.GetInterfacePtr() == NULL) {
-						continue;
-					}
-					_variant_t cell_value = cell_item->GetValue2();
-					TCHAR szR[20] = { _T('\0') };
-					if (j == 1 && cell_value.vt == VT_R8) {
-						DWORD iMatchNo = (DWORD)cell_value.dblVal;
-						_stprintf(szR, _T("%02u."), iMatchNo);
-						TCHAR* dataPos = (TCHAR*)strMatchPrefix.data();
-						memcpy(dataPos, szR, _tcslen(szR) * sizeof(TCHAR));
-						matchNameState++;
-					} else if (j == 5 && cell_value.vt == VT_BSTR) {
-						CW2T teamName(cell_value.bstrVal);
-						int teamNameLen = _tcslen(teamName.m_psz);
-						if (teamNameLen < strMatchPrefix.size() - 3) {
-							matchNameState++;
-							TCHAR* dataPos = (TCHAR*)strMatchPrefix.data() + strMatchPrefix.size() - teamNameLen;
-							memcpy(dataPos, teamName.m_psz, teamNameLen * sizeof(TCHAR));
-						}
-					} else if (j == 7 && cell_value.vt == VT_BSTR) {
-						if (matchNameState == 2) {
-							strMatchPrefix = strMatchPrefix + dmVS + CW2T(cell_value.bstrVal).m_psz;
-						} else {
-							strMatchPrefix.clear();
-						}
-						if (!strMatchPrefix.empty()) {
-							if (matchStr.empty()) {
-								matchStr = strMatchPrefix.c_str();
-							}
-							else {
-								matchStr = matchStr + _T("\n") + strMatchPrefix.c_str();
-							}
-						}
-					} else if (j == 8 || j == 9 || j == 10) {
-						if (cell_value.vt == VT_R8) {
-							_stprintf(szR, _T("%.2f"), cell_value.dblVal);
-							if (rateStr.empty()) {
-								rateStr = szR;
-							}
-							else {
-								rateStr = rateStr + _T('#') + szR;
-							}
-						}
-					}
-                }
-            }
-        }
-		CStlStrArray arrTemp;
-		Global::DepartString(rateStr, _T("#"), arrTemp);
-		if (arrTemp.size() == 42) {
-			m_strPL = rateStr.c_str();
 		}
-		Global::DepartString(matchStr, _T("\n"), arrTemp);
-		if (arrTemp.size() == 14) {
-			m_strMatchs = matchStr.c_str();
-			std::wstring matchs_w = CT2W(matchStr.c_str()).m_psz;
+
+		ws->getLabel(row, 6, text);
+		if (!text.empty()) {
+			if (matchNameState == 2) {
+				strMatchPrefix = strMatchPrefix + dmVS + text;
+			}
+			else {
+				strMatchPrefix.clear();
+			}
+			if (!strMatchPrefix.empty()) {
+				if (matchStr.empty()) {
+					matchStr = strMatchPrefix.c_str();
+				}
+				else {
+					matchStr = matchStr + _T("\n") + strMatchPrefix.c_str();
+				}
+			}
 		}
-		DoDataExchange(FALSE);
-    } catch(_com_error& error) {
-        MessageBox(error.ErrorMessage(), "´íÎó", MB_ICONERROR|MB_OK);
-        return 1L;
-    }
-	try {
-		if (pExcelApp.p != NULL) {
-			pExcelApp->Quit();
+
+		for (int j = 7; j <= 9; j++) {
+			double rate = 0.0;
+			ws->getDouble(row, j, rate);
+			if (rate > 0) {
+				_stprintf(szR, _T("%.2f"), rate);
+				if (rateStr.empty()) {
+					rateStr = szR;
+				} else {
+					rateStr = rateStr + _T('#') + szR;
+				}
+			}
 		}
-	} catch (...) {
 	}
+	CStlStrArray arrTemp;
+	Global::DepartString(rateStr, _T("#"), arrTemp);
+	if (arrTemp.size() == TOTO_COUNT * 3) {
+		m_strPL = rateStr.c_str();
+	}
+	Global::DepartString(matchStr, _T("\n"), arrTemp);
+	if (arrTemp.size() == TOTO_COUNT) {
+		m_strMatchs = matchStr.c_str();
+		std::wstring matchs_w = CT2W(matchStr.c_str()).m_psz;
+	}
+	DoDataExchange(FALSE);
     return 0L;
 }
 
