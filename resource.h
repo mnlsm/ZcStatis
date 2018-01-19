@@ -13,6 +13,7 @@
 #define IDD_DIALOG_DBDATA               203
 #define IDD_DIALOG_TZ                   204
 #define IDD_DIALOG_GAMBEL               205
+#define IDD_JQC                         206
 #define IDR_MENU1                       214
 #define IDC_STATIS_LIST                 1001
 #define IDC_LIST_QH                     1002
@@ -104,13 +105,15 @@
 #define IDC_STMATCHONE13                8013
 #define IDC_STMATCHONE14                8014
 #define IDM_PREV                        32772
+#define ID_32773                        32773
+#define IDM_JQC                         32774
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        206
-#define _APS_NEXT_COMMAND_VALUE         32773
+#define _APS_NEXT_COMMAND_VALUE         32775
 #define _APS_NEXT_CONTROL_VALUE         1024
 #define _APS_NEXT_SYMED_VALUE           102
 #endif

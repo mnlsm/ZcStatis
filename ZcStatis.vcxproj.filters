@@ -31,6 +31,9 @@
     <Filter Include="excel">
       <UniqueIdentifier>{53de19f1-4f4e-412f-8a9c-3a61ff4316c0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="JQC">
+      <UniqueIdentifier>{194420d0-59c9-4653-9115-8ec7aa6e1f0d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lua\lbitlib.c">
@@ -198,6 +201,12 @@
     <ClCompile Include="excel\ExcelFormat.cpp">
       <Filter>excel</Filter>
     </ClCompile>
+    <ClCompile Include="JQC\JQCDialog.cc">
+      <Filter>JQC</Filter>
+    </ClCompile>
+    <ClCompile Include="JQC\JQCEngine.cc">
+      <Filter>JQC</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua\lctype.h">
@@ -355,6 +364,12 @@
     </ClInclude>
     <ClInclude Include="excel\ExcelFormat.h">
       <Filter>excel</Filter>
+    </ClInclude>
+    <ClInclude Include="JQC\JQCDialog.h">
+      <Filter>JQC</Filter>
+    </ClInclude>
+    <ClInclude Include="JQC\JQCEngine.h">
+      <Filter>JQC</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

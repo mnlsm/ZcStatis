@@ -39,6 +39,7 @@ public:
 
 		COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
 		COMMAND_ID_HANDLER(IDM_ADDRECORD, OnAddRecord)
+		COMMAND_ID_HANDLER(IDM_JQC, OnMenuJQC)
 		COMMAND_ID_HANDLER(IDM_REFRESH, OnRefresh)
 
 		CHAIN_MSG_MAP(_BaseDlgResize)
@@ -58,7 +59,8 @@ public:
 	LRESULT OnCancel(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnAddRecord(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnRefresh(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	
+	LRESULT OnMenuJQC(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+
 private:
 	typedef struct DataRowTag {
 		CStringATL m_strCodeZongShu;

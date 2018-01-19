@@ -9,6 +9,7 @@
 #include "Global.h"
 #include "Engine.h"
 #include "DialogGambel.h"
+#include "JQC/JQCDialog.h"
 #include <SQLiteCpp/SQLiteCpp.h>
 
 CMainDlg::CMainDlg() : m_lstStatis(this, 1) {
@@ -101,6 +102,13 @@ LRESULT CMainDlg::OnAddRecord(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, 
     ReloadStatisData();
     return 1L;
 }
+
+LRESULT CMainDlg::OnMenuJQC(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	JQCDialog jqc;
+	jqc.DoModal();
+	return 1L;
+}
+
 
 LRESULT CMainDlg::OnRefresh(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
     ReloadStatisData();
