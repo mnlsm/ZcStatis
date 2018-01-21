@@ -1,14 +1,14 @@
 --18007
 
 kMatchScores = {
-    "1,2,3", --阿森纳
-    "0,1,2", --水晶宫
-    "0,1,2", --伯恩利
-    "1,2,3", --曼彻斯特联
-    "0,1,2", --斯托克城
-    "0,1,2", --哈德斯菲尔德
-    "1,2,3", --曼彻斯特城
-    "0,1", --纽卡斯尔联
+    "1,2,3", --拉齐奥
+    "0,1,2", --切沃
+    "0,1,2", --卡利亚里
+    "1,2,3", --AC米兰
+    "0,1,2", --国际米兰
+    "0,1,2", --罗马
+    "1,2,3", --萨索洛
+    "0,1", --都灵
 };
 
 local function trace(level, info) 
@@ -75,7 +75,7 @@ function IsFilterLua(params)
 		return ret;
 	end
 
-	if count0 < 0 or count0 > 4 then
+	if count0 < 1 or count0 > 4 then
 		ret.code = 1;
 		ret.info = trace_prefix .. "count0=" .. count0;
 		trace(1, ret.info);
