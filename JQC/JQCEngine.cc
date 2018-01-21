@@ -34,6 +34,23 @@ static std::string lua_table_getfield(lua_State *L, const char *key,
 	return result;
 }
 
+static std::string lua_table_getfield(lua_State *L, int index, const char *defval) {
+	std::string result;
+	lua_pushnumber(L, index);
+	lua_gettable(L, -2);
+	if (lua_type(L, -1) == LUA_TSTRING) {
+		result = lua_tostring(L, -1);
+	} else {
+		if (defval != NULL) {
+			result = defval;
+		}
+	}
+	lua_pop(L, 1);
+	return result;
+}
+
+
+
 int __cdecl JQCEngine::LUA_DbgTrace(lua_State *L) {
 	if (lua_type(L, 1) == LUA_TSTRING) {
 		std::string line = dbgview_prefix + lua_tostring(L, 1);
@@ -65,6 +82,8 @@ JQCEngine::JQCEngine(const CStlString& script) {
 }
 
 BOOL JQCEngine::CalculateAllResult(CStlString& failed_reason) {
+	m_arrResult.clear();
+	m_strMatchScores.clear();
 	BOOL result = CalculateAllResultImpl(failed_reason);
 	if (!result) {
 		if (!failed_reason.empty()) {
@@ -92,6 +111,7 @@ BOOL JQCEngine::CalculateAllResultImpl(CStlString& failed_reason) {
 				tempAll.push_back(record);
 			}
 		}
+		m_arrResult.swap(tempAll);
 		result = TRUE;
 	}
 	else {
@@ -162,11 +182,17 @@ lua_State* JQCEngine::InitLua(CStlString& failed_reason) {
 		return NULL;
 	}
 
-	if (lua_getglobal(L, "kMatchScores") == LUA_TSTRING) {
-		m_strMatchScores = lua_tostring(L, -1);
+	if (lua_getglobal(L, "kMatchScores") == LUA_TTABLE) {
+		int index = 0;
+		while (++index > 0) {
+			std::string codes = lua_table_getfield(L, index, "none");
+			if (codes == "none") {
+				break;
+			}
+			m_strMatchScores.push_back(codes);
+		}
 		lua_pop(L, 1);
 	}
-
 	if (m_strMatchScores.empty()) {
 		failed_reason = _T("no match scores!!");
 		lua_close(L);
@@ -183,7 +209,7 @@ void JQCEngine::TermLua(lua_State* state) {
 
 static void gatherMatchScores(const CStlStrxyArray&split_scores,
 		int index, CIntArray& record, CIntxyArray& result) {
-	if (record.size() == split_scores.size() * 2) {
+	if (record.size() == split_scores.size()) {
 		result.push_back(record);
 	}
 	if (index >= split_scores.size()) {
@@ -192,19 +218,15 @@ static void gatherMatchScores(const CStlStrxyArray&split_scores,
 	for (const auto& codes : split_scores[index]) {
 		for (const auto& code : codes) {
 			record.push_back(code - '0');
+			gatherMatchScores(split_scores, index + 1, record, result);
+			record.pop_back();
 		}
-		gatherMatchScores(split_scores, index + 1, record, result);
-		record.pop_back();
-		record.pop_back();
 	}
 
 }
 
-BOOL JQCEngine::GeneratorCodes(const CStlString& strMatchScores, 
-		CIntxyArray& result) {
+BOOL JQCEngine::GeneratorCodes(const CStlStrArray& arrAllMatchScores, CIntxyArray& result) {
 	result.clear();
-	CStlStrArray arrAllMatchScores;
-	Global::DepartString(strMatchScores, _T("\n"), arrAllMatchScores);
 	CStlStrxyArray split_scores;
 	for (const auto& match : arrAllMatchScores) {
 		CStlStrArray scores;
@@ -212,14 +234,13 @@ BOOL JQCEngine::GeneratorCodes(const CStlString& strMatchScores,
 		if (scores.empty()) {
 			return FALSE;
 		}
-		for (const auto& score : scores) {
-			if (score.size() != 2) {
+		for (auto& score : scores) {
+			Global::TrimBlank(score);
+			if (score.size() != 1) {
 				return FALSE;
 			}
-			for (const auto& code : score) {
-				if (code != '0' && code != '1' && code != '2' && code != '3') {
-					return FALSE;
-				}
+			if (score[0] < '0' || score[0] > '9') {
+				return FALSE;
 			}
 		}
 		split_scores.push_back(scores);
@@ -229,10 +250,11 @@ BOOL JQCEngine::GeneratorCodes(const CStlString& strMatchScores,
 	return TRUE;
 }
 
-
-
 BOOL JQCEngine::IsFilterTJ(const CIntArray& record, const CStlString& strTJ) {
-	return FALSE; 
+	if (IsFilterF(record, strTJ, NULL)) {
+		return TRUE;
+	}
+	return FALSE;
 }
 
 void JQCEngine::push_scriptfunc_params(lua_State *L, const CIntArray& record) {
@@ -290,5 +312,66 @@ void JQCEngine::push_scriptfunc_params(lua_State *L, const CIntArray& record) {
 
 }
 
+void JQCEngine::GetResultString(CStlString& result) {
+	result.clear();
+	for (const auto& record : m_arrResult) {
+		CStlString line(record.size(), _T('\0'));
+		for (int i = 0; i < record.size(); i++) {
+			const auto& code = record[i];
+			line[i] = _T('0') + code;
+		}
+		if (result.empty()) {
+			result = line;
+		} else {
+			result = result + _T('\n') + line;
+		}
+	}
+}
 
+//F|12A|103|1|3|
+BOOL JQCEngine::IsFilterF(const CIntArray &tempArr, const std::string& strTJ, std::string *pStr) {
+	if (strTJ.find(_T("F")) == std::string::npos) {
+		return FALSE;
+	}
+	CIntPair CountRange;
+	//depart std::string
+	CStlStrArray arrPart;
+	TCHAR cbDim[] = _T("|");
+	Global::DepartString(strTJ, cbDim, arrPart);
+	//jugde valid para
+	if (arrPart.size() != 5) return FALSE;
+	std::string strHead = arrPart[0];
+	std::string strIndexs = arrPart[1];
+	std::string strScores = arrPart[2];
+	CountRange.first = _ttol(arrPart[3].c_str());
+	CountRange.second = _ttol(arrPart[4].c_str());
+	Global::TrimBlank(strIndexs);
+	Global::TrimBlank(strScores);
+	if (CountRange.first > CountRange.second) return false;
 
+	CIntArray arrIndex;
+	for (int i = 0; i < strIndexs.size(); i++) {
+		if (strIndexs[i] >= _T('1') && strIndexs[i] <= _T('9')) {
+			arrIndex.push_back(strIndexs[i] - _T('1'));
+		}
+		else if (strIndexs[i] == _T('A') || strIndexs[i] == _T('B')
+			|| strIndexs[i] == _T('C') || strIndexs[i] == _T('D') || strIndexs[i] == _T('E'))
+			arrIndex.push_back(strIndexs[i] - _T('A') + 9);
+		else return FALSE;
+	}
+	CIntArray arrFirst;
+	for (int i = 0; i < strScores.size(); i++) {
+		int iScoreValue = strScores[i] - _T('0');
+		arrFirst.push_back(iScoreValue);
+	}
+	if (arrFirst.size() != arrIndex.size()) return FALSE;
+
+	int iCount = 0;
+	for (int i = 0; i < arrIndex.size(); i++) {
+		int iIndex = arrIndex[i];
+		if (arrFirst[i] == tempArr[iIndex]) iCount++;
+	}
+	if (iCount > CountRange.second || iCount < CountRange.first)
+		return TRUE;
+	return FALSE;
+}

@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "JQCDialog.h"
 #include "Global.h"
+static const CStlString DZ_FILTER_NAME = _T("结果文件(*.txt)");
+static const CStlString DZ_FILTER = _T("*.txt");
+
 
 JQCDialog::JQCDialog()
 	:m_lstStatis(this, 1) {
@@ -27,18 +30,20 @@ LRESULT JQCDialog::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	CRect rcDesktop;
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &rcDesktop, sizeof(RECT));
 	LPMINMAXINFO pMinMaxInfo = reinterpret_cast<LPMINMAXINFO>(lParam);
-	pMinMaxInfo->ptMaxSize.x = pMinMaxInfo->ptMaxTrackSize.x = rcDesktop.right - rcDesktop.left;
-	pMinMaxInfo->ptMaxSize.y = pMinMaxInfo->ptMaxTrackSize.y = rcDesktop.bottom - rcDesktop.top;
+	pMinMaxInfo->ptMaxSize.x = pMinMaxInfo->ptMaxTrackSize.x = rcDesktop.right - rcDesktop.left - 10;
+	pMinMaxInfo->ptMaxSize.y = pMinMaxInfo->ptMaxTrackSize.y = rcDesktop.bottom - rcDesktop.top - 10;
 	return 1L;
 }
 
 LRESULT JQCDialog::OnInitMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	CMenuHandle menu((HMENU)wParam);
-	menu.RemoveMenu(IDM_ADDRECORD, MF_BYCOMMAND);
+	//menu.RemoveMenu(IDM_ADDRECORD, MF_BYCOMMAND);
+	CStringATL text;
+	text.Format(_T("计算本期【%s】"), m_strQH);
+	menu.ModifyMenu(IDM_ADDRECORD, MF_BYCOMMAND | MF_STRING, IDM_ADDRECORD, text);
 	menu.RemoveMenu(IDM_JQC, MF_BYCOMMAND);
 	return 1L;
 }
-
 
 LRESULT JQCDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	LRESULT lRet = m_lstStatis.DefWindowProc(uMsg, wParam, lParam);
@@ -56,6 +61,27 @@ LRESULT JQCDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 }
 
 LRESULT JQCDialog::OnAddRecord(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	CStringATL strLuaFile;
+	CStlString strScript, reason;
+	strLuaFile.Format(_T("%s\\%s.lua"), m_strWorkDir, m_strQH);
+	if (!PathFileExists(strLuaFile)) {
+		MessageBox("Lua脚本文件读取失败 0！", "错误", MB_ICONERROR | MB_OK);
+		return 1L;
+	}
+	if (!Global::ReadFileData((LPCTSTR)strLuaFile, strScript) || strScript.empty()) {
+		MessageBox("Lua脚本文件读取失败 1！", "错误", MB_ICONERROR | MB_OK);
+		return 1L;
+	}
+	JQCEngine engine(strScript);
+	if (engine.CalculateAllResult(reason)) {
+		strLuaFile.Format(_T("【%s】计算完成， 共有【%u】注结果， 是否保存？"), m_strQH, engine.GetResult().size());
+		if (MessageBox(strLuaFile, "完成", MB_ICONQUESTION | MB_YESNO) == IDYES) {
+			DoSaveResult(engine);
+		}
+	} else {
+		strLuaFile.Format(_T("【%s】计算失败！"), m_strQH);
+		MessageBox(strLuaFile, "错误", MB_ICONERROR | MB_OK);
+	}
 	return 1L;
 }
 
@@ -91,9 +117,11 @@ void JQCDialog::InitControls() {
 	m_lstStatis.InsertColumn(colIndex, "号 码", LVCFMT_CENTER, 100);    //270
 	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
 
-	m_lstStatis.InsertColumn(colIndex, "号码和", LVCFMT_CENTER, 85);    //70
+	m_lstStatis.InsertColumn(colIndex, "总进球", LVCFMT_CENTER, 85);    //70
 	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
 
+	m_lstStatis.InsertColumn(colIndex, "场进球", LVCFMT_CENTER, 100);    //70
+	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
 	//set sort type
 	m_lstStatis.SetSortColumn(0);
 }
@@ -106,7 +134,7 @@ void JQCDialog::ReloadStatisData() {
 		Global::ReadFileData(strTextFile, filedate);
 		std::vector<CStlString> arrLines;
 		Global::DepartString(filedate, _T("\r\n"), arrLines);
-		int iIndex = 0;
+		int iIndex = 0, maxQH = 0;
 		for (const auto& line : arrLines) {
 			int colIndex = 0;
 			std::vector<CStlString> arrParts;
@@ -117,20 +145,67 @@ void JQCDialog::ReloadStatisData() {
 			if (arrParts[1].size() != 8) {
 				continue;
 			}
+			int qh = _ttol(arrParts[0].c_str());
+			if (qh > maxQH) {
+				maxQH = qh;
+			}
 			iIndex = m_lstStatis.InsertItem(iIndex, arrParts[0].c_str());
 			m_lstStatis.SetItemText(iIndex, ++colIndex, arrParts[3].c_str());
 			m_lstStatis.SetItemText(iIndex, ++colIndex, arrParts[2].c_str());
 			m_lstStatis.SetItemText(iIndex, ++colIndex, arrParts[1].c_str());
 			CStlString& codes = arrParts[1];
-			int sum = 0;
+			CIntArray arrCodes;
+			int sumAll = 0;
 			for (int j = 0; j < 8; j++) {
 				int code = (codes[j] - _T('0'));
-				sum += code;
+				sumAll += code;
+				arrCodes.push_back(code);
 			}
 			CStringATL strNum;
-			sprintf(strNum.GetBuffer(255), "%u", sum);
+			sprintf(strNum.GetBuffer(255), "%u", sumAll);
+			strNum.ReleaseBuffer();
+			m_lstStatis.SetItemText(iIndex, ++colIndex, strNum);
+			sprintf(strNum.GetBuffer(255), "%02u-%02u-%02u-%02u", arrCodes[1] + arrCodes[0],
+				arrCodes[3] + arrCodes[2], arrCodes[5] + arrCodes[4], arrCodes[7] + arrCodes[6]);
 			strNum.ReleaseBuffer();
 			m_lstStatis.SetItemText(iIndex, ++colIndex, strNum);
 		}
+		m_strQH.Format(_T("%u"), maxQH + 1);
+		CreateWorkDir();
 	}
+}
+
+void JQCDialog::CreateWorkDir() {
+	CStringATL strPath(Global::GetAppPath().c_str());
+	strPath += _T("JQC");
+	CStringATL strInitFileName;
+	CreateDirectory(strPath, NULL);
+	strPath = strPath + _T("\\") + m_strQH;
+	CreateDirectory(strPath, NULL);
+	m_strWorkDir = strPath;
+}
+
+void JQCDialog::DoSaveResult(JQCEngine& engine) {
+	CStlString strResult;
+	engine.GetResultString(strResult);
+	if (strResult.empty()) {
+		return;
+	}
+	TCHAR szFilterName[30] = { _T('\0') };
+	_tcscpy(szFilterName, DZ_FILTER_NAME.c_str());
+	_tcscat(szFilterName + DZ_FILTER_NAME.length() + 1, DZ_FILTER.c_str());
+	CFileDialog dlg(FALSE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+		szFilterName, m_hWnd);
+	dlg.m_ofn.lpstrInitialDir = m_strWorkDir;
+	CStringATL strInitFileName;
+	strInitFileName.Format(_T("%s.txt"), m_strQH);
+	TCHAR szFileName[MAX_PATH + 1] = { _T('\0') };
+	_tcscpy(szFileName, strInitFileName);
+	dlg.m_ofn.lpstrFile = szFileName;
+	if (dlg.DoModal() != IDOK) {
+		return;
+	}
+	CStlString strLoadPath = dlg.m_ofn.lpstrFile;
+	std::string utf8 = Global::toUTF8((LPCTSTR)strResult.c_str());
+	Global::SaveFileData(strLoadPath, utf8, FALSE);
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "resource.h"
+#include "JQCEngine.h"
 
 class JQCDialog :
 	public CAxDialogImpl<JQCDialog>,
@@ -52,12 +53,15 @@ public:
 private:
 	void InitControls();
 	void ReloadStatisData();
+	void DoSaveResult(JQCEngine& engine);
 
 private:
 	CSortListViewCtrlEx<JQCDialog> m_lstStatis;
+	CStringATL m_strQH;
 
-
-
+private:
+	CStringATL m_strWorkDir;
+	void CreateWorkDir();
 
 
 };
