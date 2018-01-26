@@ -62,7 +62,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level2</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>./;./wtl91/include;./sqlite3;./excel</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;./wtl91/include;./sqlite3;./excel;./thirdpart/include</AdditionalIncludeDirectories>
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
     </ClCompile>
     <Link>
@@ -70,6 +70,7 @@
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
       <OutputFile>.\bin\ZcStatisd.exe</OutputFile>
+      <AdditionalLibraryDirectories>./thirdpart/lib</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -98,13 +99,14 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat />
-      <AdditionalIncludeDirectories>./;./wtl91/include;./sqlite3;./excel</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;./wtl91/include;./sqlite3;./excel;./thirdpart/include</AdditionalIncludeDirectories>
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
       <OutputFile>.\bin\ZcStatis.exe</OutputFile>
+      <AdditionalLibraryDirectories>./thirdpart/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -124,6 +126,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CRCUtility.cpp" />
     <ClCompile Include="DialogDB.cpp" />
     <ClCompile Include="DialogGambel.cpp" />
     <ClCompile Include="DialogTZ.cpp" />
@@ -139,6 +142,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Global.cpp" />
+    <ClCompile Include="http\HttpClientItem.cpp" />
+    <ClCompile Include="http\HttpClientMgr.cpp" />
+    <ClCompile Include="http\HttpClientMgr_Session.cpp" />
     <ClCompile Include="JQC\JQCDialog.cc" />
     <ClCompile Include="JQC\JQCEngine.cc" />
     <ClCompile Include="lua\lapi.c">
@@ -278,6 +284,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MainDlg.cpp" />
+    <ClCompile Include="MiscHelper.cc" />
     <ClCompile Include="MyPrintInfo.cpp" />
     <ClCompile Include="PrintWnd.cpp" />
     <ClCompile Include="sqlite3\sqlite3.c">
@@ -313,10 +320,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ZcStatis.cpp" />
+    <ClCompile Include="ZlibStream.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="atlctrlsext.h" />
     <ClInclude Include="ButtonMenu.h" />
+    <ClInclude Include="CRCUtility.h" />
     <ClInclude Include="DialogDB.h" />
     <ClInclude Include="DialogGambel.h" />
     <ClInclude Include="DialogTZ.h" />
@@ -325,6 +334,8 @@
     <ClInclude Include="excel\BasicExcel.hpp" />
     <ClInclude Include="excel\ExcelFormat.h" />
     <ClInclude Include="Global.h" />
+    <ClInclude Include="http\HttpClientItem.h" />
+    <ClInclude Include="http\HttpClientMgr.h" />
     <ClInclude Include="JQC\JQCDialog.h" />
     <ClInclude Include="JQC\JQCEngine.h" />
     <ClInclude Include="lua\lapi.h" />
@@ -354,6 +365,7 @@
     <ClInclude Include="lua\lvm.h" />
     <ClInclude Include="lua\lzio.h" />
     <ClInclude Include="MainDlg.h" />
+    <ClInclude Include="MiscHelper.h" />
     <ClInclude Include="MyPrintInfo.h" />
     <ClInclude Include="PrintWnd.h" />
     <ClInclude Include="resource.h" />
@@ -369,6 +381,7 @@
     <ClInclude Include="sqlite3\SQLiteCpp\VariadicBind.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StlFiles.h" />
+    <ClInclude Include="ZlibStream.h" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="res\ZcStatis.exe.manifest" />

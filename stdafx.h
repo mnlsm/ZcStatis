@@ -36,6 +36,11 @@ extern CAppModule _Module;
 #include <atlMisc.h>
 #include <atlprint.h>
 
+#include <atlfile.h>
+#include <atltime.h>
+#include <atlsync.h>
+#include <ATLComTime.h>
+
 //#define _WTL_USE_CSTRING
 #include <atlddx.h>
 #include "atlctrlsext.h"
@@ -50,3 +55,7 @@ typedef ATL::CString CStringATL;
 #define TOTO_COUNT 14
 #define TOTO_MAXLOSE TOTO_COUNT - 1
 
+#include <hash_map>
+#include <hash_set>
+
+#include "libjingleinc.h"

@@ -34,6 +34,9 @@
     <Filter Include="JQC">
       <UniqueIdentifier>{194420d0-59c9-4653-9115-8ec7aa6e1f0d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="http">
+      <UniqueIdentifier>{edaa110f-48e3-4d70-bd4e-4416a08a902e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lua\lbitlib.c">
@@ -207,6 +210,24 @@
     <ClCompile Include="JQC\JQCEngine.cc">
       <Filter>JQC</Filter>
     </ClCompile>
+    <ClCompile Include="http\HttpClientItem.cpp">
+      <Filter>http</Filter>
+    </ClCompile>
+    <ClCompile Include="http\HttpClientMgr.cpp">
+      <Filter>http</Filter>
+    </ClCompile>
+    <ClCompile Include="http\HttpClientMgr_Session.cpp">
+      <Filter>http</Filter>
+    </ClCompile>
+    <ClCompile Include="ZlibStream.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="MiscHelper.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="CRCUtility.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua\lctype.h">
@@ -370,6 +391,21 @@
     </ClInclude>
     <ClInclude Include="JQC\JQCEngine.h">
       <Filter>JQC</Filter>
+    </ClInclude>
+    <ClInclude Include="http\HttpClientItem.h">
+      <Filter>http</Filter>
+    </ClInclude>
+    <ClInclude Include="http\HttpClientMgr.h">
+      <Filter>http</Filter>
+    </ClInclude>
+    <ClInclude Include="ZlibStream.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="MiscHelper.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="CRCUtility.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

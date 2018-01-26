@@ -27,3 +27,29 @@
 #pragma comment(lib, "comsupp.lib")
 #endif
 
+#ifdef _DEBUG
+//#pragma comment( lib , "libexpatMTd.lib")
+//#ifdef USE_SSLSTREAM
+//#pragma comment( lib , "libjingle_based.lib")
+//#else
+#pragma comment( lib , "libjingle_baseNoTLSd.lib")
+//#endif
+//#pragma comment( lib , "libprotobuf-lited.lib")
+#pragma comment( lib , "Ws2_32.lib")
+#pragma comment(lib, "zlibd.lib")
+
+#pragma comment(lib, "Rpcrt4.lib")
+#pragma comment(lib, "Wininet.lib")
+#else
+//#pragma comment( lib , "libexpatMT.lib")
+//#ifdef USE_SSLSTREAM
+//#pragma comment( lib , "libjingle_base.lib")
+//#else
+#pragma comment( lib , "libjingle_baseNoTLS.lib")
+//#endif
+//#pragma comment( lib , "libprotobuf-lite.lib")
+#pragma comment( lib , "Ws2_32.lib")
+#pragma comment(lib, "zlib.lib")
+#pragma comment(lib, "Rpcrt4.lib")
+#pragma comment(lib, "Wininet.lib")
+#endif
