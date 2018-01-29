@@ -127,6 +127,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CRCUtility.cpp" />
+    <ClCompile Include="danlue\DanLueDialog.cc" />
+    <ClCompile Include="danlue\DanLueEngine.cc" />
     <ClCompile Include="DialogDB.cpp" />
     <ClCompile Include="DialogGambel.cpp" />
     <ClCompile Include="DialogTZ.cpp" />
@@ -326,6 +328,8 @@
     <ClInclude Include="atlctrlsext.h" />
     <ClInclude Include="ButtonMenu.h" />
     <ClInclude Include="CRCUtility.h" />
+    <ClInclude Include="danlue\DanLueDialog.h" />
+    <ClInclude Include="danlue\DanLueEngine.h" />
     <ClInclude Include="DialogDB.h" />
     <ClInclude Include="DialogGambel.h" />
     <ClInclude Include="DialogTZ.h" />

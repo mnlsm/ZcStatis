@@ -37,6 +37,9 @@
     <Filter Include="http">
       <UniqueIdentifier>{edaa110f-48e3-4d70-bd4e-4416a08a902e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="danlue">
+      <UniqueIdentifier>{5b6c1657-95d4-4fb2-a428-848a0240cdd9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lua\lbitlib.c">
@@ -228,6 +231,12 @@
     <ClCompile Include="CRCUtility.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="danlue\DanLueDialog.cc">
+      <Filter>danlue</Filter>
+    </ClCompile>
+    <ClCompile Include="danlue\DanLueEngine.cc">
+      <Filter>danlue</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua\lctype.h">
@@ -406,6 +415,12 @@
     </ClInclude>
     <ClInclude Include="CRCUtility.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="danlue\DanLueDialog.h">
+      <Filter>danlue</Filter>
+    </ClInclude>
+    <ClInclude Include="danlue\DanLueEngine.h">
+      <Filter>danlue</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

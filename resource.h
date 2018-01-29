@@ -14,6 +14,8 @@
 #define IDD_DIALOG_TZ                   204
 #define IDD_DIALOG_GAMBEL               205
 #define IDD_JQC                         206
+#define IDD_JQC1                        207
+#define IDD_DANLUE_LOGIN                207
 #define IDR_MENU1                       214
 #define IDC_STATIS_LIST                 1001
 #define IDC_LIST_QH                     1002
