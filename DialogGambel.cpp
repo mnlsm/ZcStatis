@@ -359,8 +359,6 @@ void CDialogGambel::InitControls() {
 	}
 }
 
-
-
 void CDialogGambel::ReloadFangAnData() {
 	m_arrDbData.clear();
 	m_lstGambel.DeleteAllItems();
