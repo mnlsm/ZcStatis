@@ -6,6 +6,24 @@
 static const CStlString DZ_FILTER_NAME = _T("结果文件(*.txt)");
 static const CStlString DZ_FILTER = _T("*.txt");
 
+DanLueDialog DanLueDialog::sInst;
+void DanLueDialog::PopUp() {
+	if (!sInst.IsWindow()) {
+		sInst.Create(::GetDesktopWindow());
+	}
+	if (sInst.IsWindow()) {
+		sInst.ShowWindow(SW_SHOW);
+		::SetForegroundWindow(sInst.m_hWnd);
+	}
+}
+
+void DanLueDialog::Destroy() {
+	if (sInst.IsWindow()) {
+		sInst.DestroyWindow();
+	}
+}
+
+
 DanLueDialog::DanLueDialog() : 
 	m_lstMatch(this, 1),
 	m_lstResult(this, 2),
@@ -15,7 +33,10 @@ DanLueDialog::DanLueDialog() :
 	m_buLogoff(this, 100),
 	m_buRefresh(this, 100),
 	m_buClear(this, 100),
+	m_stBetAreaTitle(this, 100),
 	m_buCalc(this, 100),
+	m_stSep1(this, 100),
+	m_stSep2(this, 100),
 	m_buUpload(this, 100) 
 {
 	SYSTEMTIME tm = { 0 };
@@ -25,15 +46,16 @@ DanLueDialog::DanLueDialog() :
 }
 
 LRESULT DanLueDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	DoDataExchange(FALSE);
 
 	CRect rcDesktop;
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &rcDesktop, sizeof(RECT));
-	int gapX = rcDesktop.Width() / 20;
-	int gapY = rcDesktop.Height() / 20;
+	int gapX = rcDesktop.Width() / 50;
+	int gapY = rcDesktop.Height() / 50;
 	rcDesktop.DeflateRect(gapX, gapY, gapX, gapY);
 	SetWindowPos(NULL, &rcDesktop, SWP_NOZORDER);
 
-	CenterWindow();
+	//CenterWindow();
 	InitControls();
 
 	ReloadStatisData();
@@ -49,16 +71,6 @@ LRESULT DanLueDialog::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, B
 	return 1L;
 }
 
-LRESULT DanLueDialog::OnInitMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
-	CMenuHandle menu((HMENU)wParam);
-	//menu.RemoveMenu(IDM_ADDRECORD, MF_BYCOMMAND);
-	CStringATL text;
-	text.Format(_T("计算本期【%s】"), m_strQH);
-	menu.ModifyMenu(IDM_ADDRECORD, MF_BYCOMMAND | MF_STRING, IDM_ADDRECORD, text);
-	menu.RemoveMenu(IDM_JQC, MF_BYCOMMAND);
-	return 1L;
-}
-
 LRESULT DanLueDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	LRESULT lRet = m_lstMatch.DefWindowProc(uMsg, wParam, lParam);
 	return lRet;
@@ -70,7 +82,7 @@ LRESULT DanLueDialog::OnListLButtonDbclk(UINT uMsg, WPARAM wParam, LPARAM lParam
 }
 
 LRESULT DanLueDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-	EndDialog(0);
+	ShowWindow(SW_HIDE);
 	return 1L;
 }
 
@@ -105,8 +117,6 @@ LRESULT DanLueDialog::OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 }
 
 void DanLueDialog::InitControls() {
-	DoDataExchange(FALSE);
-
 	HICON hIconBig = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR | LR_SHARED, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON));
 	SetIcon(hIconBig, TRUE);
 	HICON hIconSmall = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR | LR_SHARED, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CXSMICON));
@@ -116,6 +126,42 @@ void DanLueDialog::InitControls() {
 	DWORD dwStyleEx = LVS_EX_GRIDLINES | LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP
 		| LVS_EX_REGIONAL;
 	ListView_SetExtendedListViewStyle(m_lstMatch.m_hWnd, dwStyleEx);
+	ListView_SetExtendedListViewStyle(m_lstResult.m_hWnd, dwStyleEx);
+
+	CRect rcItem, rcc;
+	GetClientRect(rcc);
+
+	m_lstResult.GetClientRect(rcItem);
+	rcItem.right = rcc.right - 10;
+	rcItem.bottom = rcc.bottom - 10;
+	m_lstResult.SetWindowPos(NULL, rcItem.left, rcItem.top, rcItem.Width(), rcItem.Height(), SWP_NOZORDER | SWP_NOMOVE);
+
+	m_stBetArea.GetWindowRect(rcItem);
+	ScreenToClient(rcItem);
+	int temp = rcItem.Width();
+	m_stBetArea.SetWindowPos(NULL, rcc.right - 10 - temp, rcItem.top, temp, rcItem.Height(), SWP_NOZORDER | SWP_NOSIZE);
+	temp = rcc.right - 10 - temp;
+	m_stBetAreaTitle.GetWindowRect(rcItem);
+	ScreenToClient(rcItem);
+	m_stBetAreaTitle.SetWindowPos(NULL, temp, rcItem.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+
+	m_lstMatch.GetClientRect(rcItem);
+	rcItem.right = temp - 20;
+	m_lstMatch.SetWindowPos(NULL, rcItem.left, rcItem.top, rcItem.Width(), rcItem.Height(), SWP_NOZORDER | SWP_NOMOVE);
+
+	m_stSep1.GetWindowRect(rcItem);
+	ScreenToClient(rcItem);
+	rcItem.left = 0;
+	rcItem.right = rcc.right;
+	m_stSep1.SetWindowPos(NULL, rcItem.left, rcItem.top, rcItem.Width(), rcItem.Height(), SWP_NOZORDER);
+
+	m_stSep2.GetWindowRect(rcItem);
+	ScreenToClient(rcItem);
+	rcItem.left = 0;
+	rcItem.right = rcc.right;
+	m_stSep2.SetWindowPos(NULL, rcItem.left, rcItem.top, rcItem.Width(), rcItem.Height(), SWP_NOZORDER);
+
+
 
 	//insert header;
 	int colIndex = 0;
@@ -123,33 +169,33 @@ void DanLueDialog::InitControls() {
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
 	m_lstMatch.InsertColumn(colIndex, "赛事", LVCFMT_CENTER, 100);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
-	m_lstMatch.InsertColumn(colIndex++, "对阵", LVCFMT_CENTER, 100);    //70
-	m_lstMatch.InsertColumn(colIndex++, "胜平负", LVCFMT_CENTER, 150);    //70
-	m_lstMatch.InsertColumn(colIndex++, "让球胜平负", LVCFMT_CENTER, 150);    //70
-
-	//m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
-
-	/*
-	m_lstMatch.InsertColumn(colIndex, "销量(万)", LVCFMT_CENTER, 100);    //70
-	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
-
-	m_lstMatch.InsertColumn(colIndex, "奖金(万)", LVCFMT_LEFT, 100);    //170
-	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_DOUBLE);
-
-	m_lstMatch.InsertColumn(colIndex, "号 码", LVCFMT_CENTER, 100);    //270
+	m_lstMatch.InsertColumn(colIndex, "对阵", LVCFMT_CENTER, 250);    //70
+	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
+	m_lstMatch.InsertColumn(colIndex, "过期时间", LVCFMT_CENTER, 130);    //70
+	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
+	m_lstMatch.InsertColumn(colIndex, "胜平负", LVCFMT_CENTER, 200);    //70
+	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
+	m_lstMatch.InsertColumn(colIndex, "让胜平负", LVCFMT_CENTER, 200);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
 
-	m_lstMatch.InsertColumn(colIndex, "总进球", LVCFMT_CENTER, 85);    //70
-	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
-
-	m_lstMatch.InsertColumn(colIndex, "场进球", LVCFMT_CENTER, 100);    //70
-	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
-	*/
-	//set sort type
 	m_lstMatch.SetSortColumn(0);
+
+	m_lstResult.GetClientRect(rcItem);
+	colIndex = 0;
+	m_lstResult.InsertColumn(colIndex, "编号", LVCFMT_CENTER, 70);    //70
+	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
+
+	m_lstResult.InsertColumn(colIndex, "奖金(元)", LVCFMT_CENTER, 90);    //70
+	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
+
+	m_lstResult.InsertColumn(colIndex, "结果", LVCFMT_CENTER, rcItem.Width() - 160);    //70
+	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
+
+	//set sort type
 }
 
 void DanLueDialog::ReloadStatisData() {
+	return;
 	CStlString strTextFile = Global::GetAppPath() + _T("jqc.txt");
 	if (PathFileExists(strTextFile.c_str())) {
 		m_lstMatch.DeleteAllItems();

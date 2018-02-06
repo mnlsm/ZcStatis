@@ -42,6 +42,7 @@ LRESULT JQCDialog::OnInitMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	text.Format(_T("¼ÆËã±¾ÆÚ¡¾%s¡¿"), m_strQH);
 	menu.ModifyMenu(IDM_ADDRECORD, MF_BYCOMMAND | MF_STRING, IDM_ADDRECORD, text);
 	menu.RemoveMenu(IDM_JQC, MF_BYCOMMAND);
+	menu.RemoveMenu(IDM_DANLUE, MF_BYCOMMAND);
 	return 1L;
 }
 

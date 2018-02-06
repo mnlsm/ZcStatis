@@ -6,12 +6,15 @@ class DanLueDialog :
 	public CAxDialogImpl<DanLueDialog>,
 	public CWinDataExchange<DanLueDialog> {
 
-public:
+private:
 	DanLueDialog();
+	static DanLueDialog sInst;
+public:
+	static void PopUp();
+	static void Destroy();
 
 public:
 	enum { IDD = IDD_DANLUE_LOGIN };
-	typedef CDialogResize<DanLueDialog> _BaseDlgResize;
 
 	BEGIN_DDX_MAP(DanLueDialog)
 		DDX_CONTROL(IDC_MATCH_LIST, m_lstMatch)
@@ -19,6 +22,11 @@ public:
 
 		DDX_CONTROL(IDC_YZM, m_stYZM)
 		DDX_CONTROL(IDC_BETAREA, m_stBetArea)
+		DDX_CONTROL(IDC_STBETAREA1, m_stBetAreaTitle)
+
+		DDX_CONTROL(IDC_SEP1, m_stSep1)
+		DDX_CONTROL(IDC_SEP2, m_stSep2)
+
 
 		DDX_CONTROL(IDC_BULOGIN, m_buLogin)
 		DDX_CONTROL(IDC_BULOGOFF, m_buLogoff)
@@ -32,7 +40,6 @@ public:
 	BEGIN_MSG_MAP(DanLueDialog)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
-		MESSAGE_HANDLER(WM_INITMENU, OnInitMenu)
 
 		COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
 		COMMAND_ID_HANDLER(IDM_ADDRECORD, OnAddRecord)
@@ -70,6 +77,10 @@ private:
 	CSortListViewCtrlEx<DanLueDialog> m_lstResult;
 	CContainedWindowT<CStatic> m_stYZM;
 	CContainedWindowT<CStatic> m_stBetArea;
+	CContainedWindowT<CStatic> m_stBetAreaTitle;
+
+	CContainedWindowT<CStatic> m_stSep1;
+	CContainedWindowT<CStatic> m_stSep2;
 
 
 	CContainedWindowT<CButton> m_buLogin;
@@ -78,6 +89,8 @@ private:
 	CContainedWindowT<CButton> m_buClear;
 	CContainedWindowT<CButton> m_buCalc;
 	CContainedWindowT<CButton> m_buUpload;
+	
+	
 
 
 

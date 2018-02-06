@@ -41,6 +41,8 @@ public:
 		COMMAND_ID_HANDLER(IDM_ADDRECORD, OnAddRecord)
 		COMMAND_ID_HANDLER(IDM_JQC, OnMenuJQC)
 		COMMAND_ID_HANDLER(IDM_REFRESH, OnRefresh)
+		COMMAND_ID_HANDLER(IDM_DANLUE, OnDanLue)
+
 
 		CHAIN_MSG_MAP(_BaseDlgResize)
 		CHAIN_MSG_MAP(CAxDialogImpl<CMainDlg>)
@@ -60,7 +62,9 @@ public:
 	LRESULT OnAddRecord(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnRefresh(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnMenuJQC(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnDanLue(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
+	
 private:
 	typedef struct DataRowTag {
 		CStringATL m_strCodeZongShu;
