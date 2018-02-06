@@ -1,26 +1,40 @@
 #include "stdafx.h"
 #include "DanLueDialog.h"
 #include "Global.h"
+//"http://appserver.87.cn/jc/match"
+
 static const CStlString DZ_FILTER_NAME = _T("结果文件(*.txt)");
 static const CStlString DZ_FILTER = _T("*.txt");
 
-DanLueDialog::DanLueDialog() : m_lstStatis(this, 1) {
+DanLueDialog::DanLueDialog() : 
+	m_lstMatch(this, 1),
+	m_lstResult(this, 2),
+	m_stYZM(this, 3),
+	m_stBetArea(this, 4),
+	m_buLogin(this, 100),
+	m_buLogoff(this, 100),
+	m_buRefresh(this, 100),
+	m_buClear(this, 100),
+	m_buCalc(this, 100),
+	m_buUpload(this, 100) 
+{
 	SYSTEMTIME tm = { 0 };
 	GetLocalTime(&tm);
 	m_strQH.Format("%04d%02d%02d", (int)tm.wYear, (int)tm.wMonth, (int)tm.wDay);
+	CreateWorkDir();
 }
 
 LRESULT DanLueDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
-	CenterWindow();
-	InitControls();
-	DlgResize_Init();
 
 	CRect rcDesktop;
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &rcDesktop, sizeof(RECT));
-	int gapX = rcDesktop.Width() / 10;
-	int gapY = rcDesktop.Height() / 10;
+	int gapX = rcDesktop.Width() / 20;
+	int gapY = rcDesktop.Height() / 20;
 	rcDesktop.DeflateRect(gapX, gapY, gapX, gapY);
 	SetWindowPos(NULL, &rcDesktop, SWP_NOZORDER);
+
+	CenterWindow();
+	InitControls();
 
 	ReloadStatisData();
 	return TRUE;
@@ -46,12 +60,12 @@ LRESULT DanLueDialog::OnInitMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 }
 
 LRESULT DanLueDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
-	LRESULT lRet = m_lstStatis.DefWindowProc(uMsg, wParam, lParam);
+	LRESULT lRet = m_lstMatch.DefWindowProc(uMsg, wParam, lParam);
 	return lRet;
 }
 
 LRESULT DanLueDialog::OnListLButtonDbclk(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
-	LRESULT lRet = m_lstStatis.DefWindowProc(uMsg, wParam, lParam);
+	LRESULT lRet = m_lstMatch.DefWindowProc(uMsg, wParam, lParam);
 	return lRet;
 }
 
@@ -101,35 +115,44 @@ void DanLueDialog::InitControls() {
 
 	DWORD dwStyleEx = LVS_EX_GRIDLINES | LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP
 		| LVS_EX_REGIONAL;
-	ListView_SetExtendedListViewStyle(m_lstStatis.m_hWnd, dwStyleEx);
+	ListView_SetExtendedListViewStyle(m_lstMatch.m_hWnd, dwStyleEx);
 
 	//insert header;
 	int colIndex = 0;
-	m_lstStatis.InsertColumn(colIndex, "期号", LVCFMT_CENTER, 100);    //70
-	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
+	m_lstMatch.InsertColumn(colIndex, "期号", LVCFMT_CENTER, 100);    //70
+	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
+	m_lstMatch.InsertColumn(colIndex, "赛事", LVCFMT_CENTER, 100);    //70
+	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
+	m_lstMatch.InsertColumn(colIndex++, "对阵", LVCFMT_CENTER, 100);    //70
+	m_lstMatch.InsertColumn(colIndex++, "胜平负", LVCFMT_CENTER, 150);    //70
+	m_lstMatch.InsertColumn(colIndex++, "让球胜平负", LVCFMT_CENTER, 150);    //70
 
-	m_lstStatis.InsertColumn(colIndex, "销量(万)", LVCFMT_CENTER, 100);    //70
-	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
+	//m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
 
-	m_lstStatis.InsertColumn(colIndex, "奖金(万)", LVCFMT_LEFT, 100);    //170
-	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_DOUBLE);
+	/*
+	m_lstMatch.InsertColumn(colIndex, "销量(万)", LVCFMT_CENTER, 100);    //70
+	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
 
-	m_lstStatis.InsertColumn(colIndex, "号 码", LVCFMT_CENTER, 100);    //270
-	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
+	m_lstMatch.InsertColumn(colIndex, "奖金(万)", LVCFMT_LEFT, 100);    //170
+	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_DOUBLE);
 
-	m_lstStatis.InsertColumn(colIndex, "总进球", LVCFMT_CENTER, 85);    //70
-	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
+	m_lstMatch.InsertColumn(colIndex, "号 码", LVCFMT_CENTER, 100);    //270
+	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
 
-	m_lstStatis.InsertColumn(colIndex, "场进球", LVCFMT_CENTER, 100);    //70
-	m_lstStatis.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
+	m_lstMatch.InsertColumn(colIndex, "总进球", LVCFMT_CENTER, 85);    //70
+	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
+
+	m_lstMatch.InsertColumn(colIndex, "场进球", LVCFMT_CENTER, 100);    //70
+	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
+	*/
 	//set sort type
-	m_lstStatis.SetSortColumn(0);
+	m_lstMatch.SetSortColumn(0);
 }
 
 void DanLueDialog::ReloadStatisData() {
 	CStlString strTextFile = Global::GetAppPath() + _T("jqc.txt");
 	if (PathFileExists(strTextFile.c_str())) {
-		m_lstStatis.DeleteAllItems();
+		m_lstMatch.DeleteAllItems();
 		std::string filedate;
 		Global::ReadFileData(strTextFile, filedate);
 		std::vector<CStlString> arrLines;
@@ -149,10 +172,10 @@ void DanLueDialog::ReloadStatisData() {
 			if (qh > maxQH) {
 				maxQH = qh;
 			}
-			iIndex = m_lstStatis.InsertItem(iIndex, arrParts[0].c_str());
-			m_lstStatis.SetItemText(iIndex, ++colIndex, arrParts[3].c_str());
-			m_lstStatis.SetItemText(iIndex, ++colIndex, arrParts[2].c_str());
-			m_lstStatis.SetItemText(iIndex, ++colIndex, arrParts[1].c_str());
+			iIndex = m_lstMatch.InsertItem(iIndex, arrParts[0].c_str());
+			m_lstMatch.SetItemText(iIndex, ++colIndex, arrParts[3].c_str());
+			m_lstMatch.SetItemText(iIndex, ++colIndex, arrParts[2].c_str());
+			m_lstMatch.SetItemText(iIndex, ++colIndex, arrParts[1].c_str());
 			CStlString& codes = arrParts[1];
 			CIntArray arrCodes;
 			int sumAll = 0;
@@ -164,11 +187,11 @@ void DanLueDialog::ReloadStatisData() {
 			CStringATL strNum;
 			sprintf(strNum.GetBuffer(255), "%u", sumAll);
 			strNum.ReleaseBuffer();
-			m_lstStatis.SetItemText(iIndex, ++colIndex, strNum);
+			m_lstMatch.SetItemText(iIndex, ++colIndex, strNum);
 			sprintf(strNum.GetBuffer(255), "%02u-%02u-%02u-%02u", arrCodes[1] + arrCodes[0],
 				arrCodes[3] + arrCodes[2], arrCodes[5] + arrCodes[4], arrCodes[7] + arrCodes[6]);
 			strNum.ReleaseBuffer();
-			m_lstStatis.SetItemText(iIndex, ++colIndex, strNum);
+			m_lstMatch.SetItemText(iIndex, ++colIndex, strNum);
 		}
 		m_strQH.Format(_T("%u"), maxQH + 1);
 		CreateWorkDir();

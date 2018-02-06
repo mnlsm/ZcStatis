@@ -4,7 +4,6 @@
 
 class DanLueDialog :
 	public CAxDialogImpl<DanLueDialog>,
-	public CDialogResize<DanLueDialog>,
 	public CWinDataExchange<DanLueDialog> {
 
 public:
@@ -15,12 +14,20 @@ public:
 	typedef CDialogResize<DanLueDialog> _BaseDlgResize;
 
 	BEGIN_DDX_MAP(DanLueDialog)
-		DDX_CONTROL(IDC_STATIS_LIST, m_lstStatis)
-	END_DDX_MAP()
+		DDX_CONTROL(IDC_MATCH_LIST, m_lstMatch)
+		DDX_CONTROL(IDC_RESULT_LIST, m_lstResult)
 
-	BEGIN_DLGRESIZE_MAP(DanLueDialog)
-		DLGRESIZE_CONTROL(IDC_STATIS_LIST, DLSZ_SIZE_X | DLSZ_SIZE_Y | DLSZ_REPAINT)
-	END_DLGRESIZE_MAP()
+		DDX_CONTROL(IDC_YZM, m_stYZM)
+		DDX_CONTROL(IDC_BETAREA, m_stBetArea)
+
+		DDX_CONTROL(IDC_BULOGIN, m_buLogin)
+		DDX_CONTROL(IDC_BULOGOFF, m_buLogoff)
+		DDX_CONTROL(IDC_BUCALC, m_buCalc)
+		DDX_CONTROL(IDC_BUUPLOAD, m_buUpload)
+		DDX_CONTROL(IDC_BUCLEARALL, m_buClear)
+		DDX_CONTROL(IDC_BUREFRESH, m_buRefresh)
+
+	END_DDX_MAP()
 
 	BEGIN_MSG_MAP(DanLueDialog)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
@@ -31,12 +38,15 @@ public:
 		COMMAND_ID_HANDLER(IDM_ADDRECORD, OnAddRecord)
 		COMMAND_ID_HANDLER(IDM_REFRESH, OnRefresh)
 
-		CHAIN_MSG_MAP(_BaseDlgResize)
 		CHAIN_MSG_MAP(CAxDialogImpl<DanLueDialog>)
 		REFLECT_NOTIFICATIONS()
 		ALT_MSG_MAP(1)
 		MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnListLButtonDbclk)
 		MESSAGE_HANDLER(WM_RBUTTONDOWN, OnListRButtonDown)
+		ALT_MSG_MAP(2) //result
+		ALT_MSG_MAP(3) //yzm
+		ALT_MSG_MAP(4) //bet area
+		ALT_MSG_MAP(100) //normal
 	END_MSG_MAP()
 
 	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -56,7 +66,21 @@ private:
 	void DoSaveResult(DanLueEngine& engine);
 
 private:
-	CSortListViewCtrlEx<DanLueDialog> m_lstStatis;
+	CSortListViewCtrlEx<DanLueDialog> m_lstMatch;
+	CSortListViewCtrlEx<DanLueDialog> m_lstResult;
+	CContainedWindowT<CStatic> m_stYZM;
+	CContainedWindowT<CStatic> m_stBetArea;
+
+
+	CContainedWindowT<CButton> m_buLogin;
+	CContainedWindowT<CButton> m_buLogoff;
+	CContainedWindowT<CButton> m_buRefresh;
+	CContainedWindowT<CButton> m_buClear;
+	CContainedWindowT<CButton> m_buCalc;
+	CContainedWindowT<CButton> m_buUpload;
+
+
+
 	CStringATL m_strQH;
 
 private:

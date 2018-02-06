@@ -14,7 +14,6 @@
 #define IDD_DIALOG_TZ                   204
 #define IDD_DIALOG_GAMBEL               205
 #define IDD_JQC                         206
-#define IDD_JQC1                        207
 #define IDD_DANLUE_LOGIN                207
 #define IDR_MENU1                       214
 #define IDC_STATIS_LIST                 1001
@@ -46,8 +45,16 @@
 #define IDC_BUEMPTY                     1021
 #define IDC_STQI                        1023
 #define IDC_EDIT_SEARCH                 1023
+#define IDC_BETAREA                     1024
+#define IDC_MATCH_LIST                  1025
 #define IDC_BUSET                       1026
+#define IDC_RESULT_LIST                 1026
 #define IDC_STSHOWQI                    1027
+#define IDC_BULOGIN                     1027
+#define IDC_BULOGOFF                    1028
+#define IDC_BUCLEARALL                  1029
+#define IDC_BUREFRESH                   1030
+#define IDC_YZM                         1031
 #define IDC_CORESULT1                   1078
 #define IDC_CORESULT2                   1079
 #define IDC_CORESULT3                   1080
@@ -92,6 +99,7 @@
 #define IDC_CORESULT42                  1119
 #define IDC_BUADD                       1120
 #define IDC_BUCALC                      1121
+#define IDC_BUUPLOAD                    1122
 #define IDC_STMATCHONE1                 8001
 #define IDC_STMATCHONE2                 8002
 #define IDC_STMATCHONE3                 8003
@@ -116,7 +124,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        206
 #define _APS_NEXT_COMMAND_VALUE         32775
-#define _APS_NEXT_CONTROL_VALUE         1024
+#define _APS_NEXT_CONTROL_VALUE         1032
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif
