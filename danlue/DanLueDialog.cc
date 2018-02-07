@@ -85,7 +85,7 @@ LRESULT DanLueDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 	ShowWindow(SW_HIDE);
 	return 1L;
 }
-
+/*
 LRESULT DanLueDialog::OnAddRecord(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	CStringATL strLuaFile;
 	CStlString strScript, reason;
@@ -108,6 +108,28 @@ LRESULT DanLueDialog::OnAddRecord(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 		strLuaFile.Format(_T("°æ%s°øº∆À„ ß∞‹£°"), m_strQH);
 		MessageBox(strLuaFile, "¥ÌŒÛ", MB_ICONERROR | MB_OK);
 	}
+	return 1L;
+}
+*/
+
+
+LRESULT DanLueDialog::OnLoginIn(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	return 1L;
+}
+
+LRESULT DanLueDialog::OnLoginOff(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	return 1L;
+}
+
+LRESULT DanLueDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	return 1L;
+}
+
+LRESULT DanLueDialog::OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	return 1L;
+}
+
+LRESULT DanLueDialog::OnClearAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	return 1L;
 }
 

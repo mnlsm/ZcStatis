@@ -42,8 +42,14 @@ public:
 		MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
 
 		COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
-		COMMAND_ID_HANDLER(IDM_ADDRECORD, OnAddRecord)
-		COMMAND_ID_HANDLER(IDM_REFRESH, OnRefresh)
+
+		COMMAND_ID_HANDLER(IDC_BULOGIN, OnLoginIn)
+		COMMAND_ID_HANDLER(IDC_BULOGOFF, OnLoginOff)
+		COMMAND_ID_HANDLER(IDC_BUCALC, OnCalc)
+		COMMAND_ID_HANDLER(IDC_BUUPLOAD, OnUpload)
+		COMMAND_ID_HANDLER(IDC_BUCLEARALL, OnClearAll)
+		COMMAND_ID_HANDLER(IDC_BUREFRESH, OnRefresh)
+
 
 		CHAIN_MSG_MAP(CAxDialogImpl<DanLueDialog>)
 		REFLECT_NOTIFICATIONS()
@@ -64,7 +70,13 @@ public:
 	LRESULT OnListLButtonDbclk(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 	LRESULT OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-	LRESULT OnAddRecord(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	//LRESULT OnAddRecord(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+
+	LRESULT OnLoginIn(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnLoginOff(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnClearAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 private:
