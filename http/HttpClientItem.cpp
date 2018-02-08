@@ -37,6 +37,9 @@ void CHttpClientItem::Request( const THttpRequestData &request_param ) {
 	usessl_ = request_param.use_ssl;
 	responsecategory_ = request_param.response_type;
 	proxy_ = request_param.proxy;
+	if (!request_param.agent.empty()) {
+		set_agent(request_param.agent);
+	}
 	if( request_param.request_type == HTTP_REQUEST_GET || request_param.request_type == HTTP_REQUEST_POST ) {
 		fixed_requestheaders_.push_back( std::make_pair( "Content-Type" , "application/oct-stream") );
 	}

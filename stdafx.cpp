@@ -53,3 +53,34 @@
 #pragma comment(lib, "Rpcrt4.lib")
 #pragma comment(lib, "Wininet.lib")
 #endif
+
+bool ParseJsonString(const std::string& data, Json::Value& result) {
+	if (data.empty()) {
+		return false;
+	}
+	Json::Reader reader;
+	return reader.parse(data, result, true);
+}
+
+bool GetInt64FromJsonObject(const Json::Value& in, const std::string& k, int64* out) {
+	Json::Value x;
+	bool ret = false;
+	if (GetValueFromJsonObject(in, k, &x)) {
+		if (!x.isString()) {
+			ret = x.isConvertibleTo(Json::intValue);
+			if (ret) {
+				*out = x.asInt64();
+			}
+		} else {
+			long val;  // NOLINT
+			const char* c_str = in.asCString();
+			char* end_ptr;
+			errno = 0;
+			val = _strtoi64(c_str, &end_ptr, 10); // NOLINT
+			ret = (end_ptr != c_str && *end_ptr == '\0' && !errno &&
+				val >= LLONG_MIN && val <= LLONG_MAX);
+			*out = val;
+		}
+		return ret;
+	}
+}

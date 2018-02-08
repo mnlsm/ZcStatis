@@ -128,6 +128,7 @@
   <ItemGroup>
     <ClCompile Include="CRCUtility.cpp" />
     <ClCompile Include="danlue\DanLueDialog.cc" />
+    <ClCompile Include="danlue\DanLueDialog_Network.cc" />
     <ClCompile Include="danlue\DanLueEngine.cc" />
     <ClCompile Include="DialogDB.cpp" />
     <ClCompile Include="DialogGambel.cpp" />

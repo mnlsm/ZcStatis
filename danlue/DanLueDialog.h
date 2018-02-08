@@ -1,9 +1,12 @@
 #pragma once
 #include "resource.h"
 #include "DanLueEngine.h"
+#include "AsyncFuncDispatch.h"
+#include "http/HttpClientMgr.h"
 
 class DanLueDialog :
 	public CAxDialogImpl<DanLueDialog>,
+	public CAsyncFuncDispatcher,
 	public CWinDataExchange<DanLueDialog> {
 
 private:
@@ -14,7 +17,10 @@ public:
 	static void Destroy();
 
 public:
-	enum { IDD = IDD_DANLUE_LOGIN };
+	virtual bool AddOneAsyncFunc(talk_base::IAsyncFuncCall *pAsyncFunc);
+
+public:
+	enum { IDD = IDD_DANLUE_LOGIN, WM_ASYNC_DISPATCH = WM_APP + 0x360 };
 
 	BEGIN_DDX_MAP(DanLueDialog)
 		DDX_CONTROL(IDC_MATCH_LIST, m_lstMatch)
@@ -40,6 +46,8 @@ public:
 	BEGIN_MSG_MAP(DanLueDialog)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
+		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+		MESSAGE_HANDLER(WM_ASYNC_DISPATCH, OnAsyncDispatch)
 
 		COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
 
@@ -65,6 +73,11 @@ public:
 	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnInitMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT OnAsyncDispatch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+
+	
+
 
 	LRESULT OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnListLButtonDbclk(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -102,15 +115,71 @@ private:
 	CContainedWindowT<CButton> m_buCalc;
 	CContainedWindowT<CButton> m_buUpload;
 	
-	
-
-
-
 	CStringATL m_strQH;
 
 private:
+	CStringATL m_strRootDir;
 	CStringATL m_strWorkDir;
 	void CreateWorkDir();
 
+//network
+private:
+	static void OnHttpReturnGlobal(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+	void OnHttpReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+	CHttpRequestPtr CreatePostRequest(const std::string& url, const std::string& idprefix, const std::string& data);
+	CHttpRequestPtr CreateGetRequest(const std::string& url, const std::string& idprefix);
+	std::shared_ptr<CHttpClientMgr> httpMgr_;
 
+private:
+	int doLogin();
+	void OnLoginReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+
+	int doLogOff();
+	void OnLogOffReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+
+	int doInfo();
+	void OnInfoReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+
+	int doRcToken();
+	void OnRcTokenReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+
+	int doFriendList();
+	void OnFriendListReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+
+	int doLotteryCategories();
+	void OnLotteryCategoriesReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+
+	int doJcMatchList();
+	void OnJcMatchListReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+
+
+private:
+	std::string m_LoginToken;
+	std::string m_NickName;
+	std::string m_UserID;
+	std::string m_RcUserID;
+	std::string m_RcUserToken;
+	int64 m_slwId;
+	struct LotteryCategories {
+		std::string description;
+		std::string id;
+		std::string label;
+		std::string path;
+	};
+	std::vector<LotteryCategories> m_LotteryCategories;
+
+	struct JCMatchItem {
+		std::string id;
+		std::string descrition;
+		std::string start_time;
+		std::string last_buy_time;
+
+		struct Subject {
+			int64 id;
+			double odds;
+			bool checked;
+		};
+		std::vector<Subject> subjects;
+	};
+	std::multimap<std::string, JCMatchItem> m_JCMatchItems;
 };

@@ -49,6 +49,7 @@ public:
 	}
 	virtual ~THttpRequestData(){}
 public:
+	std::string agent;
 	std::string cmd;
 	std::string request_id;
 	std::string request_url;
@@ -85,6 +86,7 @@ public:
 	inline BOOL is_closed() const { return is_closed_; }
 	inline BOOL is_abort_check_arrive() const { return is_abort_check_arrived; }
 	inline const std::string& request_id() { return request_id_; }
+	inline void set_agent(const std::string& agent) { agent_ = agent; }
 
 protected:
 	CHttpClientItem( CHttpClientMgr *httpclientmgr );

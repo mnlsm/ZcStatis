@@ -237,6 +237,9 @@
     <ClCompile Include="danlue\DanLueEngine.cc">
       <Filter>danlue</Filter>
     </ClCompile>
+    <ClCompile Include="danlue\DanLueDialog_Network.cc">
+      <Filter>danlue</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua\lctype.h">

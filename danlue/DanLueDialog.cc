@@ -37,12 +37,15 @@ DanLueDialog::DanLueDialog() :
 	m_buCalc(this, 100),
 	m_stSep1(this, 100),
 	m_stSep2(this, 100),
-	m_buUpload(this, 100) 
-{
+	m_buUpload(this, 100)  {
 	SYSTEMTIME tm = { 0 };
 	GetLocalTime(&tm);
 	m_strQH.Format("%04d%02d%02d", (int)tm.wYear, (int)tm.wMonth, (int)tm.wDay);
 	CreateWorkDir();
+	httpMgr_.reset(new (std::nothrow) CHttpClientMgr());
+	if (httpMgr_.get() != nullptr) {
+		httpMgr_->Init();
+	}
 }
 
 LRESULT DanLueDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
@@ -60,6 +63,11 @@ LRESULT DanLueDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 	ReloadStatisData();
 	return TRUE;
+}
+
+LRESULT DanLueDialog::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	LRESULT lRet = CAxDialogImpl<DanLueDialog>::OnDestroy(uMsg, wParam, lParam, bHandled);
+	return lRet;
 }
 
 LRESULT DanLueDialog::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
@@ -268,10 +276,10 @@ void DanLueDialog::ReloadStatisData() {
 
 void DanLueDialog::CreateWorkDir() {
 	CStringATL strPath(Global::GetAppPath().c_str());
-	strPath += _T("JC");
+	m_strRootDir = strPath + _T("JC");
 	CStringATL strInitFileName;
-	CreateDirectory(strPath, NULL);
-	strPath = strPath + _T("\\") + m_strQH;
+	CreateDirectory(m_strRootDir, NULL);
+	strPath = m_strRootDir + _T("\\") + m_strQH;
 	CreateDirectory(strPath, NULL);
 	m_strWorkDir = strPath;
 }

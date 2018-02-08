@@ -59,3 +59,6 @@ typedef ATL::CString CStringATL;
 #include <hash_set>
 
 #include "libjingleinc.h"
+
+bool ParseJsonString(const std::string& data, Json::Value& result);
+bool GetInt64FromJsonObject(const Json::Value& in, const std::string& k, int64* out);
