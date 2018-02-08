@@ -173,10 +173,13 @@ private:
 		std::string descrition;
 		std::string start_time;
 		std::string last_buy_time;
+		int64 hand;
 
 		struct Subject {
-			int64 id;
+			int64 tid;
+			int64 betCode;
 			double odds;
+			std::string tip;
 			bool checked;
 		};
 		std::vector<Subject> subjects;

@@ -386,7 +386,6 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 										if (itemsValue.isArray()) {
 											for (int k = 0; k < itemsValue.size(); k++) {
 												JCMatchItem ji;
-
 												Json::Value itemValue;
 												GetValueFromJsonArray(itemsValue, k, &itemValue);
 												if (itemValue.isObject()) {
@@ -407,22 +406,69 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 														_i64toa(cID, buf, 10);
 														ji.id = buf;
 														GetStringFromJsonObject(playValue, "gameType", &v1);
-														
-
-
+														GetInt64FromJsonObject(playValue, "hand", &ji.hand);
+														Json::Value oddsValue;
+														if (v1 == "dg") {
+															GetValueFromJsonObject(playValue, "spTypeDg", &oddsValue);
+														}
+														else {
+															GetValueFromJsonObject(playValue, "spTypeGg", &oddsValue);
+														}
+														if (oddsValue.isArray()) {
+															std::vector<double> arrOdds;
+															for (int m = 0; m < oddsValue.size(); m++) {
+																double odds = 0.0;
+																GetDoubleFromJsonArray(oddsValue, m, &odds);
+																arrOdds.push_back(odds);
+															}
+															if (type == 4 && arrOdds.size() == 31) {
+																std::swap(arrOdds[0], arrOdds[12]);
+																std::swap(arrOdds[13], arrOdds[17]);
+																std::swap(arrOdds[18], arrOdds[30]);
+															}
+															for (int m = 0; m < arrOdds.size(); m++) {
+																JCMatchItem::Subject sub;
+																if (type == 0) {
+																	sub.tid = 6; //胜平负
+																	sub.betCode = 3;
+																	if (m == 1) {
+																		sub.betCode = 1;
+																	} else if (m == 0) {
+																		sub.betCode = 0;
+																	}
+																}
+																else if (type == 1) {
+																	sub.tid = 1; //让球胜平负
+																	sub.betCode = 3;
+																	if (m == 1) {
+																		sub.betCode = 1;
+																	}
+																	else if (m == 0) {
+																		sub.betCode = 0;
+																	}
+																}
+																else if (type == 2) {
+																	sub.tid = 2; //进球总数
+																	sub.betCode = m;
+																}
+																else if (type == 3) {
+																	sub.tid = 4; //半全场
+																	sub.betCode = m;
+																} 
+																else if (type == 4) {
+																	sub.tid = 3; //比分
+																	sub.betCode = m;
+																}
+																sub.odds = arrOdds[m];
+																sub.checked = false;
+																m_JCMatchItems.insert(std::make_pair(date, ji));
+															}
+														}
 													}
-
-
 												}
-												m_JCMatchItems.insert(std::make_pair(date, ji));
-
-											
 											}
-										
 										}
-
 									}
-								
 								}
 							}
 						}
@@ -433,3 +479,34 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 	}
 
 }
+
+/*
+POST http://appserver.87.cn/lottery/hemai HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+User-Agent: Dalvik/2.1.0 (Linux; U; Android 6.0; M5s Build/MRA58K)
+Host: appserver.87.cn
+Connection: Keep-Alive
+Accept-Encoding: gzip
+Content-Length: 410
+
+{"baodinumber":0,"brokerage":0,"buynumber":1,"detail":"20180208001:4-8:0|20180208002:4-0,4-3:0","eventId":227,"hemaidesc":"","hemaipaydesc":"","hemaisuccessdesc":"","hemaitype":"5","isshow":1,"licenseId":"227","money":4,"mult":1,"odds":"","passtype":"2c1","programDesc":"227","sharenumber":4,"sid":"1866628","title":"竞彩足球 合买","token":"3C37257AAB2E6A2144390DD83E83C266","uploadstate":"0","userId":0}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+HTTP/1.1 200
+Server: nginx/1.7.2
+Date: Thu, 08 Feb 2018 14:46:04 GMT
+Content-Type: application/json;charset=UTF-8
+Connection: keep-alive
+Content-Length: 84
+
+{"status":"0","message":"合发起成功","data":"966877","timestamp":1518101164012}
+
+*/
+
+/*
+6 - 3, 6 - 1, 6 - 0 	(胜平负代码[6] 结果: 3, 1, 0)
+1 - 3, 1 - 1, 1 - 0 	(让球胜平负代码[1] 结果: 3, 1, 0)
+2 - 0, 2 - 1, 2 - 2 ... (进球总数代码[2] 结果: 0...7)
+4 - 0, 4 - 1, 4 - 2 ... (半全场代码[4] 结果[位置] 0...8)
+3 - 0, 3 - 1, 3 - 2 ... (比分代码[3] 结果[位置] 0....30) 注意 "*其它"在对应胜平负结果的最低索引
+*/
