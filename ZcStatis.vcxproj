@@ -130,6 +130,7 @@
     <ClCompile Include="danlue\DanLueDialog.cc" />
     <ClCompile Include="danlue\DanLueDialog_Network.cc" />
     <ClCompile Include="danlue\DanLueEngine.cc" />
+    <ClCompile Include="danlue\DanLueEngine_BetArea.cpp" />
     <ClCompile Include="DialogDB.cpp" />
     <ClCompile Include="DialogGambel.cpp" />
     <ClCompile Include="DialogTZ.cpp" />

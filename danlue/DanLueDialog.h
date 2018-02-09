@@ -67,6 +67,9 @@ public:
 		ALT_MSG_MAP(2) //result
 		ALT_MSG_MAP(3) //yzm
 		ALT_MSG_MAP(4) //bet area
+		MESSAGE_HANDLER(WM_ERASEBKGND, OnBetAreaEraseBkgnd)
+		MESSAGE_HANDLER(WM_PAINT, OnBetAreaPaint)
+
 		ALT_MSG_MAP(100) //normal
 	END_MSG_MAP()
 
@@ -91,6 +94,10 @@ public:
 	LRESULT OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnClearAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+
+
+	LRESULT OnBetAreaEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT OnBetAreaPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 private:
 	void InitControls();
@@ -181,6 +188,8 @@ private:
 			double odds;
 			std::string tip;
 			bool checked;
+			void calcTip();
+			std::string betStr();
 		};
 		std::vector<Subject> subjects;
 	};

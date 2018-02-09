@@ -410,8 +410,7 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 														Json::Value oddsValue;
 														if (v1 == "dg") {
 															GetValueFromJsonObject(playValue, "spTypeDg", &oddsValue);
-														}
-														else {
+														} else {
 															GetValueFromJsonObject(playValue, "spTypeGg", &oddsValue);
 														}
 														if (oddsValue.isArray()) {
@@ -419,12 +418,15 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 															for (int m = 0; m < oddsValue.size(); m++) {
 																double odds = 0.0;
 																GetDoubleFromJsonArray(oddsValue, m, &odds);
-																arrOdds.push_back(odds);
-															}
-															if (type == 4 && arrOdds.size() == 31) {
-																std::swap(arrOdds[0], arrOdds[12]);
-																std::swap(arrOdds[13], arrOdds[17]);
-																std::swap(arrOdds[18], arrOdds[30]);
+																if (type == 4 && m == 12) {
+																	arrOdds.insert(arrOdds.begin(), odds);
+																} else if (type == 4 && m == 17) {
+																	arrOdds.insert(arrOdds.begin() + 13, odds);
+																} else if (type == 4 && m == 30) {
+																	arrOdds.insert(arrOdds.begin() + 18, odds);
+																} else {
+																	arrOdds.push_back(odds);
+																}
 															}
 															for (int m = 0; m < arrOdds.size(); m++) {
 																JCMatchItem::Subject sub;
@@ -460,6 +462,7 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 																	sub.betCode = m;
 																}
 																sub.odds = arrOdds[m];
+																sub.calcTip();
 																sub.checked = false;
 																m_JCMatchItems.insert(std::make_pair(date, ji));
 															}
@@ -479,6 +482,197 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 	}
 
 }
+
+void DanLueDialog::JCMatchItem::Subject::calcTip() {
+	CStringATL temp;
+	if (tid == 6) {
+		if (betCode == 3) {
+			tip = "胜";
+		} else if (betCode == 1) {
+			tip = "平";
+		} else if (betCode == 0) {
+			tip = "负";
+		}
+	}
+	else if (tid == 1) {
+		if (betCode == 3) {
+			tip = "胜";
+		}
+		else if (betCode == 1) {
+			tip = "平";
+		}
+		else if (betCode == 0) {
+			tip = "负";
+		}
+	}
+	else if (tid == 2) {
+		if (betCode < 7) {
+			temp.Format("%d球", betCode);
+		} else {
+			temp.Format("%d+球", betCode);
+		}
+		tip = temp;
+	}
+	else if (tid == 4) {
+		if (betCode == 0) {
+			tip = "胜胜";
+		} 
+		else if (betCode == 1) {
+			tip = "胜平";
+		}
+		else if (betCode == 2) {
+			tip = "胜负";
+		}
+		else if (betCode == 3) {
+			tip = "平胜";
+		}
+		else if (betCode == 4) {
+			tip = "平平";
+		}
+		else if (betCode == 5) {
+			tip = "平负";
+		}
+		else if (betCode == 6) {
+			tip = "负胜";
+		}
+		else if (betCode == 7) {
+			tip = "负平";
+		}
+		else if (betCode == 8) {
+			tip = "负负";
+		}
+	}
+	else if (tid == 3) {
+		if (betCode == 0) {
+			tip = "胜其它";
+		}
+		else if (betCode == 1) {
+			tip = "1:0";
+		}
+		else if (betCode == 2) {
+			tip = "2:0";
+		}
+		else if (betCode == 3) {
+			tip = "2:1";
+		}
+		else if (betCode == 4) {
+			tip = "3:0";
+		}
+		else if (betCode == 5) {
+			tip = "3:1";
+		}
+		else if (betCode == 6) {
+			tip = "3:2";
+		}
+		else if (betCode == 7) {
+			tip = "4:0";
+		}
+		else if (betCode == 8) {
+			tip = "4:1";
+		}
+		else if (betCode == 9) {
+			tip = "4:2";
+		}
+		else if (betCode == 10) {
+			tip = "5:0";
+		}
+		else if (betCode == 11) {
+			tip = "5:1";
+		}
+		else if (betCode == 12) {
+			tip = "5:2";
+		}
+
+		else if (betCode == 13) {
+			tip = "平其它";
+		}
+		else if (betCode == 14) {
+			tip = "0:0";
+		}
+		else if (betCode == 15) {
+			tip = "1:1";
+		}
+		else if (betCode == 16) {
+			tip = "2:2";
+		}
+		else if (betCode == 17) {
+			tip = "3:2";
+		}
+
+
+		else if (betCode == 18) {
+			tip = "负其它";
+		}
+		else if (betCode == 19) {
+			tip = "0:1";
+		}
+		else if (betCode == 20) {
+			tip = "0:2";
+		}
+		else if (betCode == 21) {
+			tip = "1:2";
+		}
+		else if (betCode == 22) {
+			tip = "0:3";
+		}
+		else if (betCode == 23) {
+			tip = "1:3";
+		}
+		else if (betCode == 24) {
+			tip = "2:3";
+		}
+		else if (betCode == 25) {
+			tip = "0:4";
+		}
+		else if (betCode == 26) {
+			tip = "1:4";
+		}
+		else if (betCode == 27) {
+			tip = "2:4";
+		}
+		else if (betCode == 28) {
+			tip = "0:5";
+		}
+		else if (betCode == 29) {
+			tip = "1:5";
+		}
+		else if (betCode == 30) {
+			tip = "2:5";
+		}
+
+	}
+
+}
+
+
+std::string DanLueDialog::JCMatchItem::Subject::betStr() {
+	std::string ret;
+	char cb[20] = { '\0' };
+	sprintf(cb, "%d-%d", tid, betCode);
+	ret = cb;
+	return ret;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
 POST http://appserver.87.cn/lottery/hemai HTTP/1.1
