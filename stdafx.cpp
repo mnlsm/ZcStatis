@@ -72,8 +72,8 @@ bool GetInt64FromJsonObject(const Json::Value& in, const std::string& k, int64* 
 				*out = x.asInt64();
 			}
 		} else {
-			long val;  // NOLINT
-			const char* c_str = in.asCString();
+			__int64 val = 0;  // NOLINT
+			const char* c_str = x.asCString();
 			char* end_ptr;
 			errno = 0;
 			val = _strtoi64(c_str, &end_ptr, 10); // NOLINT

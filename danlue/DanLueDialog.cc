@@ -38,6 +38,7 @@ DanLueDialog::DanLueDialog() :
 	m_stSep1(this, 100),
 	m_stSep2(this, 100),
 	m_buUpload(this, 100)  {
+	m_FirstDrawBetArea = true;
 	SYSTEMTIME tm = { 0 };
 	GetLocalTime(&tm);
 	m_strQH.Format("%04d%02d%02d", (int)tm.wYear, (int)tm.wMonth, (int)tm.wDay);
@@ -122,10 +123,12 @@ LRESULT DanLueDialog::OnAddRecord(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 
 
 LRESULT DanLueDialog::OnLoginIn(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	doLogin();
 	return 1L;
 }
 
 LRESULT DanLueDialog::OnLoginOff(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	doLogOff();
 	return 1L;
 }
 

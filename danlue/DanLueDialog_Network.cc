@@ -77,8 +77,16 @@ struct ResHeader {
 		message = "unknown";
 	}
 	void parse(const Json::Value& rootValue) {
+		std::string str_error;
+		GetStringFromJsonObject(rootValue, "error", &str_error);
+		if (!str_error.empty()) {
+			str_error = Global::fromUTF8(str_error);
+		}
 		GetIntFromJsonObject(rootValue, "status", &status);
 		GetStringFromJsonObject(rootValue, "message", &message);
+		if (!message.empty()) {
+			message = Global::fromUTF8(message);
+		}
 		GetInt64FromJsonObject(rootValue, "timestamp", &timestamp);
 	}
 	int status;
@@ -122,9 +130,11 @@ int DanLueDialog::doLogin() {
 		if (!Global::ReadFileData((LPCTSTR)strLoginFile, data) || data.empty()) {
 			return -1;
 		}
-		std::string url = "http://appserver.87.cn/account/login";
+		std::string url = "http://newapp.87.cn/account/login";
 		CHttpRequestPtr request = CreatePostRequest(url, LOGIN_REQ_PREFIX, data);
-		request->request_headers.insert(std::make_pair("Content-Type", "application/x-www-form-urlencoded"));
+		//request->request_headers.insert(std::make_pair("Content-Type", "application/x-www-form-urlencoded"));
+		request->request_headers.insert(std::make_pair("Content-Type", "application/json"));
+		
 		httpMgr_->DoHttpCommandRequest(request);
 	}
 	m_buLogin.EnableWindow(FALSE);
@@ -135,7 +145,7 @@ int DanLueDialog::doLogin() {
 
 void DanLueDialog::OnLoginReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
 	if (response->httperror == talk_base::HE_NONE) {
-		Json::Value rootValue;
+		Json::Value rootValue, dataValue;
 		if (ParseJsonString(response->response_content, rootValue) && rootValue.isObject()) {
 			ResHeader header;
 			header.parse(rootValue);
@@ -145,11 +155,13 @@ void DanLueDialog::OnLoginReturn(const CHttpRequestPtr& request, const CHttpResp
 				m_buLogoff.EnableWindow(FALSE);
 			}
 			int64 userID = 0;
-			GetStringFromJsonObject(rootValue, "data", &m_LoginToken);
-			GetInt64FromJsonObject(rootValue, "userId", &userID);
-			GetStringFromJsonObject(rootValue, "niname", &m_NickName);
-			GetStringFromJsonObject(rootValue, "rcuserid", &m_RcUserID);
-			GetInt64FromJsonObject(rootValue, "slwId", &m_slwId);
+
+			GetValueFromJsonObject(rootValue, "data", &dataValue);
+			GetStringFromJsonObject(dataValue, "data", &m_LoginToken);
+			GetInt64FromJsonObject(dataValue, "userId", &userID);
+			GetStringFromJsonObject(dataValue, "niname", &m_NickName);
+			GetStringFromJsonObject(dataValue, "rcuserid", &m_RcUserID);
+			GetInt64FromJsonObject(dataValue, "slwId", &m_slwId);
 			char buf[128] = { '\0' };
 			_i64toa(userID, buf, 10);
 			m_UserID = buf;
@@ -186,10 +198,10 @@ void DanLueDialog::OnLogOffReturn(const CHttpRequestPtr& request, const CHttpRes
 		if (ParseJsonString(response->response_content, rootValue) && rootValue.isObject()) {
 			ResHeader header;
 			header.parse(rootValue);
-			if (header.status == 0) {
+			//if (header.status == 0) {
 				m_buLogin.EnableWindow(TRUE);
 				m_buLogoff.EnableWindow(FALSE);
-			}
+			//}
 		}
 	}
 }
@@ -296,7 +308,7 @@ int DanLueDialog::doLotteryCategories() {
 	root["userId"] = 0;
 	std::string json = writer.write(root);
 	std::string url = "http://appserver.87.cn/lottery/lottery_categories";
-	CHttpRequestPtr request = CreatePostRequest(url, FRIENDLIST_REQ_PREFIX, json);
+	CHttpRequestPtr request = CreatePostRequest(url, LOTTERYCATEGORIES_REQ_PREFIX, json);
 	request->request_headers.insert(std::make_pair("Content-Type", "application/x-www-form-urlencoded"));
 	httpMgr_->DoHttpCommandRequest(request);
 	return 0l;
@@ -309,8 +321,9 @@ void DanLueDialog::OnLotteryCategoriesReturn(const CHttpRequestPtr& request,
 		if (ParseJsonString(response->response_content, rootValue) && rootValue.isObject()) {
 			ResHeader header;
 			header.parse(rootValue);
-			if (header.status == 0) {
-				GetValueFromJsonObject(rootValue, "data", &dataValue);
+			GetValueFromJsonObject(rootValue, "data", &dataValue);
+			if (header.status == 0 || dataValue.isArray()) {
+				//GetValueFromJsonObject(rootValue, "data", &dataValue);
 				if (dataValue.isArray()) {
 					for (int i = 0; i < dataValue.size(); i++) {
 						Json::Value itemValue;
@@ -319,6 +332,7 @@ void DanLueDialog::OnLotteryCategoriesReturn(const CHttpRequestPtr& request,
 							LotteryCategories lc;
 							int64 cID;
 							GetStringFromJsonObject(itemValue, "description", &lc.description);
+							lc.description = Global::fromUTF8(lc.description);
 							GetInt64FromJsonObject(itemValue, "id", &cID);
 							GetStringFromJsonObject(itemValue, "label", &lc.label);
 							GetStringFromJsonObject(itemValue, "path", &lc.path);
@@ -385,7 +399,7 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 										GetValueFromJsonArray(listValue, j, &itemsValue);
 										if (itemsValue.isArray()) {
 											for (int k = 0; k < itemsValue.size(); k++) {
-												JCMatchItem ji;
+												std::shared_ptr<JCMatchItem> ji(new JCMatchItem());
 												Json::Value itemValue;
 												GetValueFromJsonArray(itemsValue, k, &itemValue);
 												if (itemValue.isObject()) {
@@ -398,15 +412,15 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 														int64 cID = -1;
 														GetStringFromJsonObject(playValue, "hn2", &v1);
 														GetStringFromJsonObject(playValue, "an2", &v2);
-														ji.descrition = v1 + "   VS   " + v2;
-														GetStringFromJsonObject(playValue, "dt", &ji.start_time);
-														GetStringFromJsonObject(playValue, "ot", &ji.last_buy_time);
+														ji->descrition = v1 + "   VS   " + v2;
+														GetStringFromJsonObject(playValue, "dt", &ji->start_time);
+														GetStringFromJsonObject(playValue, "ot", &ji->last_buy_time);
 														GetInt64FromJsonObject(playValue, "id", &cID);
 														char buf[128] = { '\0' };
 														_i64toa(cID, buf, 10);
-														ji.id = buf;
+														ji->id = buf;
 														GetStringFromJsonObject(playValue, "gameType", &v1);
-														GetInt64FromJsonObject(playValue, "hand", &ji.hand);
+														GetInt64FromJsonObject(playValue, "hand", &ji->hand);
 														Json::Value oddsValue;
 														if (v1 == "dg") {
 															GetValueFromJsonObject(playValue, "spTypeDg", &oddsValue);
@@ -435,7 +449,7 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 																	sub.betCode = 3;
 																	if (m == 1) {
 																		sub.betCode = 1;
-																	} else if (m == 0) {
+																	} else if (m == 2) {
 																		sub.betCode = 0;
 																	}
 																}
@@ -445,7 +459,7 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 																	if (m == 1) {
 																		sub.betCode = 1;
 																	}
-																	else if (m == 0) {
+																	else if (m == 2) {
 																		sub.betCode = 0;
 																	}
 																}
@@ -462,7 +476,7 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 																	sub.betCode = m;
 																}
 																sub.odds = arrOdds[m];
-																sub.calcTip();
+																sub.calcTip(ji->hand);
 																sub.checked = false;
 																m_JCMatchItems.insert(std::make_pair(date, ji));
 															}
@@ -483,7 +497,7 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 
 }
 
-void DanLueDialog::JCMatchItem::Subject::calcTip() {
+void DanLueDialog::JCMatchItem::Subject::calcTip(int hand) {
 	CStringATL temp;
 	if (tid == 6) {
 		if (betCode == 3) {
@@ -496,7 +510,13 @@ void DanLueDialog::JCMatchItem::Subject::calcTip() {
 	}
 	else if (tid == 1) {
 		if (betCode == 3) {
-			tip = "ʤ";
+			if (hand >= 0) {
+				temp.Format("ʤ(+%d)", hand);
+			}
+			else {
+				temp.Format("ʤ(%d)", hand);
+			}
+			tip = temp;
 		}
 		else if (betCode == 1) {
 			tip = "ƽ";
@@ -653,6 +673,16 @@ std::string DanLueDialog::JCMatchItem::Subject::betStr() {
 	return ret;
 }
 
+DanLueDialog::JCMatchItem::Subject* DanLueDialog::JCMatchItem::get_subject(int tid, int betCode) {
+	DanLueDialog::JCMatchItem::Subject* result = NULL;
+	for (auto& subject : subjects) {
+		if (subject.tid == tid && subject.betCode == betCode) {
+			result = &subject;
+			break;
+		}
+	}
+	return result;
+}
 
 
 

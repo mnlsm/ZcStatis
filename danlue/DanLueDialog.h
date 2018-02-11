@@ -98,6 +98,11 @@ public:
 
 	LRESULT OnBetAreaEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnBetAreaPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	void DrawBetAreaTitle(CDCHandle dc, const CRect& rcc, int& yTop);
+	void DrawSPF(CDCHandle dc, const CRect& rcc, int& yTop);
+	void DrawJQZS(CDCHandle dc, const CRect& rcc, int& yTop);
+	void DrawBQC(CDCHandle dc, const CRect& rcc, int& yTop);
+	void DrawBF(CDCHandle dc, const CRect& rcc, int& yTop);
 
 private:
 	void InitControls();
@@ -188,10 +193,27 @@ private:
 			double odds;
 			std::string tip;
 			bool checked;
-			void calcTip();
+			void calcTip(int hand);
 			std::string betStr();
+			std::string oddsStr();
 		};
 		std::vector<Subject> subjects;
+		
+		Subject* get_subject(int tid, int betCode);
 	};
-	std::multimap<std::string, JCMatchItem> m_JCMatchItems;
+	std::multimap<std::string, std::shared_ptr<JCMatchItem>> m_JCMatchItems;
+	std::shared_ptr<JCMatchItem> m_CurrentMatchItem;
+
+private:
+	struct DrawBetItem {
+		CRect rect;
+	};
+	DrawBetItem m_TitleDrawBetItem;
+	DrawBetItem m_SPFDrawBetItems[6];
+	DrawBetItem m_JQZSDrawBetItems[8];
+	DrawBetItem m_BQCDrawBetItems[9];
+	DrawBetItem m_BFDrawBetItems[31];
+	bool m_FirstDrawBetArea;
+
+
 };
