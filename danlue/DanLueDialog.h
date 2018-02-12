@@ -169,6 +169,8 @@ private:
 	int doJcMatchList();
 	void OnJcMatchListReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
+	int doHeMai(const CStlStrxyArray& codes, const CStlStrArray& matchIDs);
+	void OnHeMaiReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
 private:
 	std::string m_LoginToken;

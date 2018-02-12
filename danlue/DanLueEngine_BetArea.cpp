@@ -499,7 +499,6 @@ void DanLueDialog::DrawBF(CDCHandle dc, const CRect& rcc, int& yTop) {
 			}
 		}
 	}
-	
 	dc.RestoreDC(saveDC);
 	yTop = yTop + 2 * (itemHeight + 1) + 20;
 

@@ -77,6 +77,7 @@ static const std::string JCMATCHLIST_REQ_PREFIX = "jcmatchlist_req_prefix";
 #define  FRIENDLIST_REQ_PREFIX  "friendlist_req_prefix"
 #define  LOTTERYCATEGORIES_REQ_PREFIX  "lotterycategories_req_prefix"
 #define  JCMATCHLIST_REQ_PREFIX "jcmatchlist_req_prefix"
+#define  HEMAI_REQ_PREFIX "hemai_req_prefix"
 
 struct ResHeader {
 	ResHeader() {
@@ -124,9 +125,11 @@ void DanLueDialog::OnHttpReturn(const CHttpRequestPtr& request, const CHttpRespo
 	else if (request->request_id.find(JCMATCHLIST_REQ_PREFIX) == 0) {
 		OnJcMatchListReturn(request, response);
 	}
-
+	else if (request->request_id.find(HEMAI_REQ_PREFIX) == 0) {
+		OnHeMaiReturn(request, response);
+	}
 	
-
+	
 
 
 }
@@ -513,6 +516,89 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 	ReloadMatchListData();
 }
 
+int DanLueDialog::doHeMai(const CStlStrxyArray& records, const CStlStrArray& matchIDs) {
+	Json::Value root;
+	Json::FastWriter writer;
+	root["baodinumber"] = 0;
+	root["brokerage"] = 0;
+	int buynumber = (records.size() * 2 / 100);
+	buynumber = buynumber + 1;
+	root["buynumber"] = buynumber; //
+	root["eventId"] = 227;
+	root["hemaitype"] = "5";
+	root["isshow"] = 1;
+	root["licenseId"] = "227";
+	root["mult"] = -1;
+	root["odds"] = "";
+	root["programDesc"] = "227";
+	
+	root["sid"] = m_UserID;
+	root["token"] = m_LoginToken;
+	root["uploadstate"] = "1";
+	root["userId"] = 0;
+	
+	root["hemaidesc"] = Global::toUTF8("信就有");
+	root["title"] = Global::toUTF8("竞彩合买");
+	CStringATL temp, temp1, temp2;
+	for (const auto& record : records) {
+		if (!temp.IsEmpty()) {
+			temp = temp + "|";
+		}
+		if (!temp1.IsEmpty()) {
+			temp1 += ",";
+		}
+		temp1 += "1";
+		CStringATL line;
+		for (const auto& code : record) {
+			if (!line.IsEmpty()) {
+				line += ",";
+			}
+			line += code.c_str();
+		}
+		temp += line;
+	}
+	for (const auto& match : matchIDs) {
+		if (!temp2.IsEmpty()) {
+			temp2 += ",";
+		}
+		temp2 += match.c_str();
+	}
+	root["detail"] = (LPCSTR)temp; //todo
+	root["hemaipaydesc"] = (LPCSTR)temp2; //todo
+	root["hemaisuccessdesc"] = (LPCSTR)temp1; //todo
+	root["money"] = 2 * records.size();// todo
+	temp.Format("%dc1", matchIDs.size());
+	root["passtype"] = (LPCSTR)temp;//todo
+	root["sharenumber"] = records.size(); //todo
+
+	std::string json = writer.write(root);
+
+	std::string url = "http://appserver.87.cn/lottery/hemai";
+	CHttpRequestPtr request = CreatePostRequest(url, HEMAI_REQ_PREFIX, json);
+	request->request_headers.insert(std::make_pair("Content-Type", "application/x-www-form-urlencoded"));
+	httpMgr_->DoHttpCommandRequest(request);
+	return 0L;
+}
+
+void DanLueDialog::OnHeMaiReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
+	if (response->httperror == talk_base::HE_NONE) {
+		Json::Value rootValue, dataValue;
+		if (ParseJsonString(response->response_content, rootValue) && rootValue.isObject()) {
+			ResHeader header;
+			header.parse(rootValue);
+			if (header.status == 0) {
+				GetValueFromJsonObject(rootValue, "data", &dataValue);
+				if (dataValue.isObject()) {
+					//todo
+				}
+			}
+		}
+	}
+}
+
+
+
+
 void DanLueDialog::JCMatchItem::Subject::calcTip(int hand) {
 	CStringATL temp;
 	if (tid == 6) {
@@ -719,6 +805,7 @@ DanLueDialog::JCMatchItem::Subject* DanLueDialog::JCMatchItem::get_subject(int t
 
 
 
+
 /*
 POST http://appserver.87.cn/lottery/hemai HTTP/1.1
 Content-Type: application/x-www-form-urlencoded
@@ -726,19 +813,18 @@ User-Agent: Dalvik/2.1.0 (Linux; U; Android 6.0; M5s Build/MRA58K)
 Host: appserver.87.cn
 Connection: Keep-Alive
 Accept-Encoding: gzip
-Content-Length: 410
+Content-Length: 447
 
-{"baodinumber":0,"brokerage":0,"buynumber":1,"detail":"20180208001:4-8:0|20180208002:4-0,4-3:0","eventId":227,"hemaidesc":"","hemaipaydesc":"","hemaisuccessdesc":"","hemaitype":"5","isshow":1,"licenseId":"227","money":4,"mult":1,"odds":"","passtype":"2c1","programDesc":"227","sharenumber":4,"sid":"1866628","title":"竞彩足球 合买","token":"3C37257AAB2E6A2144390DD83E83C266","uploadstate":"0","userId":0}
-
+{"baodinumber":0,"brokerage":0,"buynumber":3,"detail":"2-2,2-3|2-3,2-3|2-2,2-4|2-3,2-4|2-2,2-5","eventId":227,"hemaidesc":"信就有","hemaipaydesc":"20180212007,20180212008","hemaisuccessdesc":"1,1,1,1,1","hemaitype":"5","isshow":1,"licenseId":"227","money":10,"mult":-1,"odds":"","passtype":"2c1","programDesc":"227","sharenumber":10,"sid":"1866628","title":"进球过关","token":"2208631C52C5E5AD3EBA4969FF9C0BCF","uploadstate":"1","userId":0}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 HTTP/1.1 200
 Server: nginx/1.7.2
-Date: Thu, 08 Feb 2018 14:46:04 GMT
+Date: Mon, 12 Feb 2018 07:41:16 GMT
 Content-Type: application/json;charset=UTF-8
 Connection: keep-alive
 Content-Length: 84
 
-{"status":"0","message":"合发起成功","data":"966877","timestamp":1518101164012}
+{"status":"0","message":"合发起成功","data":"971424","timestamp":1518421276470}
 
 */
 
