@@ -41,7 +41,7 @@ DanLueDialog::DanLueDialog() :
 	m_FirstDrawBetArea = true;
 	SYSTEMTIME tm = { 0 };
 	GetLocalTime(&tm);
-	m_strQH.Format("%04d%02d%02d", (int)tm.wYear, (int)tm.wMonth, (int)tm.wDay);
+	m_strQH.Format("%04d-%02d-%02d", (int)tm.wYear, (int)tm.wMonth, (int)tm.wDay);
 	CreateWorkDir();
 	httpMgr_.reset(new (std::nothrow) CHttpClientMgr());
 	if (httpMgr_.get() != nullptr) {
@@ -62,12 +62,13 @@ LRESULT DanLueDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	//CenterWindow();
 	InitControls();
 
-	ReloadStatisData();
+	//ReloadStatisData();
 	return TRUE;
 }
 
 LRESULT DanLueDialog::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	LRESULT lRet = CAxDialogImpl<DanLueDialog>::OnDestroy(uMsg, wParam, lParam, bHandled);
+	//doLogOff();
 	return lRet;
 }
 
@@ -80,15 +81,95 @@ LRESULT DanLueDialog::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, B
 	return 1L;
 }
 
-LRESULT DanLueDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT DanLueDialog::OnListLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	LRESULT lRet = m_lstMatch.DefWindowProc(uMsg, wParam, lParam);
+	CPoint pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+	LVHITTESTINFO lvh = { 0 };
+	lvh.pt = pt;
+	UINT index = m_lstMatch.HitTest(&lvh);
+	if (index != -1) {
+		CStringATL strID;
+		m_lstMatch.GetItemText(index, 0, strID);
+		auto& iter = m_JCMatchItems.begin();
+		for (; iter != m_JCMatchItems.end(); ++iter) {
+			if (iter->second->id.compare(strID) == 0) {
+				m_CurrentMatchItem = iter->second;
+				if (m_CurrentMatchItem.get() != NULL) {
+					m_stBetArea.Invalidate();
+				}
+			}
+		}
+		//DoListMenuCommand(IDM_EDIT_FANGANS, index);
+	}
+
 	return lRet;
 }
 
+LRESULT DanLueDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	LRESULT lRet = m_lstMatch.DefWindowProc(uMsg, wParam, lParam);
+	CPoint pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+	LVHITTESTINFO lvh = { 0 };
+	lvh.pt = pt;
+	UINT index = m_lstMatch.HitTest(&lvh);
+	if (index != -1) {
+		CMenu menu;
+		if (menu.CreatePopupMenu()) {
+			menu.AppendMenu(MF_STRING, 100, _T("清空选择"));
+			m_lstMatch.ClientToScreen(&pt);
+			UINT cmd = menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RETURNCMD, pt.x, pt.y, m_hWnd);
+			DoMatchListMenuCommand(cmd, index);
+			menu.DestroyMenu();
+		}
+	}
+	return lRet;
+}
+
+void DanLueDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
+	if (cmd == 100) {
+		CStringATL strID;
+		m_lstMatch.GetItemText(index, 0, strID);
+		auto& iter = m_JCMatchItems.begin();
+		for (; iter != m_JCMatchItems.end(); ++iter) {
+			if (iter->second->id.compare(strID) == 0) {
+				m_CurrentMatchItem = iter->second;
+				for (auto& sub : m_CurrentMatchItem->subjects) {
+					sub.checked = false;
+				}
+				m_lstMatch.SetItemText(index, 6, "");
+				m_stBetArea.Invalidate();
+			}
+		}
+	}
+}
+
+void DanLueDialog::DoRefreshMatchListResults() {
+	for (int i = 0; i < m_lstMatch.GetItemCount(); i++) {
+		CStringATL strID;
+		m_lstMatch.GetItemText(i, 0, strID);
+		CStringATL result;
+		for (auto& item : m_JCMatchItems) {
+			if (item.second->id.compare(strID) == 0) {
+				for (auto& sub : item.second->subjects) {
+					if (sub.checked) {
+						result += sub.betStr().c_str();
+						result += ";";
+					}
+				}
+			}
+		}
+		m_lstMatch.SetItemText(i, 6, result);
+	}
+}
+
+
+
+
+/*
 LRESULT DanLueDialog::OnListLButtonDbclk(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	LRESULT lRet = m_lstMatch.DefWindowProc(uMsg, wParam, lParam);
 	return lRet;
 }
+*/
 
 LRESULT DanLueDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	ShowWindow(SW_HIDE);
@@ -145,7 +226,7 @@ LRESULT DanLueDialog::OnClearAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 }
 
 LRESULT DanLueDialog::OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-	ReloadStatisData();
+	doJcMatchList();
 	return 1L;
 }
 
@@ -210,6 +291,8 @@ void DanLueDialog::InitControls() {
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
 	m_lstMatch.InsertColumn(colIndex, "让胜平负", LVCFMT_CENTER, 200);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
+	m_lstMatch.InsertColumn(colIndex, "选择结果", LVCFMT_CENTER, 400);    //70
+	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
 
 	m_lstMatch.SetSortColumn(0);
 
@@ -224,9 +307,62 @@ void DanLueDialog::InitControls() {
 	m_lstResult.InsertColumn(colIndex, "结果", LVCFMT_CENTER, rcItem.Width() - 160);    //70
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
 
+	//m_lstMatch.setItemH
 	//set sort type
 }
 
+
+
+void DanLueDialog::ReloadMatchListData() {
+	m_lstMatch.DeleteAllItems();
+	
+	auto& iter = m_JCMatchItems.begin();// equal_range((LPCSTR)m_strQH);
+	int iIndex = 0;
+	while (iter != m_JCMatchItems.end()) {
+		if (iter->first.find(m_strQH) != 0) {
+			continue;
+		}
+		int colIndex = 0;
+		std::shared_ptr<JCMatchItem> ji = iter->second;
+		iIndex = m_lstMatch.InsertItem(iIndex, ji->id.c_str());
+		m_lstMatch.SetItemText(iIndex, ++colIndex, ji->match_category.c_str());
+		m_lstMatch.SetItemText(iIndex, ++colIndex, ji->descrition.c_str());
+		m_lstMatch.SetItemText(iIndex, ++colIndex, ji->last_buy_time.c_str());
+		CStringATL temp;
+		double a = 0.00, b = 0.00, c = 0.00;
+		JCMatchItem::Subject* sub = ji->get_subject(6, 3);
+		if (sub == NULL) {
+			temp = "未 开 售";
+		} else {
+			a = sub->odds;
+			sub = ji->get_subject(6, 1);
+			b = sub->odds;
+			sub = ji->get_subject(6, 0);
+			c = sub->odds;
+			temp.Format("%.2f  %.2f  %.2f", a , b , c);
+		}
+		m_lstMatch.SetItemText(iIndex, ++colIndex, temp);
+
+		sub = ji->get_subject(1, 3);
+		a = sub->odds;
+		sub = ji->get_subject(1, 1);
+		b = sub->odds;
+		sub = ji->get_subject(1, 0);
+		c = sub->odds;
+		if (ji->hand < 0)
+			temp.Format("%.2f(%d)  %.2f  %.2f", a, (int)ji->hand, b, c);
+		else 
+			temp.Format("%.2f(+%d)  %.2f  %.2f", a, (int)ji->hand, b, c);
+		m_lstMatch.SetItemText(iIndex, ++colIndex, temp);
+
+		++iter;
+	}
+	m_lstMatch.DoSortItems(0, false);
+	m_CurrentMatchItem.reset();
+	m_stBetArea.Invalidate();
+}
+
+/*
 void DanLueDialog::ReloadStatisData() {
 	return;
 	CStlString strTextFile = Global::GetAppPath() + _T("jqc.txt");
@@ -276,6 +412,7 @@ void DanLueDialog::ReloadStatisData() {
 		CreateWorkDir();
 	}
 }
+*/
 
 void DanLueDialog::CreateWorkDir() {
 	CStringATL strPath(Global::GetAppPath().c_str());

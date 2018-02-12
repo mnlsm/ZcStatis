@@ -60,6 +60,7 @@ CHttpRequestPtr DanLueDialog::CreateGetRequest(const std::string& url, const std
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
 static const std::string LOGIN_REQ_PREFIX = "login_req_prefix";
 static const std::string LOGOFF_REQ_PREFIX = "logoff_req_prefix";
 static const std::string INFO_REQ_PREFIX = "info_req_prefix";
@@ -67,8 +68,15 @@ static const std::string RCTOKEN_REQ_PREFIX = "rctoken_req_prefix";
 static const std::string FRIENDLIST_REQ_PREFIX = "friendlist_req_prefix";
 static const std::string LOTTERYCATEGORIES_REQ_PREFIX = "lotterycategories_req_prefix";
 static const std::string JCMATCHLIST_REQ_PREFIX = "jcmatchlist_req_prefix";
+*/
 
-
+#define LOGIN_REQ_PREFIX  "login_req_prefix"
+#define  LOGOFF_REQ_PREFIX  "logoff_req_prefix"
+#define  INFO_REQ_PREFIX  "info_req_prefix"
+#define  RCTOKEN_REQ_PREFIX  "rctoken_req_prefix"
+#define  FRIENDLIST_REQ_PREFIX  "friendlist_req_prefix"
+#define  LOTTERYCATEGORIES_REQ_PREFIX  "lotterycategories_req_prefix"
+#define  JCMATCHLIST_REQ_PREFIX "jcmatchlist_req_prefix"
 
 struct ResHeader {
 	ResHeader() {
@@ -179,6 +187,9 @@ void DanLueDialog::OnLoginReturn(const CHttpRequestPtr& request, const CHttpResp
 }
 
 int DanLueDialog::doLogOff() {
+	if (m_UserID.empty()) {
+		return 0;
+	}
 	Json::Value root;
 	Json::FastWriter writer;
 	root["sid"] = m_UserID;
@@ -263,7 +274,6 @@ void DanLueDialog::OnRcTokenReturn(const CHttpRequestPtr& request, const CHttpRe
 					GetStringFromJsonObject(dataValue, "rctoken", &m_RcUserToken);
 				}
 			}
-
 		}
 	}
 }
@@ -349,6 +359,7 @@ void DanLueDialog::OnLotteryCategoriesReturn(const CHttpRequestPtr& request,
 	for (const auto& lc : m_LotteryCategories) {
 		if (lc.id == "227") {
 			doJcMatchList();
+			break;
 		}
 	}
 
@@ -395,11 +406,11 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 								GetValueFromJsonObject(scheduleValue, "list", &listValue);
 								if (listValue.isArray()) {
 									for (int j = 0; j < listValue.size(); j++) {
+										std::shared_ptr<JCMatchItem> ji(new JCMatchItem());
 										Json::Value itemsValue;
 										GetValueFromJsonArray(listValue, j, &itemsValue);
 										if (itemsValue.isArray()) {
 											for (int k = 0; k < itemsValue.size(); k++) {
-												std::shared_ptr<JCMatchItem> ji(new JCMatchItem());
 												Json::Value itemValue;
 												GetValueFromJsonArray(itemsValue, k, &itemValue);
 												if (itemValue.isObject()) {
@@ -413,6 +424,9 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 														GetStringFromJsonObject(playValue, "hn2", &v1);
 														GetStringFromJsonObject(playValue, "an2", &v2);
 														ji->descrition = v1 + "   VS   " + v2;
+														ji->descrition = Global::fromUTF8(ji->descrition);
+														GetStringFromJsonObject(playValue, "lid", &v1);
+														ji->match_category = Global::fromUTF8(v1);
 														GetStringFromJsonObject(playValue, "dt", &ji->start_time);
 														GetStringFromJsonObject(playValue, "ot", &ji->last_buy_time);
 														GetInt64FromJsonObject(playValue, "id", &cID);
@@ -478,13 +492,15 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 																sub.odds = arrOdds[m];
 																sub.calcTip(ji->hand);
 																sub.checked = false;
-																m_JCMatchItems.insert(std::make_pair(date, ji));
+																ji->subjects.push_back(sub);
+																//m_JCMatchItems.insert(std::make_pair(date, ji));
 															}
 														}
 													}
 												}
 											}
 										}
+										m_JCMatchItems.insert(std::make_pair(date, ji));
 									}
 								}
 							}
@@ -494,7 +510,7 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 			}
 		}
 	}
-
+	ReloadMatchListData();
 }
 
 void DanLueDialog::JCMatchItem::Subject::calcTip(int hand) {
@@ -664,11 +680,10 @@ void DanLueDialog::JCMatchItem::Subject::calcTip(int hand) {
 
 }
 
-
 std::string DanLueDialog::JCMatchItem::Subject::betStr() {
 	std::string ret;
 	char cb[20] = { '\0' };
-	sprintf(cb, "%d-%d", tid, betCode);
+	sprintf(cb, "%d-%d", (int)tid, (int)betCode);
 	ret = cb;
 	return ret;
 }

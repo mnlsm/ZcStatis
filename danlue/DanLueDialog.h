@@ -62,11 +62,13 @@ public:
 		CHAIN_MSG_MAP(CAxDialogImpl<DanLueDialog>)
 		REFLECT_NOTIFICATIONS()
 		ALT_MSG_MAP(1)
-		MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnListLButtonDbclk)
+		//MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnListLButtonDbclk)
 		MESSAGE_HANDLER(WM_RBUTTONDOWN, OnListRButtonDown)
+		MESSAGE_HANDLER(WM_LBUTTONDOWN, OnListLButtonDown)
 		ALT_MSG_MAP(2) //result
 		ALT_MSG_MAP(3) //yzm
 		ALT_MSG_MAP(4) //bet area
+		MESSAGE_HANDLER(WM_LBUTTONDOWN, OnBetAreaLButtonDown)
 		MESSAGE_HANDLER(WM_ERASEBKGND, OnBetAreaEraseBkgnd)
 		MESSAGE_HANDLER(WM_PAINT, OnBetAreaPaint)
 
@@ -81,9 +83,9 @@ public:
 
 	
 
-
+	LRESULT OnListLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-	LRESULT OnListLButtonDbclk(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	//LRESULT OnListLButtonDbclk(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 	LRESULT OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	//LRESULT OnAddRecord(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
@@ -95,7 +97,7 @@ public:
 	LRESULT OnClearAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
-
+	LRESULT OnBetAreaLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnBetAreaEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnBetAreaPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	void DrawBetAreaTitle(CDCHandle dc, const CRect& rcc, int& yTop);
@@ -106,8 +108,11 @@ public:
 
 private:
 	void InitControls();
-	void ReloadStatisData();
+	void ReloadMatchListData();
 	void DoSaveResult(DanLueEngine& engine);
+
+	void DoMatchListMenuCommand(UINT cmd, UINT index);
+	void DoRefreshMatchListResults();
 
 private:
 	CSortListViewCtrlEx<DanLueDialog> m_lstMatch;
@@ -182,6 +187,7 @@ private:
 
 	struct JCMatchItem {
 		std::string id;
+		std::string match_category;
 		std::string descrition;
 		std::string start_time;
 		std::string last_buy_time;
@@ -195,7 +201,7 @@ private:
 			bool checked;
 			void calcTip(int hand);
 			std::string betStr();
-			std::string oddsStr();
+			//std::string oddsStr();
 		};
 		std::vector<Subject> subjects;
 		
@@ -206,6 +212,8 @@ private:
 
 private:
 	struct DrawBetItem {
+		int64 tid;
+		int64 betCode;
 		CRect rect;
 	};
 	DrawBetItem m_TitleDrawBetItem;
