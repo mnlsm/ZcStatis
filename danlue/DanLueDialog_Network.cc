@@ -386,6 +386,7 @@ int DanLueDialog::doJcMatchList() {
 
 void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request, 
 		const CHttpResponseDataPtr& response) {
+	std::multimap<std::string, std::shared_ptr<JCMatchItem>> temp;
 	if (response->httperror == talk_base::HE_NONE) {
 		Json::Value rootValue, dataValue;
 		if (ParseJsonString(response->response_content, rootValue) && rootValue.isObject()) {
@@ -496,14 +497,13 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 																sub.calcTip(ji->hand);
 																sub.checked = false;
 																ji->subjects.push_back(sub);
-																//m_JCMatchItems.insert(std::make_pair(date, ji));
 															}
 														}
 													}
 												}
 											}
 										}
-										m_JCMatchItems.insert(std::make_pair(date, ji));
+										temp.insert(std::make_pair(date, ji));
 									}
 								}
 							}
@@ -513,10 +513,35 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 			}
 		}
 	}
+	if (!temp.empty()) {
+		m_JCMatchItems.swap(temp);
+	}
 	ReloadMatchListData();
 }
 
-int DanLueDialog::doHeMai(const CStlStrxyArray& records, const CStlStrArray& matchIDs) {
+int DanLueDialog::doHeMai() {
+	if (m_Engine.get() == NULL) {
+		MessageBoxA("请先加载Lua脚本", "错误", MB_OK | MB_ICONERROR);
+		return -1;
+	}
+	CStlStrxyArray records;
+	CStlStrArray matchIDs;
+	m_Engine->getResults(records);
+	m_Engine->getMatchIds(matchIDs);
+	if (records.empty() || matchIDs.empty()) {
+		MessageBoxA("请先计算结果", "错误", MB_OK | MB_ICONERROR);
+		return -1;
+	}
+
+	std::string title = m_Engine->getFanAnTitle();
+	if (title.empty()) {
+		title = Global::toUTF8("竞彩合买");
+	}
+	std::string desc = m_Engine->getFanAnDesc();
+	if (desc.empty()) {
+		desc = Global::toUTF8("信就有");
+	}
+
 	Json::Value root;
 	Json::FastWriter writer;
 	root["baodinumber"] = 0;
@@ -537,13 +562,10 @@ int DanLueDialog::doHeMai(const CStlStrxyArray& records, const CStlStrArray& mat
 	root["uploadstate"] = "1";
 	root["userId"] = 0;
 	
-	root["hemaidesc"] = Global::toUTF8("信就有");
-	root["title"] = Global::toUTF8("竞彩合买");
+	root["title"] = title;
+	root["hemaidesc"] = desc;
 	CStringATL temp, temp1, temp2;
 	for (const auto& record : records) {
-		if (!temp.IsEmpty()) {
-			temp = temp + "|";
-		}
 		if (!temp1.IsEmpty()) {
 			temp1 += ",";
 		}
@@ -554,6 +576,9 @@ int DanLueDialog::doHeMai(const CStlStrxyArray& records, const CStlStrArray& mat
 				line += ",";
 			}
 			line += code.c_str();
+		}
+		if (!temp.IsEmpty()) {
+			temp += "|";
 		}
 		temp += line;
 	}
@@ -787,7 +812,14 @@ DanLueDialog::JCMatchItem::Subject* DanLueDialog::JCMatchItem::get_subject(int t
 
 
 
-
+DanLueDialog::JCMatchItem::Subject* DanLueDialog::get_subjects(const std::string& id, int tid, int code) {
+	for (const auto& item : m_JCMatchItems) {
+		if (item.second->id == id) {
+			return item.second->get_subject(tid, code);
+		}
+	}
+	return NULL;
+}
 
 
 

@@ -40,6 +40,7 @@ public:
 		DDX_CONTROL(IDC_BUUPLOAD, m_buUpload)
 		DDX_CONTROL(IDC_BUCLEARALL, m_buClear)
 		DDX_CONTROL(IDC_BUREFRESH, m_buRefresh)
+		DDX_CONTROL(IDC_COPY_CHOICES, m_buCopy)
 
 	END_DDX_MAP()
 
@@ -57,6 +58,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_BUUPLOAD, OnUpload)
 		COMMAND_ID_HANDLER(IDC_BUCLEARALL, OnClearAll)
 		COMMAND_ID_HANDLER(IDC_BUREFRESH, OnRefresh)
+		COMMAND_ID_HANDLER(IDC_COPY_CHOICES, OnCopyChoices)
 
 
 		CHAIN_MSG_MAP(CAxDialogImpl<DanLueDialog>)
@@ -96,6 +98,7 @@ public:
 	LRESULT OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnClearAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 	LRESULT OnBetAreaLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnBetAreaEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -109,7 +112,6 @@ public:
 private:
 	void InitControls();
 	void ReloadMatchListData();
-	void DoSaveResult(DanLueEngine& engine);
 
 	void DoMatchListMenuCommand(UINT cmd, UINT index);
 	void DoRefreshMatchListResults();
@@ -129,6 +131,7 @@ private:
 	CContainedWindowT<CButton> m_buLogoff;
 	CContainedWindowT<CButton> m_buRefresh;
 	CContainedWindowT<CButton> m_buClear;
+	CContainedWindowT<CButton> m_buCopy;
 	CContainedWindowT<CButton> m_buCalc;
 	CContainedWindowT<CButton> m_buUpload;
 	
@@ -169,7 +172,7 @@ private:
 	int doJcMatchList();
 	void OnJcMatchListReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
-	int doHeMai(const CStlStrxyArray& codes, const CStlStrArray& matchIDs);
+	int doHeMai();
 	void OnHeMaiReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
 private:
@@ -212,6 +215,8 @@ private:
 	std::multimap<std::string, std::shared_ptr<JCMatchItem>> m_JCMatchItems;
 	std::shared_ptr<JCMatchItem> m_CurrentMatchItem;
 
+	JCMatchItem::Subject* get_subjects(const std::string& id, int tid, int code);
+
 private:
 	struct DrawBetItem {
 		int64 tid;
@@ -225,5 +230,6 @@ private:
 	DrawBetItem m_BFDrawBetItems[31];
 	bool m_FirstDrawBetArea;
 
-
+private:
+	std::shared_ptr<DanLueEngine> m_Engine;
 };

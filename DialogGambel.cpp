@@ -527,16 +527,15 @@ void CDialogGambel::DoEditScript(const DataRow& data) {
 void CDialogGambel::DoCopyScript(const DataRow& data) {
 	if (OpenClipboard()) {
 		EmptyClipboard();
-		if (data.m_strScript.IsEmpty()) {
-			return;
-		}
-		std::string scriptUtf8 = Global::toUTF8((LPCTSTR)data.m_strScript);
-		HGLOBAL hGlobal = GlobalAlloc(GHND, scriptUtf8.size() + 1);
-		if (hGlobal != NULL) {
-			char* buffer = (char*)GlobalLock(hGlobal);
-			memcpy(buffer, scriptUtf8.data(), scriptUtf8.size());
-			GlobalUnlock(hGlobal);
-			SetClipboardData(CF_TEXT, hGlobal);
+		if (!data.m_strScript.IsEmpty()) {
+			std::string scriptUtf8 = Global::toUTF8((LPCTSTR)data.m_strScript);
+			HGLOBAL hGlobal = GlobalAlloc(GHND, scriptUtf8.size() + 1);
+			if (hGlobal != NULL) {
+				char* buffer = (char*)GlobalLock(hGlobal);
+				memcpy(buffer, scriptUtf8.data(), scriptUtf8.size());
+				GlobalUnlock(hGlobal);
+				SetClipboardData(CF_TEXT, hGlobal);
+			}
 		}
 		CloseClipboard();
 	}

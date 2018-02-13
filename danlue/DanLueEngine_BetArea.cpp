@@ -463,11 +463,14 @@ void DanLueDialog::DrawBF(CDCHandle dc, const CRect& rcc, int& yTop) {
 				int t = top + i * (itemHeight + 1);
 				int b = t + itemHeight;
 				int index = i * 7 + j;
-				if (index < 32) {
+				if (index < 31) {
 					m_BFDrawBetItems[index].rect.SetRect(l, t, r, b);
 					m_BFDrawBetItems[index].rect.OffsetRect(1, 1);
 					m_BFDrawBetItems[index].tid = 3;
 					m_BFDrawBetItems[index].betCode = index;
+				}
+				else {
+					break;
 				}
 			}
 		}

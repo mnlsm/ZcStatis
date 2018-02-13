@@ -81,6 +81,6 @@ bool GetInt64FromJsonObject(const Json::Value& in, const std::string& k, int64* 
 				val >= LLONG_MIN && val <= LLONG_MAX);
 			*out = val;
 		}
-		return ret;
 	}
+	return ret;
 }

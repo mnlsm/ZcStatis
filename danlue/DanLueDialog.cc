@@ -3,8 +3,8 @@
 #include "Global.h"
 //"http://appserver.87.cn/jc/match"
 
-static const CStlString DZ_FILTER_NAME = _T("结果文件(*.txt)");
-static const CStlString DZ_FILTER = _T("*.txt");
+static const CStlString LUA_FILTER_NAME = _T("脚本文件(*.lua)");
+static const CStlString LUA_FILTER = _T("*.lua");
 
 DanLueDialog DanLueDialog::sInst;
 void DanLueDialog::PopUp() {
@@ -25,6 +25,7 @@ void DanLueDialog::Destroy() {
 
 
 DanLueDialog::DanLueDialog() : 
+	m_Engine((DanLueEngine*)NULL),
 	m_lstMatch(this, 1),
 	m_lstResult(this, 2),
 	m_stYZM(this, 3),
@@ -37,6 +38,7 @@ DanLueDialog::DanLueDialog() :
 	m_buCalc(this, 100),
 	m_stSep1(this, 100),
 	m_stSep2(this, 100),
+	m_buCopy(this, 100),
 	m_buUpload(this, 100)  {
 	m_FirstDrawBetArea = true;
 	SYSTEMTIME tm = { 0 };
@@ -47,6 +49,7 @@ DanLueDialog::DanLueDialog() :
 	if (httpMgr_.get() != nullptr) {
 		httpMgr_->Init();
 	}
+	m_Engine.reset();
 }
 
 LRESULT DanLueDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
@@ -161,16 +164,6 @@ void DanLueDialog::DoRefreshMatchListResults() {
 	}
 }
 
-
-
-
-/*
-LRESULT DanLueDialog::OnListLButtonDbclk(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
-	LRESULT lRet = m_lstMatch.DefWindowProc(uMsg, wParam, lParam);
-	return lRet;
-}
-*/
-
 LRESULT DanLueDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	ShowWindow(SW_HIDE);
 	return 1L;
@@ -214,14 +207,88 @@ LRESULT DanLueDialog::OnLoginOff(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 }
 
 LRESULT DanLueDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	std::string filedata;
+	TCHAR szFilterName[30] = { _T('\0') };
+	_tcscpy(szFilterName, LUA_FILTER_NAME.c_str());
+	_tcscat(szFilterName + LUA_FILTER_NAME.length() + 1, LUA_FILTER.c_str());
+	CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+		szFilterName, m_hWnd);
+	dlg.m_ofn.lpstrInitialDir = m_strWorkDir;
+	if(dlg.DoModal() != IDOK) {
+		return 1;
+	}
+	CStlString strLoadPath = dlg.m_ofn.lpstrFile;
+	if (!Global::ReadFileData(strLoadPath, filedata) || filedata.size() == 0) {
+		MessageBox("Script文件读取失败！", "错误", MB_ICONERROR | MB_OK);
+		return 1;
+	}
+
+	std::shared_ptr<DanLueEngine> engine(new (std::nothrow) DanLueEngine(filedata));
+	if (engine.get() != NULL) {
+		CStlString reason = "";
+		if (!engine->CalculateAllResult(reason)) {
+			CStringATL errorStr;
+			errorStr.Format("计算错误： %s", reason.c_str());
+			MessageBox(errorStr, "错误", MB_ICONERROR | MB_OK);
+			return 1L;
+		}
+		engine.swap(m_Engine);
+	}
+
+	//更新显示
+	for (auto& item : m_JCMatchItems) {
+		for (auto& sub : item.second->subjects) {
+			sub.checked = false;
+		}
+	}
+	for (const auto& r : m_Engine->getSource()) {
+		for (const auto& item : r.bets) {
+			JCMatchItem::Subject* sub = get_subjects(r.id, item.tid, item.code);
+			if (sub != NULL) {
+				sub->checked = true;
+			}
+		}
+	}
+	DoRefreshMatchListResults();
+	m_stBetArea.Invalidate();
+
+	int index = 0;
+	for (const auto& r : m_Engine->getResult()) {
+		int colIndex = 0;
+		double bouns = 2.0;
+		CStringATL strResult, strCodes;
+		strResult.Format("%d", index + 1);
+		int lIndex = m_lstResult.InsertItem(index++, strResult);
+		for (const auto& item : r) {
+			bouns = bouns * item.bet.odds;
+			char sz[32] = { '\0' };
+			sprintf(sz, "%d-%d", item.bet.tid, item.bet.code);
+			if (!strCodes.IsEmpty()) {
+				strCodes += " ,";
+			}
+			strCodes += sz;
+		}
+		strResult.Format("%.2f", bouns);
+		m_lstResult.SetItemText(lIndex, ++colIndex, strResult);
+		m_lstResult.SetItemText(lIndex, ++colIndex, strCodes);
+	}
+
 	return 1L;
 }
 
 LRESULT DanLueDialog::OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	doHeMai();
 	return 1L;
 }
 
 LRESULT DanLueDialog::OnClearAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	for (auto& item : m_JCMatchItems) {
+		for (auto& sub : item.second->subjects) {
+			sub.checked = false;
+		}
+	}
+	DoRefreshMatchListResults();
+	m_stBetArea.Invalidate();
 	return 1L;
 }
 
@@ -229,6 +296,49 @@ LRESULT DanLueDialog::OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 	doJcMatchList();
 	return 1L;
 }
+
+LRESULT DanLueDialog::OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	CStringATL strMatchBets = "kMatchBets = {\r\n";
+	for (auto& item : m_JCMatchItems) {
+		CStringATL strItem, strBets;
+		item.second->id;
+		for (auto& sub : item.second->subjects) {
+			if (sub.checked) {
+				char szTemp[128] = { '\0' };
+				sprintf(szTemp, "%d,%d,%.2f", (int)sub.tid, (int)sub.betCode, sub.odds);
+				if (!strBets.IsEmpty()) {
+					strBets += ";";
+				}
+				strBets += szTemp;
+			}
+		}
+		if (!strBets.IsEmpty()) {
+			strItem.Format("    \"%s;%d;%s\",         --%s\r\n", item.second->id.c_str(),
+				(int)item.second->hand, strBets, item.second->descrition.c_str());
+			strMatchBets += strItem;
+		}
+	}
+	strMatchBets += "};\r\n";
+	//strMatchBets = Global::toUTF8((LPCSTR)strMatchBets).c_str();
+
+	if (OpenClipboard()) {
+		EmptyClipboard();
+		if (!strMatchBets.IsEmpty()) {
+			HGLOBAL hGlobal = GlobalAlloc(GHND, strMatchBets.GetLength() + 1);
+			if (hGlobal != NULL) {
+				char* buffer = (char*)GlobalLock(hGlobal);
+				memcpy(buffer, strMatchBets, strMatchBets.GetLength());
+				GlobalUnlock(hGlobal);
+				SetClipboardData(CF_TEXT, hGlobal);
+			}
+		}
+		CloseClipboard();
+	}
+
+	return 1L;
+}
+
+
 
 void DanLueDialog::InitControls() {
 	HICON hIconBig = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR | LR_SHARED, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON));
@@ -318,7 +428,7 @@ void DanLueDialog::ReloadMatchListData() {
 	
 	auto& iter = m_JCMatchItems.begin();// equal_range((LPCSTR)m_strQH);
 	int iIndex = 0;
-	while (iter != m_JCMatchItems.end()) {
+	for (; iter != m_JCMatchItems.end(); ++iter) {
 		if (iter->first.find(m_strQH) != 0) {
 			continue;
 		}
@@ -355,64 +465,14 @@ void DanLueDialog::ReloadMatchListData() {
 			temp.Format("%.2f(+%d)  %.2f  %.2f", a, (int)ji->hand, b, c);
 		m_lstMatch.SetItemText(iIndex, ++colIndex, temp);
 
-		++iter;
+		
 	}
 	m_lstMatch.DoSortItems(0, false);
 	m_CurrentMatchItem.reset();
 	m_stBetArea.Invalidate();
 }
 
-/*
-void DanLueDialog::ReloadStatisData() {
-	return;
-	CStlString strTextFile = Global::GetAppPath() + _T("jqc.txt");
-	if (PathFileExists(strTextFile.c_str())) {
-		m_lstMatch.DeleteAllItems();
-		std::string filedate;
-		Global::ReadFileData(strTextFile, filedate);
-		std::vector<CStlString> arrLines;
-		Global::DepartString(filedate, _T("\r\n"), arrLines);
-		int iIndex = 0, maxQH = 0;
-		for (const auto& line : arrLines) {
-			int colIndex = 0;
-			std::vector<CStlString> arrParts;
-			Global::DepartString(line, _T(","), arrParts);
-			if (arrParts.size() != 4) {
-				continue;
-			}
-			if (arrParts[1].size() != 8) {
-				continue;
-			}
-			int qh = _ttol(arrParts[0].c_str());
-			if (qh > maxQH) {
-				maxQH = qh;
-			}
-			iIndex = m_lstMatch.InsertItem(iIndex, arrParts[0].c_str());
-			m_lstMatch.SetItemText(iIndex, ++colIndex, arrParts[3].c_str());
-			m_lstMatch.SetItemText(iIndex, ++colIndex, arrParts[2].c_str());
-			m_lstMatch.SetItemText(iIndex, ++colIndex, arrParts[1].c_str());
-			CStlString& codes = arrParts[1];
-			CIntArray arrCodes;
-			int sumAll = 0;
-			for (int j = 0; j < 8; j++) {
-				int code = (codes[j] - _T('0'));
-				sumAll += code;
-				arrCodes.push_back(code);
-			}
-			CStringATL strNum;
-			sprintf(strNum.GetBuffer(255), "%u", sumAll);
-			strNum.ReleaseBuffer();
-			m_lstMatch.SetItemText(iIndex, ++colIndex, strNum);
-			sprintf(strNum.GetBuffer(255), "%02u-%02u-%02u-%02u", arrCodes[1] + arrCodes[0],
-				arrCodes[3] + arrCodes[2], arrCodes[5] + arrCodes[4], arrCodes[7] + arrCodes[6]);
-			strNum.ReleaseBuffer();
-			m_lstMatch.SetItemText(iIndex, ++colIndex, strNum);
-		}
-		m_strQH.Format(_T("%u"), maxQH + 1);
-		CreateWorkDir();
-	}
-}
-*/
+
 
 void DanLueDialog::CreateWorkDir() {
 	CStringATL strPath(Global::GetAppPath().c_str());
@@ -424,27 +484,4 @@ void DanLueDialog::CreateWorkDir() {
 	m_strWorkDir = strPath;
 }
 
-void DanLueDialog::DoSaveResult(DanLueEngine& engine) {
-	CStlString strResult;
-	engine.GetResultString(strResult);
-	if (strResult.empty()) {
-		return;
-	}
-	TCHAR szFilterName[30] = { _T('\0') };
-	_tcscpy(szFilterName, DZ_FILTER_NAME.c_str());
-	_tcscat(szFilterName + DZ_FILTER_NAME.length() + 1, DZ_FILTER.c_str());
-	CFileDialog dlg(FALSE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-		szFilterName, m_hWnd);
-	dlg.m_ofn.lpstrInitialDir = m_strWorkDir;
-	CStringATL strInitFileName;
-	strInitFileName.Format(_T("%s.txt"), m_strQH);
-	TCHAR szFileName[MAX_PATH + 1] = { _T('\0') };
-	_tcscpy(szFileName, strInitFileName);
-	dlg.m_ofn.lpstrFile = szFileName;
-	if (dlg.DoModal() != IDOK) {
-		return;
-	}
-	CStlString strLoadPath = dlg.m_ofn.lpstrFile;
-	std::string utf8 = Global::toUTF8((LPCTSTR)strResult.c_str());
-	Global::SaveFileData(strLoadPath, utf8, FALSE);
-}
+

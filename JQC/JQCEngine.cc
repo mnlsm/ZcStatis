@@ -222,7 +222,6 @@ static void gatherMatchScores(const CStlStrxyArray&split_scores,
 			record.pop_back();
 		}
 	}
-
 }
 
 BOOL JQCEngine::GeneratorCodes(const CStlStrArray& arrAllMatchScores, CIntxyArray& result) {
