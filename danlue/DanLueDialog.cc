@@ -252,6 +252,7 @@ LRESULT DanLueDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHa
 	DoRefreshMatchListResults();
 	m_stBetArea.Invalidate();
 
+	m_lstResult.DeleteAllItems();
 	int index = 0;
 	for (const auto& r : m_Engine->getResult()) {
 		int colIndex = 0;
@@ -463,8 +464,6 @@ void DanLueDialog::ReloadMatchListData() {
 		else 
 			temp.Format("%.2f(+%d)  %.2f  %.2f", a, (int)ji->hand, b, c);
 		m_lstMatch.SetItemText(iIndex, ++colIndex, temp);
-
-		
 	}
 	m_lstMatch.DoSortItems(0, false);
 	m_CurrentMatchItem.reset();
