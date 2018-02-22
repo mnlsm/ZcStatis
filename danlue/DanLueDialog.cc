@@ -320,7 +320,6 @@ LRESULT DanLueDialog::OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
 	}
 	strMatchBets += "};\r\n";
 	//strMatchBets = Global::toUTF8((LPCSTR)strMatchBets).c_str();
-
 	if (OpenClipboard()) {
 		EmptyClipboard();
 		if (!strMatchBets.IsEmpty()) {
