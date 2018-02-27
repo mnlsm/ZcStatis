@@ -22,7 +22,7 @@ typedef std::vector<std::vector<JcBetItem>> TBetResult;
 class DanLueEngine {
 
 public:
-	DanLueEngine(const CStlString& script);
+	DanLueEngine(const CStlString& script, const char* logf);
 
 public:
 	BOOL CalculateAllResult(CStlString& failed_reason);
@@ -48,6 +48,7 @@ protected:
 
 protected:
 	CStlString m_strScript;
+	CStlString m_strLogPath;
 	std::vector<JcBetItemSource> m_vecSources;
 	TBetResult m_vecResults;
 	CStlString m_strFanAnTitle, m_strFanAnDesc;

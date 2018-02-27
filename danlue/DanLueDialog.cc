@@ -214,6 +214,10 @@ LRESULT DanLueDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHa
 	CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
 		szFilterName, m_hWnd);
 	dlg.m_ofn.lpstrInitialDir = m_strWorkDir;
+	CStringATL strInitFileName = _T("1.lua");;
+	TCHAR szFileName[MAX_PATH + 1] = { _T('\0') };
+	_tcscpy(szFileName, strInitFileName);
+	dlg.m_ofn.lpstrFile = szFileName;
 	if(dlg.DoModal() != IDOK) {
 		return 1;
 	}
@@ -223,7 +227,7 @@ LRESULT DanLueDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHa
 		return 1;
 	}
 
-	std::shared_ptr<DanLueEngine> engine(new (std::nothrow) DanLueEngine(filedata));
+	std::shared_ptr<DanLueEngine> engine(new (std::nothrow) DanLueEngine(filedata, m_strWorkDir));
 	if (engine.get() != NULL) {
 		CStlString reason = "";
 		if (!engine->CalculateAllResult(reason)) {
@@ -290,6 +294,7 @@ LRESULT DanLueDialog::OnClearAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 	}
 	DoRefreshMatchListResults();
 	m_stBetArea.Invalidate();
+	m_lstResult.DeleteAllItems();
 	return 1L;
 }
 
@@ -355,7 +360,8 @@ void DanLueDialog::InitControls() {
 	CRect rcItem, rcc;
 	GetClientRect(rcc);
 
-	m_lstResult.GetClientRect(rcItem);
+	m_lstResult.GetWindowRect(rcItem);
+	ScreenToClient(rcItem);
 	rcItem.right = rcc.right - 10;
 	rcItem.bottom = rcc.bottom - 10;
 	m_lstResult.SetWindowPos(NULL, rcItem.left, rcItem.top, rcItem.Width(), rcItem.Height(), SWP_NOZORDER | SWP_NOMOVE);

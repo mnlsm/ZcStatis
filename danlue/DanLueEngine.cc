@@ -2,7 +2,7 @@
 #include "DanLueEngine.h"
 #include "Global.h"
 
-static const std::string dbgview_prefix = "jc_dbgtrace: ";
+static const std::string dbgview_prefix = "";
 static const std::string dbgview_exception = "jc_exception: ";
 
 
@@ -48,14 +48,27 @@ static std::string lua_table_getfield(lua_State *L, int index, const char *defva
 	return result;
 }
 
-DanLueEngine::DanLueEngine(const CStlString& script) {
+DanLueEngine::DanLueEngine(const CStlString& script, const char* logf) {
 	m_strScript = script;
+#ifndef _DEBUG
+	if (logf != NULL) {
+		m_strLogPath = logf;
+		m_strLogPath += "\\debug.log";
+		DeleteFileA(m_strLogPath.c_str());
+	}
+#endif
 }
 
 int __cdecl DanLueEngine::LUA_DbgTrace(lua_State *L) {
 	if (lua_type(L, 1) == LUA_TSTRING) {
 		std::string line = dbgview_prefix + lua_tostring(L, 1);
-		OutputDebugStringA(line.c_str());
+		DanLueEngine* pThis = (DanLueEngine*)lua_touserdata(L, lua_upvalueindex(1));
+		const CStlString& path = pThis->m_strLogPath;
+		if (!path.empty()) {
+			Global::SaveFileData(path.c_str(), line, TRUE);
+		} else {
+			OutputDebugStringA(line.c_str());
+		}
 	}
 	return 0;
 }
@@ -137,7 +150,8 @@ lua_State* DanLueEngine::InitLua(CStlString& failed_reason) {
 	lua_pushcclosure(L, DanLueEngine::LUA_IsFilterTJ, 1);
 	lua_setglobal(L, "IsFilterTJ");
 
-	lua_pushcclosure(L, DanLueEngine::LUA_DbgTrace, 0);
+	lua_pushlightuserdata(L, this);
+	lua_pushcclosure(L, DanLueEngine::LUA_DbgTrace, 1);
 	lua_setglobal(L, "dbgview_print");
 
 	if (luaL_dostring(L, m_strScript.c_str()) != 0) {
