@@ -376,12 +376,20 @@ void DanLueEngine::getMatchIds(CStlStrArray& matchIds) {
 	}
 }
 
-void DanLueEngine::getResults(CStlStrxyArray& records) {
+void DanLueEngine::getResults(CStlStrxyArray& records, int start, int max_count) {
 	records.clear();
-	for (const auto& record : m_vecResults) {
+	if (start >= m_vecResults.size()) {
+		return;
+	}
+	int count = 0;
+	for (int i = start; i < m_vecResults.size(); i++) {
+		if (++count > max_count) {
+			break;
+		}
+		const auto& record = m_vecResults.at(i);
 		CStlStrArray vecRecord;
 		for (const auto& item : record) {
-			char bet[32];
+			char bet[32] = {'\0'};
 			sprintf(bet, "%d-%d", item.bet.tid, item.bet.code);
 			vecRecord.push_back(bet);
 		}

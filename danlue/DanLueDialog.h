@@ -177,6 +177,7 @@ private:
 	void OnJcMatchListReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
 	int doHeMai();
+	int doHeMaiImpl(const CStlStrxyArray& records, const CStlStrArray& matchIDs);
 	void OnHeMaiReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
 private:

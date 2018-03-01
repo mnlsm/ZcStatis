@@ -524,15 +524,36 @@ int DanLueDialog::doHeMai() {
 		MessageBoxA("请先加载Lua脚本", "错误", MB_OK | MB_ICONERROR);
 		return -1;
 	}
-	CStlStrxyArray records;
 	CStlStrArray matchIDs;
-	m_Engine->getResults(records);
+	CStlStrxyArray records;
+	int start = 0, max_count = 100;
+	m_Engine->getResults(records, start, max_count);
 	m_Engine->getMatchIds(matchIDs);
 	if (records.empty() || matchIDs.empty()) {
 		MessageBoxA("请先计算结果", "错误", MB_OK | MB_ICONERROR);
 		return -1;
 	}
+	CStlString saveFile = m_Engine->getScriptFile() + ".dat";
+	DeleteFile(saveFile.c_str());
+	do {
+		records.clear();
+		m_Engine->getResults(records, start, max_count);
+		if (doHeMaiImpl(records, matchIDs) != 0) {
+			return -1;
+		}
+		start += records.size();
+	} while (!records.empty());
+}
 
+int DanLueDialog::doHeMaiImpl(const CStlStrxyArray& records, const CStlStrArray& matchIDs) {
+
+//	CStlStrxyArray records;
+//	CStlStrArray matchIDs;
+	//m_Engine->getResults(records);
+//	m_Engine->getMatchIds(matchIDs);
+	if (records.empty() || matchIDs.empty()) {
+		return 0;
+	}
 	std::string title = m_Engine->getFanAnTitle();
 	if (title.empty()) {
 		title = Global::toUTF8("竞彩合买");
@@ -607,7 +628,7 @@ int DanLueDialog::doHeMai() {
 	//备份上传 结果
 	strRecords.Replace("|", "\r\n");
 	CStlString saveFile = m_Engine->getScriptFile() + ".dat";
-	Global::SaveFileData(saveFile, (LPCSTR)strRecords, FALSE);
+	Global::SaveFileData(saveFile, (LPCSTR)strRecords, TRUE);
 	return 0L;
 }
 
