@@ -6,6 +6,17 @@ static const std::string dbgview_prefix = "";
 static const std::string dbgview_exception = "jc_exception: ";
 
 
+static int lua_table_getdouble(lua_State *L, const char *key, double defval) {
+	double result = defval;
+	lua_pushstring(L, key);
+	lua_gettable(L, -2);
+	if (lua_type(L, -1) == LUA_TNUMBER) {
+		result = lua_tonumber(L, -1);
+	}
+	lua_pop(L, 1);
+	return result;
+}
+
 static int lua_table_getfield(lua_State *L, const char *key, int defval) {
 	int result = defval;
 	lua_pushstring(L, key);
@@ -50,6 +61,7 @@ static std::string lua_table_getfield(lua_State *L, int index, const char *defva
 
 DanLueEngine::DanLueEngine(const CStlString& script, const char* logf) {
 	m_strScript = script;
+	m_dMinBonus = 0.0;
 #ifndef _DEBUG
 	if (logf != NULL) {
 		m_strLogPath = logf;
@@ -118,13 +130,17 @@ BOOL DanLueEngine::CalculateAllResultImpl(CStlString& failed_reason) {
 		return FALSE;
 	}
 	
+	double bonus = 0.0;
 	TBetResult allResult, tempAll;
 	if (GeneratorBets(m_vecSources, allResult)) {
 		//std::stable_sort(allResult.begin(), allResult.end());
 		//allResult.erase(std::unique(allResult.begin(), allResult.end()), allResult.end());
 		for (const auto& record : allResult) {
-			if (IsAValidRecordImpl(record, lua_state, &failed_reason)) {
+			if (IsAValidRecordImpl(record, lua_state, bonus, &failed_reason)) {
 				tempAll.push_back(record);
+				if (bonus < m_dMinBonus) {
+					tempAll.push_back(record);
+				}
 			}
 		}
 		m_vecResults.swap(tempAll);
@@ -165,12 +181,17 @@ lua_State* DanLueEngine::InitLua(CStlString& failed_reason) {
 		return NULL;
 	}
 
-	if (lua_getglobal(L, "kMatchTitle") == LUA_TTABLE) {
+	if (lua_getglobal(L, "kMinBonus") == LUA_TNUMBER) {
+		m_dMinBonus = lua_tonumber(L, -1);
+		lua_pop(L, 1);
+	}
+
+	if (lua_getglobal(L, "kMatchTitle") == LUA_TSTRING) {
 		m_strFanAnTitle = lua_tostring(L, -1);
 		lua_pop(L, 1);
 	}
 
-	if (lua_getglobal(L, "kMatchDesc") == LUA_TTABLE) {
+	if (lua_getglobal(L, "kMatchDesc") == LUA_TSTRING) {
 		m_strFanAnDesc = lua_tostring(L, -1);
 		lua_pop(L, 1);
 	}
@@ -266,7 +287,8 @@ BOOL DanLueEngine::GeneratorBets(const std::vector<JcBetItemSource>& arrMatchSco
 }
 
 BOOL DanLueEngine::IsAValidRecordImpl(const std::vector<JcBetItem>& record, 
-		lua_State* L, CStlString* invalid_reason) {
+		lua_State* L, double& bonus, CStlString* invalid_reason) {
+	bonus = 0.0;
 	BOOL result = TRUE;
 	lua_getglobal(L, "IsFilterLua");					// 获取函数，压入栈中  
 	push_scriptfunc_params(L, record);
@@ -295,6 +317,8 @@ BOOL DanLueEngine::IsAValidRecordImpl(const std::vector<JcBetItem>& record,
 		if (invalid_reason != NULL) {
 			*invalid_reason = CA2T(err.c_str()).m_psz;
 		}
+	} else {
+		bonus = lua_table_getdouble(L, "bonus", 0.0);
 	}
 	lua_pop(L, 1);
 	return isValid;
@@ -303,6 +327,7 @@ BOOL DanLueEngine::IsAValidRecordImpl(const std::vector<JcBetItem>& record,
 void DanLueEngine::push_scriptfunc_params(lua_State *L, const std::vector<JcBetItem>& record) {
 	lua_newtable(L);
 
+	double betbouns = 0.0;
 	lua_pushstring(L, "betcodes");
 	lua_newtable(L);
 	for (int i = 0; i < record.size(); i++) {
@@ -325,9 +350,21 @@ void DanLueEngine::push_scriptfunc_params(lua_State *L, const std::vector<JcBetI
 			lua_pushstring(L, "odds");
 			lua_pushnumber(L, item.bet.odds);
 			lua_settable(L, -3);
+			if (betbouns == 0.0) {
+				betbouns = item.bet.odds;
+			} else {
+				betbouns = betbouns * item.bet.odds;
+			}
+			lua_pushstring(L, "pan");
+			lua_pushinteger(L, item.bet.getPan());
+			lua_settable(L, -3);
 		}
 		lua_settable(L, -3);
 	}
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "betbouns");
+	lua_pushnumber(L, 2 * betbouns);
 	lua_settable(L, -3);
 
 }
