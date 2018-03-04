@@ -588,6 +588,7 @@ int DanLueDialog::doHeMai() {
 		}
 		temp2 += match.c_str();
 	}
+	CStringATL strRecords = temp;
 	root["detail"] = (LPCSTR)temp; //todo
 	root["hemaipaydesc"] = (LPCSTR)temp2; //todo
 	root["hemaisuccessdesc"] = (LPCSTR)temp1; //todo
@@ -602,15 +603,23 @@ int DanLueDialog::doHeMai() {
 	CHttpRequestPtr request = CreatePostRequest(url, HEMAI_REQ_PREFIX, json);
 	request->request_headers.insert(std::make_pair("Content-Type", "application/x-www-form-urlencoded"));
 	httpMgr_->DoHttpCommandRequest(request);
+
+	//备份上传 结果
+	strRecords.Replace("|", "\r\n");
+	CStlString saveFile = m_Engine->getScriptFile() + ".dat";
+	Global::SaveFileData(saveFile, (LPCSTR)strRecords, FALSE);
 	return 0L;
 }
 
 void DanLueDialog::OnHeMaiReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
+	m_buUpload.EnableWindow(TRUE);
+	CStringATL strMsg = "上传完成！";
 	if (response->httperror == talk_base::HE_NONE) {
 		Json::Value rootValue, dataValue;
 		if (ParseJsonString(response->response_content, rootValue) && rootValue.isObject()) {
 			ResHeader header;
 			header.parse(rootValue);
+			strMsg.AppendFormat(" msg: [%s]", header.message.c_str());
 			if (header.status == 0) {
 				GetValueFromJsonObject(rootValue, "data", &dataValue);
 				if (dataValue.isObject()) {
@@ -619,6 +628,7 @@ void DanLueDialog::OnHeMaiReturn(const CHttpRequestPtr& request, const CHttpResp
 			}
 		}
 	}
+	MessageBox(strMsg, "提示", MB_ICONINFORMATION | MB_OK);
 }
 
 
@@ -794,8 +804,65 @@ void DanLueDialog::JCMatchItem::Subject::calcTip(int hand) {
 std::string DanLueDialog::JCMatchItem::Subject::betStr() {
 	std::string ret;
 	char cb[20] = { '\0' };
-	sprintf(cb, "%d-%d", (int)tid, (int)betCode);
+	sprintf(cb, "%d-%d(%.2f)", (int)tid, (int)betCode, odds);
 	ret = cb;
+	return ret;
+}
+
+int DanLueDialog::JCMatchItem::Subject::getPan(int hand) const {
+	int ret = 0;
+	if (odds == 0.00) {
+		return 0;
+	}
+	if (tid == 6) {
+		if (hand < 0) {
+			if (betCode == 3) {
+				ret = -1;
+			}
+			else if (betCode == 1) {
+				ret = 3;
+			}
+			else if (betCode == 0) {
+				ret = 4;
+			}
+		}
+		else {
+			if (betCode == 3) {
+				ret = 4;
+			}
+			else if (betCode == 1) {
+				ret = 3;
+			}
+			else if (betCode == 0) {
+				ret = -1;
+			}
+		}
+
+	}
+	else if (tid == 1) {
+		if (hand < 0) {
+			if (betCode == 3) {
+				ret = 1;
+			}
+			else if (betCode == 1) {
+				ret = 2;
+			}
+			else if (betCode == 0) {
+				ret = -2;
+			}
+		}
+		else {
+			if (betCode == 3) {
+				ret = -2;
+			}
+			else if (betCode == 1) {
+				ret = 2;
+			}
+			else if (betCode == 0) {
+				ret = 1;
+			}
+		}
+	}
 	return ret;
 }
 

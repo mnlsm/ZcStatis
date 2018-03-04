@@ -32,7 +32,7 @@ public:
 
 		DDX_CONTROL(IDC_SEP1, m_stSep1)
 		DDX_CONTROL(IDC_SEP2, m_stSep2)
-
+		DDX_CONTROL(IDC_STATIC_RESULT, m_stResult)
 
 		DDX_CONTROL(IDC_BULOGIN, m_buLogin)
 		DDX_CONTROL(IDC_BULOGOFF, m_buLogoff)
@@ -126,6 +126,10 @@ private:
 	CContainedWindowT<CStatic> m_stSep1;
 	CContainedWindowT<CStatic> m_stSep2;
 
+	CContainedWindowT<CStatic> m_stResult;
+
+
+	
 
 	CContainedWindowT<CButton> m_buLogin;
 	CContainedWindowT<CButton> m_buLogoff;
@@ -206,6 +210,7 @@ private:
 			bool checked;
 			void calcTip(int hand);
 			std::string betStr();
+			int getPan(int hand) const;
 			//std::string oddsStr();
 		};
 		std::vector<Subject> subjects;

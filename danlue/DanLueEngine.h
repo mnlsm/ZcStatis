@@ -48,7 +48,6 @@ struct BetStruct {
 				}
 			}
 		}
-
 		return ret;
 	}
 };
@@ -80,6 +79,8 @@ public:
 	const TBetResult& getResult() { return m_vecResults; }
 	const std::string& getFanAnTitle() { return m_strFanAnTitle; }
 	const std::string& getFanAnDesc() { return m_strFanAnDesc; }
+	void setScriptFile(const char* file) { m_strScriptFile = file; }
+	const CStlString& getScriptFile() { return m_strScriptFile; }
 
 protected:
 	void SetSources(const std::vector<JcBetItemSource>& items);
@@ -94,6 +95,7 @@ protected:
 
 protected:
 	CStlString m_strScript;
+	CStlString m_strScriptFile;
 	CStlString m_strLogPath;
 	std::vector<JcBetItemSource> m_vecSources;
 	TBetResult m_vecResults;

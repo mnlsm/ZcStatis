@@ -39,6 +39,7 @@ DanLueDialog::DanLueDialog() :
 	m_stSep1(this, 100),
 	m_stSep2(this, 100),
 	m_buCopy(this, 100),
+	m_stResult(this, 100),
 	m_buUpload(this, 100)  {
 	m_FirstDrawBetArea = true;
 	SYSTEMTIME tm = { 0 };
@@ -118,6 +119,8 @@ LRESULT DanLueDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		CMenu menu;
 		if (menu.CreatePopupMenu()) {
 			menu.AppendMenu(MF_STRING, 100, _T("清空选择"));
+			menu.AppendMenu(MF_STRING, 101, _T("高赔选择"));
+
 			m_lstMatch.ClientToScreen(&pt);
 			UINT cmd = menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RETURNCMD, pt.x, pt.y, m_hWnd);
 			DoMatchListMenuCommand(cmd, index);
@@ -128,7 +131,7 @@ LRESULT DanLueDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
 }
 
 void DanLueDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
-	if (cmd == 100) {
+	if (cmd == 100 || cmd == 101) {
 		CStringATL strID;
 		m_lstMatch.GetItemText(index, 0, strID);
 		auto& iter = m_JCMatchItems.begin();
@@ -138,7 +141,17 @@ void DanLueDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 				for (auto& sub : m_CurrentMatchItem->subjects) {
 					sub.checked = false;
 				}
-				m_lstMatch.SetItemText(index, 6, "");
+				if (cmd == 101) {
+					int hand = iter->second->hand;
+					for (auto& sub : m_CurrentMatchItem->subjects) {
+						if (sub.getPan(hand) > 0) {
+							sub.checked = true;
+						}
+					}
+					DoRefreshMatchListResults();
+				} else if (cmd == 100) {
+					m_lstMatch.SetItemText(index, 6, "");
+				}
 				m_stBetArea.Invalidate();
 			}
 		}
@@ -229,6 +242,7 @@ LRESULT DanLueDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHa
 
 	std::shared_ptr<DanLueEngine> engine(new (std::nothrow) DanLueEngine(filedata, m_strWorkDir));
 	if (engine.get() != NULL) {
+		engine->setScriptFile(strLoadPath.c_str());
 		CStlString reason = "";
 		if (!engine->CalculateAllResult(reason)) {
 			CStringATL errorStr;
@@ -267,7 +281,7 @@ LRESULT DanLueDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHa
 		for (const auto& item : r) {
 			bouns = bouns * item.bet.odds;
 			char sz[32] = { '\0' };
-			sprintf(sz, "%d-%d", item.bet.tid, item.bet.code);
+			sprintf(sz, "%d-%d(%.2f)", item.bet.tid, item.bet.code, item.bet.odds);
 			if (!strCodes.IsEmpty()) {
 				strCodes += " ,";
 			}
@@ -277,12 +291,19 @@ LRESULT DanLueDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHa
 		m_lstResult.SetItemText(lIndex, ++colIndex, strResult);
 		m_lstResult.SetItemText(lIndex, ++colIndex, strCodes);
 	}
+	CStringATL temp;
+	temp.Format("结果列表(%d):", m_Engine->getResult().size());
+	m_stResult.SetWindowText(temp);
 
 	return 1L;
 }
 
 LRESULT DanLueDialog::OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-	doHeMai();
+	if (MessageBox("是否上传投注结果？", "提示", MB_ICONQUESTION | MB_YESNO) == IDYES) {
+		if (doHeMai() == 0) {
+			m_buUpload.EnableWindow(FALSE);
+		}
+	}
 	return 1L;
 }
 
@@ -295,6 +316,8 @@ LRESULT DanLueDialog::OnClearAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 	DoRefreshMatchListResults();
 	m_stBetArea.Invalidate();
 	m_lstResult.DeleteAllItems();
+	m_stResult.SetWindowText("结果列表:");
+
 	return 1L;
 }
 

@@ -58,6 +58,7 @@
 #define IDC_STBETAREA1                  1032
 #define IDC_SEP1                        1033
 #define IDC_SEP2                        1034
+#define IDC_STATIC_RESULT               1035
 #define IDC_CORESULT1                   1078
 #define IDC_CORESULT2                   1079
 #define IDC_CORESULT3                   1080
@@ -131,7 +132,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        206
 #define _APS_NEXT_COMMAND_VALUE         32777
-#define _APS_NEXT_CONTROL_VALUE         1035
+#define _APS_NEXT_CONTROL_VALUE         1036
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif
