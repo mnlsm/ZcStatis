@@ -74,7 +74,7 @@ public:
 	//inline const TBetResult& GetResult(){ return m_vecResults; }
 	//const std::vector<JcBetItemSource>& GetSources(){ return m_vecSources;  }
 	void getMatchIds(CStlStrArray& matchIds);
-	void getResults(CStlStrxyArray& records, int start, int max_count);
+	void getResults(int start, int max_count, CStlStrxyArray& records, bool& last);
 	const std::vector<JcBetItemSource>& getSource() { return m_vecSources; }
 	const TBetResult& getResult() { return m_vecResults; }
 	const std::string& getFanAnTitle() { return m_strFanAnTitle; }

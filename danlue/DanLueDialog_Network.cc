@@ -78,6 +78,7 @@ static const std::string JCMATCHLIST_REQ_PREFIX = "jcmatchlist_req_prefix";
 #define  LOTTERYCATEGORIES_REQ_PREFIX  "lotterycategories_req_prefix"
 #define  JCMATCHLIST_REQ_PREFIX "jcmatchlist_req_prefix"
 #define  HEMAI_REQ_PREFIX "hemai_req_prefix"
+#define  HEMAI_REQ_PREFIX_FINISH "hemai_req_prefix_finish"
 
 struct ResHeader {
 	ResHeader() {
@@ -524,10 +525,11 @@ int DanLueDialog::doHeMai() {
 		MessageBoxA("请先加载Lua脚本", "错误", MB_OK | MB_ICONERROR);
 		return -1;
 	}
+	bool last = false;
 	CStlStrArray matchIDs;
 	CStlStrxyArray records;
 	int start = 0, max_count = 100;
-	m_Engine->getResults(records, start, max_count);
+	m_Engine->getResults(start, max_count, records, last);
 	m_Engine->getMatchIds(matchIDs);
 	if (records.empty() || matchIDs.empty()) {
 		MessageBoxA("请先计算结果", "错误", MB_OK | MB_ICONERROR);
@@ -536,16 +538,17 @@ int DanLueDialog::doHeMai() {
 	CStlString saveFile = m_Engine->getScriptFile() + ".dat";
 	DeleteFile(saveFile.c_str());
 	do {
+		last = false;
 		records.clear();
-		m_Engine->getResults(records, start, max_count);
-		if (doHeMaiImpl(records, matchIDs) != 0) {
+		m_Engine->getResults(start, max_count, records, last);
+		if (doHeMaiImpl(records, matchIDs, last) != 0) {
 			return -1;
 		}
 		start += records.size();
-	} while (!records.empty());
+	} while (!last);
 }
 
-int DanLueDialog::doHeMaiImpl(const CStlStrxyArray& records, const CStlStrArray& matchIDs) {
+int DanLueDialog::doHeMaiImpl(const CStlStrxyArray& records, const CStlStrArray& matchIDs, bool last) {
 
 //	CStlStrxyArray records;
 //	CStlStrArray matchIDs;
@@ -621,19 +624,23 @@ int DanLueDialog::doHeMaiImpl(const CStlStrxyArray& records, const CStlStrArray&
 	std::string json = writer.write(root);
 
 	std::string url = "http://appserver.87.cn/lottery/hemai";
-	CHttpRequestPtr request = CreatePostRequest(url, HEMAI_REQ_PREFIX, json);
+	std::string request_id = HEMAI_REQ_PREFIX;
+	if (last) {
+		request_id = HEMAI_REQ_PREFIX_FINISH;
+	}
+	CHttpRequestPtr request = CreatePostRequest(url, request_id, json);
 	request->request_headers.insert(std::make_pair("Content-Type", "application/x-www-form-urlencoded"));
 	httpMgr_->DoHttpCommandRequest(request);
 
 	//备份上传 结果
 	strRecords.Replace("|", "\r\n");
+	strRecords += "\r\n";
 	CStlString saveFile = m_Engine->getScriptFile() + ".dat";
 	Global::SaveFileData(saveFile, (LPCSTR)strRecords, TRUE);
 	return 0L;
 }
 
 void DanLueDialog::OnHeMaiReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
-	m_buUpload.EnableWindow(TRUE);
 	CStringATL strMsg = "上传完成！";
 	if (response->httperror == talk_base::HE_NONE) {
 		Json::Value rootValue, dataValue;
@@ -649,7 +656,10 @@ void DanLueDialog::OnHeMaiReturn(const CHttpRequestPtr& request, const CHttpResp
 			}
 		}
 	}
-	MessageBox(strMsg, "提示", MB_ICONINFORMATION | MB_OK);
+	if (request->request_id == HEMAI_REQ_PREFIX_FINISH) {
+		m_buUpload.EnableWindow(TRUE);
+		MessageBox(strMsg, "提示", MB_ICONINFORMATION | MB_OK);
+	}
 }
 
 
@@ -921,37 +931,3 @@ DanLueDialog::JCMatchItem::Subject* DanLueDialog::get_subjects(const std::string
 
 
 
-
-
-
-
-
-/*
-POST http://appserver.87.cn/lottery/hemai HTTP/1.1
-Content-Type: application/x-www-form-urlencoded
-User-Agent: Dalvik/2.1.0 (Linux; U; Android 6.0; M5s Build/MRA58K)
-Host: appserver.87.cn
-Connection: Keep-Alive
-Accept-Encoding: gzip
-Content-Length: 447
-
-{"baodinumber":0,"brokerage":0,"buynumber":3,"detail":"2-2,2-3|2-3,2-3|2-2,2-4|2-3,2-4|2-2,2-5","eventId":227,"hemaidesc":"信就有","hemaipaydesc":"20180212007,20180212008","hemaisuccessdesc":"1,1,1,1,1","hemaitype":"5","isshow":1,"licenseId":"227","money":10,"mult":-1,"odds":"","passtype":"2c1","programDesc":"227","sharenumber":10,"sid":"1866628","title":"进球过关","token":"2208631C52C5E5AD3EBA4969FF9C0BCF","uploadstate":"1","userId":0}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-HTTP/1.1 200
-Server: nginx/1.7.2
-Date: Mon, 12 Feb 2018 07:41:16 GMT
-Content-Type: application/json;charset=UTF-8
-Connection: keep-alive
-Content-Length: 84
-
-{"status":"0","message":"合发起成功","data":"971424","timestamp":1518421276470}
-
-*/
-
-/*
-6 - 3, 6 - 1, 6 - 0 	(胜平负代码[6] 结果: 3, 1, 0)
-1 - 3, 1 - 1, 1 - 0 	(让球胜平负代码[1] 结果: 3, 1, 0)
-2 - 0, 2 - 1, 2 - 2 ... (进球总数代码[2] 结果: 0...7)
-4 - 0, 4 - 1, 4 - 2 ... (半全场代码[4] 结果[位置] 0...8)
-3 - 0, 3 - 1, 3 - 2 ... (比分代码[3] 结果[位置] 0....30) 注意 "*其它"在对应胜平负结果的最低索引
-*/

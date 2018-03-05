@@ -215,6 +215,14 @@ LRESULT DanLueDialog::OnLoginIn(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 }
 
 LRESULT DanLueDialog::OnLoginOff(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	m_Engine.reset();
+	m_JCMatchItems.clear();
+	m_CurrentMatchItem.reset();
+	m_lstMatch.DeleteAllItems();
+	m_lstResult.DeleteAllItems();
+	m_stResult.SetWindowText("结果列表:");
+	m_stBetArea.Invalidate();
+	m_LoginToken.clear();
 	doLogOff();
 	return 1L;
 }
@@ -269,8 +277,8 @@ LRESULT DanLueDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHa
 	}
 	DoRefreshMatchListResults();
 	m_stBetArea.Invalidate();
-
 	m_lstResult.DeleteAllItems();
+
 	int index = 0;
 	for (const auto& r : m_Engine->getResult()) {
 		int colIndex = 0;
@@ -313,11 +321,11 @@ LRESULT DanLueDialog::OnClearAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 			sub.checked = false;
 		}
 	}
+	m_Engine.reset();
 	DoRefreshMatchListResults();
 	m_stBetArea.Invalidate();
 	m_lstResult.DeleteAllItems();
 	m_stResult.SetWindowText("结果列表:");
-
 	return 1L;
 }
 
@@ -362,13 +370,44 @@ LRESULT DanLueDialog::OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
 		}
 		CloseClipboard();
 	}
-
 	return 1L;
 }
 
 
 
 void DanLueDialog::InitControls() {
+	mMatchListFont.CreateFont(/*32*/-14, // nHeight 
+		0, // nWidth 
+		0, // nEscapement 
+		0, // nOrientation 
+		FW_NORMAL, // nWeight 
+		FALSE, // bItalic 
+		FALSE, // bUnderline 
+		0, // cStrikeOut 
+		DEFAULT_CHARSET, // nCharSet 
+		OUT_DEFAULT_PRECIS, // nOutPrecision 
+		CLIP_DEFAULT_PRECIS, // nClipPrecision 
+		DEFAULT_QUALITY, // nQuality 
+		DEFAULT_PITCH | FF_SWISS, // nPitchAndFamily 
+		_T("微软雅黑"));
+	m_lstMatch.SetFont(mMatchListFont);
+	mBetAreaFont.CreateFont(/*32*/-12, // nHeight 
+		0, // nWidth 
+		0, // nEscapement 
+		0, // nOrientation 
+		FW_NORMAL, // nWeight 
+		FALSE, // bItalic 
+		FALSE, // bUnderline 
+		0, // cStrikeOut 
+		DEFAULT_CHARSET, // nCharSet 
+		OUT_DEFAULT_PRECIS, // nOutPrecision 
+		CLIP_DEFAULT_PRECIS, // nClipPrecision 
+		DEFAULT_QUALITY, // nQuality 
+		DEFAULT_PITCH | FF_SWISS, // nPitchAndFamily 
+		_T("微软雅黑"));
+	//m_stBetArea.SetFont(mBetAreaFont);
+
+
 	HICON hIconBig = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR | LR_SHARED, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON));
 	SetIcon(hIconBig, TRUE);
 	HICON hIconSmall = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR | LR_SHARED, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CXSMICON));

@@ -376,13 +376,14 @@ void DanLueEngine::getMatchIds(CStlStrArray& matchIds) {
 	}
 }
 
-void DanLueEngine::getResults(CStlStrxyArray& records, int start, int max_count) {
+void DanLueEngine::getResults(int start, int max_count, CStlStrxyArray& records, bool& last) {
+	last = false;
 	records.clear();
 	if (start >= m_vecResults.size()) {
 		return;
 	}
-	int count = 0;
-	for (int i = start; i < m_vecResults.size(); i++) {
+	int i = start, count = 0;
+	for (; i < m_vecResults.size(); i++) {
 		if (++count > max_count) {
 			break;
 		}
@@ -395,4 +396,5 @@ void DanLueEngine::getResults(CStlStrxyArray& records, int start, int max_count)
 		}
 		records.push_back(vecRecord);
 	}
+	last = (i < m_vecResults.size());
 }

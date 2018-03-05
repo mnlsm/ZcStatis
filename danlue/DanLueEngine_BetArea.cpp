@@ -69,13 +69,16 @@ LRESULT DanLueDialog::OnBetAreaPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 	memDC.FrameRect(rcc, frameBrush);
 	rcc.DeflateRect(1, 1, 1, 1);
 	int yPos = 1;
-	memDC.SelectFont(GetFont());
+	CFontHandle font = GetFont();
+	font = mBetAreaFont;
+	CFontHandle oldFont = memDC.SelectFont(font);
 	DrawBetAreaTitle(memDC.m_hDC, rcc, yPos);
 	DrawSPF(memDC.m_hDC, rcc, yPos);
 	DrawJQZS(memDC.m_hDC, rcc, yPos);
 	DrawBQC(memDC.m_hDC, rcc, yPos);
 	DrawBF(memDC.m_hDC, rcc, yPos);
 	m_FirstDrawBetArea = false;
+	memDC.SelectFont(oldFont);
 	return 0;
 }
 

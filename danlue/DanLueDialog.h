@@ -138,10 +138,12 @@ private:
 	CContainedWindowT<CButton> m_buCopy;
 	CContainedWindowT<CButton> m_buCalc;
 	CContainedWindowT<CButton> m_buUpload;
-	
-	CStringATL m_strQH;
+	CFont mMatchListFont;
+	CFont mBetAreaFont;
+
 
 private:
+	CStringATL m_strQH;
 	CStringATL m_strRootDir;
 	CStringATL m_strWorkDir;
 	void CreateWorkDir();
@@ -177,7 +179,7 @@ private:
 	void OnJcMatchListReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
 	int doHeMai();
-	int doHeMaiImpl(const CStlStrxyArray& records, const CStlStrArray& matchIDs);
+	int doHeMaiImpl(const CStlStrxyArray& records, const CStlStrArray& matchIDs, bool last);
 	void OnHeMaiReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
 private:
