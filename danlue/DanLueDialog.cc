@@ -119,8 +119,14 @@ LRESULT DanLueDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		CMenu menu;
 		if (menu.CreatePopupMenu()) {
 			menu.AppendMenu(MF_STRING, 100, _T("清空选择"));
-			menu.AppendMenu(MF_STRING, 101, _T("高赔选择"));
-
+			menu.AppendMenu(MF_SEPARATOR);
+			menu.AppendMenu(MF_STRING, 101, _T("高赔全包"));
+			menu.AppendMenu(MF_STRING, 102, _T("高赔上盘"));
+			menu.AppendMenu(MF_STRING, 103, _T("高赔下盘"));
+			menu.AppendMenu(MF_SEPARATOR);
+			menu.AppendMenu(MF_STRING, 104, _T("低赔全包"));
+			menu.AppendMenu(MF_STRING, 105, _T("低赔上盘"));
+			menu.AppendMenu(MF_STRING, 106, _T("低赔下盘"));
 			m_lstMatch.ClientToScreen(&pt);
 			UINT cmd = menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RETURNCMD, pt.x, pt.y, m_hWnd);
 			DoMatchListMenuCommand(cmd, index);
@@ -131,7 +137,7 @@ LRESULT DanLueDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
 }
 
 void DanLueDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
-	if (cmd == 100 || cmd == 101) {
+	if (cmd >= 100) {
 		CStringATL strID;
 		m_lstMatch.GetItemText(index, 0, strID);
 		auto& iter = m_JCMatchItems.begin();
@@ -141,10 +147,28 @@ void DanLueDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 				for (auto& sub : m_CurrentMatchItem->subjects) {
 					sub.checked = false;
 				}
-				if (cmd == 101) {
-					int hand = iter->second->hand;
+				int hand = iter->second->hand;
+				if (cmd == 101 || cmd == 102 || cmd == 103) {
 					for (auto& sub : m_CurrentMatchItem->subjects) {
-						if (sub.getPan(hand) > 0) {
+						int pan = sub.getPan(hand);
+						if (cmd == 101 && pan > 0) {
+							sub.checked = true;
+						} else if (cmd == 102 && (pan == 1 || pan == 2)) {
+							sub.checked = true;
+						} else if (cmd == 103 && (pan == 3 || pan == 4)) {
+							sub.checked = true;
+						}
+					}
+					DoRefreshMatchListResults();
+				}
+				else if (cmd == 104 || cmd == 105 || cmd == 106) {
+					for (auto& sub : m_CurrentMatchItem->subjects) {
+						int pan = sub.getPan(hand);
+						if (cmd == 104 && pan < 0) {
+							sub.checked = true;
+						} else if (cmd == 105 && (pan == -1)) {
+							sub.checked = true;
+						} else if (cmd == 106 && (pan == -2)) {
 							sub.checked = true;
 						}
 					}
@@ -153,6 +177,7 @@ void DanLueDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 					m_lstMatch.SetItemText(index, 6, "");
 				}
 				m_stBetArea.Invalidate();
+				break;
 			}
 		}
 	}
@@ -181,33 +206,6 @@ LRESULT DanLueDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 	ShowWindow(SW_HIDE);
 	return 1L;
 }
-/*
-LRESULT DanLueDialog::OnAddRecord(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-	CStringATL strLuaFile;
-	CStlString strScript, reason;
-	strLuaFile.Format(_T("%s\\%s.lua"), m_strWorkDir, m_strQH);
-	if (!PathFileExists(strLuaFile)) {
-		MessageBox("Lua脚本文件读取失败 0！", "错误", MB_ICONERROR | MB_OK);
-		return 1L;
-	}
-	if (!Global::ReadFileData((LPCTSTR)strLuaFile, strScript) || strScript.empty()) {
-		MessageBox("Lua脚本文件读取失败 1！", "错误", MB_ICONERROR | MB_OK);
-		return 1L;
-	}
-	DanLueEngine engine(strScript);
-	if (engine.CalculateAllResult(reason)) {
-		strLuaFile.Format(_T("【%s】计算完成， 共有【%u】注结果， 是否保存？"), m_strQH, engine.GetResult().size());
-		if (MessageBox(strLuaFile, "完成", MB_ICONQUESTION | MB_YESNO) == IDYES) {
-			DoSaveResult(engine);
-		}
-	} else {
-		strLuaFile.Format(_T("【%s】计算失败！"), m_strQH);
-		MessageBox(strLuaFile, "错误", MB_ICONERROR | MB_OK);
-	}
-	return 1L;
-}
-*/
-
 
 LRESULT DanLueDialog::OnLoginIn(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	doLogin();
