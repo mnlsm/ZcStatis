@@ -2,6 +2,7 @@
 *.d
 *.htm
 *.html
+*.log
 
 # Compiled Object files
 *.slo
