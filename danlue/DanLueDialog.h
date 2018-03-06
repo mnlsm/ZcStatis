@@ -13,7 +13,7 @@ private:
 	DanLueDialog();
 	static DanLueDialog sInst;
 public:
-	static void PopUp();
+	static void PopUp(const std::shared_ptr<SQLite::Database>& db);
 	static void Destroy();
 
 public:
@@ -59,6 +59,8 @@ public:
 		COMMAND_ID_HANDLER(IDC_BUCLEARALL, OnClearAll)
 		COMMAND_ID_HANDLER(IDC_BUREFRESH, OnRefresh)
 		COMMAND_ID_HANDLER(IDC_COPY_CHOICES, OnCopyChoices)
+		COMMAND_ID_HANDLER(IDC_BUBIFEN, OnRefreshBiFen)
+		
 
 
 		CHAIN_MSG_MAP(CAxDialogImpl<DanLueDialog>)
@@ -83,8 +85,6 @@ public:
 	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnAsyncDispatch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
-	
-
 	LRESULT OnListLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	//LRESULT OnListLButtonDbclk(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -99,6 +99,10 @@ public:
 	LRESULT OnClearAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnRefreshBiFen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+
+	
+
 
 	LRESULT OnBetAreaLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnBetAreaEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -125,11 +129,7 @@ private:
 
 	CContainedWindowT<CStatic> m_stSep1;
 	CContainedWindowT<CStatic> m_stSep2;
-
 	CContainedWindowT<CStatic> m_stResult;
-
-
-	
 
 	CContainedWindowT<CButton> m_buLogin;
 	CContainedWindowT<CButton> m_buLogoff;
@@ -182,6 +182,10 @@ private:
 	int doHeMaiImpl(const CStlStrxyArray& records, const CStlStrArray& matchIDs, bool last);
 	void OnHeMaiReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
+	int doBiFen();
+	void OnBiFenReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+
+
 private:
 	std::string m_LoginToken;
 	std::string m_NickName;
@@ -204,6 +208,7 @@ private:
 		std::string start_time;
 		std::string last_buy_time;
 		int64 hand;
+		std::string result;
 
 		struct Subject {
 			int64 tid;
@@ -217,13 +222,15 @@ private:
 			//std::string oddsStr();
 		};
 		std::vector<Subject> subjects;
-		
 		Subject* get_subject(int tid, int betCode);
 	};
 	std::multimap<std::string, std::shared_ptr<JCMatchItem>> m_JCMatchItems;
 	std::shared_ptr<JCMatchItem> m_CurrentMatchItem;
-
 	JCMatchItem::Subject* get_subjects(const std::string& id, int tid, int code);
+
+	BOOL GetItemFromDB(const std::string& id, JCMatchItem& item);
+	BOOL InsertItemToDB(const JCMatchItem& item);
+	BOOL UpdateItemResultToDB(const std::string& id, const std::string& result);
 
 private:
 	struct DrawBetItem {
@@ -237,6 +244,9 @@ private:
 	DrawBetItem m_BQCDrawBetItems[9];
 	DrawBetItem m_BFDrawBetItems[31];
 	bool m_FirstDrawBetArea;
+
+private:
+	std::shared_ptr<SQLite::Database> m_pDatabase;
 
 private:
 	std::shared_ptr<DanLueEngine> m_Engine;

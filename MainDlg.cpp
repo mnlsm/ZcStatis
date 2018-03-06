@@ -118,7 +118,7 @@ LRESULT CMainDlg::OnRefresh(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 }
 
 LRESULT CMainDlg::OnDanLue(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	DanLueDialog::PopUp();
+	DanLueDialog::PopUp(this->m_pDatabase);
 	return 1L;
 }
 

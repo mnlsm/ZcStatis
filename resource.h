@@ -106,6 +106,8 @@
 #define IDC_BUUPLOAD                    1122
 #define IDC_COPY_CHOICES                1123
 #define IDC_OPEN_SCRIPT                 1124
+#define IDC_BUKAIJIANG                  1124
+#define IDC_BUBIFEN                     1124
 #define IDC_STMATCHONE1                 8001
 #define IDC_STMATCHONE2                 8002
 #define IDC_STMATCHONE3                 8003

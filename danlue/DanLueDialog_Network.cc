@@ -79,6 +79,7 @@ static const std::string JCMATCHLIST_REQ_PREFIX = "jcmatchlist_req_prefix";
 #define  JCMATCHLIST_REQ_PREFIX "jcmatchlist_req_prefix"
 #define  HEMAI_REQ_PREFIX "hemai_req_prefix"
 #define  HEMAI_REQ_PREFIX_FINISH "hemai_req_prefix_finish"
+#define  BIFEN_REQ_PREFIX "bifen_req_prefix"
 
 struct ResHeader {
 	ResHeader() {
@@ -129,9 +130,9 @@ void DanLueDialog::OnHttpReturn(const CHttpRequestPtr& request, const CHttpRespo
 	else if (request->request_id.find(HEMAI_REQ_PREFIX) == 0) {
 		OnHeMaiReturn(request, response);
 	}
-	
-	
-
+	else if (request->request_id.find(BIFEN_REQ_PREFIX) == 0) {
+		OnBiFenReturn(request, response);
+	}
 
 }
 
@@ -515,6 +516,14 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 		}
 	}
 	if (!temp.empty()) {
+		for (auto& iter : temp) {
+			JCMatchItem item;
+			if (GetItemFromDB(iter.second->id, item)) {
+				*iter.second = item;
+			} else {
+				InsertItemToDB(*iter.second);
+			}
+		}
 		m_JCMatchItems.swap(temp);
 	}
 	ReloadMatchListData();
@@ -546,6 +555,7 @@ int DanLueDialog::doHeMai() {
 		}
 		start += records.size();
 	} while (!last);
+	return 0;
 }
 
 int DanLueDialog::doHeMaiImpl(const CStlStrxyArray& records, const CStlStrArray& matchIDs, bool last) {
@@ -662,8 +672,139 @@ void DanLueDialog::OnHeMaiReturn(const CHttpRequestPtr& request, const CHttpResp
 	}
 }
 
+void static getBiFenDateInfo(CStringATL& beginDay, CStringATL& endDay, CStringATL& beginWeekDay) {
+	SYSTEMTIME time = { 0 }, time_prev = { 0 };
+	FILETIME ftime;
+	GetLocalTime(&time);
+	time.wHour = 0;
+	time.wMinute = 0;
+	time.wSecond = 0;
+	time.wMilliseconds = 0;
+	SystemTimeToFileTime(&time, &ftime);
+	LARGE_INTEGER li = { 0 };
+	li.HighPart = ftime.dwHighDateTime;
+	li.LowPart = ftime.dwLowDateTime;
+	li.QuadPart -= 24l * 3600l * 1000l;
+	ftime.dwHighDateTime = li.HighPart;
+	ftime.dwLowDateTime = li.LowPart;
+	FileTimeToSystemTime(&ftime, &time_prev);
+	beginDay.Format("%04d-%02d-%02d", time_prev.wYear, time_prev.wMonth, time_prev.wDay);
+	endDay.Format("%04d-%02d-%02d", time.wYear, time.wMonth, time.wDay);
+	if (time_prev.wDayOfWeek == 0) {
+		beginWeekDay = "周日";
+	} else if (time_prev.wDayOfWeek == 1) {
+		beginWeekDay = "周一";
+	}
+	else if (time_prev.wDayOfWeek == 2) {
+		beginWeekDay = "周二";
+	}
+	else if (time_prev.wDayOfWeek == 3) {
+		beginWeekDay = "周三";
+	}
+	else if (time_prev.wDayOfWeek == 4) {
+		beginWeekDay = "周四";
+	}
+	else if (time_prev.wDayOfWeek == 5) {
+		beginWeekDay = "周五";
+	}
+	else if (time_prev.wDayOfWeek == 6) {
+		beginWeekDay = "周六";
+	}
+}
 
+int DanLueDialog::doBiFen() {
+	CStringATL beginDay, endDay, beginWeekDay;
+	getBiFenDateInfo(beginDay, endDay, beginWeekDay);
+	CStringATL url;
+	url.Format("http://www.okooo.com/jingcai/kaijiang/?LotteryType=SportteryWDL&StartDate=%s&EndDate=%s", 
+		beginDay, endDay);
+	std::string request_id = BIFEN_REQ_PREFIX;
+	CHttpRequestPtr request = CreateGetRequest((LPCSTR)url, request_id);
+	httpMgr_->DoHttpCommandRequest(request);
+	return 0;
+}
 
+void DanLueDialog::OnBiFenReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
+	const CStringATL strRowBegin = "<tr align=\"center\" class=\"WhiteBg BlackWords trClass\">\r\n";
+	const CStringATL strRowBegin1 = "<tr align=\"center\" class=\"ContentLight BlackWords trClass\">\r\n";
+
+	const CStringATL strRowEnd = "</tr>";
+	const CStringATL strColBegin = "<td>";
+	const CStringATL strColBegin1 = "<td class=\"border2\">";
+	const CStringATL strColBegin2 = "<td class=\"noborder\">";
+	const CStringATL strColEnd = "</td>";
+	if (response->httperror == talk_base::HE_NONE) {
+		std::map<CStringATL, CStringATL> mapBiFen;
+		CStringATL beginDay, endDay, beginWeekDay;
+		getBiFenDateInfo(beginDay, endDay, beginWeekDay);
+		CStringATL html = response->response_content.c_str();
+		int nFindRow = html.Find(strRowBegin);
+		int nFindRow1 = html.Find(strRowBegin1);
+		if (nFindRow1 >= 0 && nFindRow > nFindRow1) {
+			nFindRow = nFindRow1;
+		}
+		while (nFindRow >= 0) {
+			int nFindRowEnd = html.Find(strRowEnd, nFindRow + 1);
+			if (nFindRowEnd == -1) {
+				break;
+			}
+			int nRowStart = nFindRow + strRowBegin.GetLength();
+			if (nFindRow == nFindRow1) {
+				nRowStart = nFindRow + strRowBegin1.GetLength();
+			}
+			CStringATL strRow = html.Mid(nRowStart, nFindRowEnd - nRowStart);
+			CStlStrArray arrCols;
+			Global::DepartString((LPCSTR)strRow, "\r\n", arrCols);
+			CStringATL id, data;
+			for (int i = 0; i < arrCols.size(); i++) {
+				auto& col = arrCols[i];
+				Global::TrimBlank(col);
+				if (i == 0) {
+					id = col.c_str();
+					id.Replace(strColBegin, "");
+					id.Replace(strColBegin2, "");
+					id.Replace(strColEnd, "");
+					if (id.Find(beginWeekDay) != 0) {
+						id.Empty();
+						break;
+					}
+					id.Replace(beginWeekDay, beginDay);
+					id.Replace("-", "");
+
+				} else if (i == 6 || i == 7) {
+					CStringATL temp;
+					temp = col.c_str();
+					temp.Replace(strColBegin, "");
+					temp.Replace(strColBegin1, "");
+					temp.Replace(strColEnd, "");
+					temp.Replace("-", ":");
+					if (temp.GetLength() <= 1) {
+						data.Empty();
+						break;
+					}
+					if (data.IsEmpty()) {
+						data = temp;
+					} else {
+						data = data + "|" + temp;
+					}
+				}
+			}
+			if (!id.IsEmpty() && !data.IsEmpty()) {
+				mapBiFen[id] = data;
+			}
+			nFindRow = html.Find(strRowBegin, nFindRowEnd + 1);
+			nFindRow1 = html.Find(strRowBegin1, nFindRowEnd + 1);
+			if (nFindRow1 >= 0 && nFindRow > nFindRow1) {
+				nFindRow = nFindRow1;
+			}
+		}
+		for (const auto& bf : mapBiFen) {
+			UpdateItemResultToDB((LPCSTR)bf.first, (LPCSTR)bf.second);
+		}
+
+	}
+	return;
+}
 
 void DanLueDialog::JCMatchItem::Subject::calcTip(int hand) {
 	CStringATL temp;
@@ -908,8 +1049,6 @@ DanLueDialog::JCMatchItem::Subject* DanLueDialog::JCMatchItem::get_subject(int t
 	return result;
 }
 
-
-
 DanLueDialog::JCMatchItem::Subject* DanLueDialog::get_subjects(const std::string& id, int tid, int code) {
 	for (const auto& item : m_JCMatchItems) {
 		if (item.second->id == id) {
@@ -927,7 +1066,7 @@ DanLueDialog::JCMatchItem::Subject* DanLueDialog::get_subjects(const std::string
 
 
 
-
+//http://www.okooo.com/jingcai/kaijiang/?LotteryType=SportteryWDL&StartDate=2018-03-05&EndDate=2018-03-06
 
 
 

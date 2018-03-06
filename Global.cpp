@@ -15,7 +15,12 @@ CStlString Global::GetAppPath() {
 
 
 void Global::TrimString(CStlString& str, TCHAR a) {
-    CStlString::size_type pos = str.find_first_not_of(a);
+	CStringATL temp = str.c_str();
+	temp.Trim(a);
+	str = temp;
+	return;
+	/*
+	CStlString::size_type pos = str.find_first_not_of(a);
     if(pos == CStlString::npos) {
         return;
     }
@@ -24,6 +29,7 @@ void Global::TrimString(CStlString& str, TCHAR a) {
         str = str.substr(pos, pos2 - pos + 1);
     }
     str = str.substr(pos);
+	*/
 }
 
 void Global::TrimBlank(CStlString& str) {

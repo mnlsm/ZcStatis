@@ -7,8 +7,9 @@ static const CStlString LUA_FILTER_NAME = _T("½Å±¾ÎÄ¼þ(*.lua)");
 static const CStlString LUA_FILTER = _T("*.lua");
 
 DanLueDialog DanLueDialog::sInst;
-void DanLueDialog::PopUp() {
+void DanLueDialog::PopUp(const std::shared_ptr<SQLite::Database>& db) {
 	if (!sInst.IsWindow()) {
+		sInst.m_pDatabase = db;
 		sInst.Create(::GetDesktopWindow());
 	}
 	if (sInst.IsWindow()) {
@@ -22,7 +23,6 @@ void DanLueDialog::Destroy() {
 		sInst.DestroyWindow();
 	}
 }
-
 
 DanLueDialog::DanLueDialog() : 
 	m_Engine((DanLueEngine*)NULL),
@@ -371,6 +371,11 @@ LRESULT DanLueDialog::OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
 	return 1L;
 }
 
+LRESULT DanLueDialog::OnRefreshBiFen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	doBiFen();
+	return 1L;
+}
+
 
 
 void DanLueDialog::InitControls() {
@@ -536,8 +541,6 @@ void DanLueDialog::ReloadMatchListData() {
 	m_stBetArea.Invalidate();
 }
 
-
-
 void DanLueDialog::CreateWorkDir() {
 	CStringATL strPath(Global::GetAppPath().c_str());
 	m_strRootDir = strPath + _T("JC");
@@ -548,4 +551,91 @@ void DanLueDialog::CreateWorkDir() {
 	m_strWorkDir = strPath;
 }
 
+BOOL DanLueDialog::GetItemFromDB(const std::string& id, JCMatchItem& item) {
+	item.id = "";
+	item.subjects.clear();
+	CStringATL strSQL;
+	strSQL.Format(_T("SELECT ID, CATEGORY, DESCRIPTION, HAND, START_TIME, BUY_TIME, SUBJECTS, RESULT FROM JCZQ WHERE ID='%s'"), id.c_str());
+	SQLite::Statement sm(*m_pDatabase, strSQL);
+	if (sm.executeStep()) {
+		item.id = sm.getColumn(0).getString().c_str();
+		item.match_category = sm.getColumn(1).getString();
+		item.descrition = sm.getColumn(2).getString();
+		item.hand = sm.getColumn(3).getInt64();
+		item.start_time = sm.getColumn(4).getString();
+		item.last_buy_time = sm.getColumn(5).getString();
+		std::string data = sm.getColumn(6).getString();
+		item.result = sm.getColumn(7).getString();
+		CStlStrArray arrBetItems;
+		Global::DepartString(data, "|", arrBetItems);
+		for (auto& bet : arrBetItems) {
+			CStlStrArray arrBetInfos;
+			Global::DepartString(bet, ";", arrBetInfos);
+			if (arrBetInfos.size() != 3) return FALSE;
+			JCMatchItem::Subject sub;
+			sub.tid = atoi(arrBetInfos[0].c_str());
+			sub.betCode = atoi(arrBetInfos[1].c_str());
+			sub.odds = atof(arrBetInfos[2].c_str());
+			sub.calcTip(item.hand);
+			item.subjects.push_back(sub);
+		}
+		return TRUE;
+	}
+	return FALSE;
+}
+
+BOOL DanLueDialog::InsertItemToDB(const JCMatchItem& item) {
+	CStringATL strSQL = _T("DELETE FROM JCZQ WHERE ID=?");
+	if (TRUE) {
+		SQLite::Statement sm(*m_pDatabase, strSQL);
+		sm.bind(1, item.id);
+		if (sm.exec() > 0) {
+		}
+	}
+	strSQL = _T("INSERT INTO JCZQ (ID, CATEGORY, DESCRIPTION, HAND, START_TIME, BUY_TIME, SUBJECTS) VALUES(?,?,?,?,?,?,?)");
+	if (TRUE) {
+		SQLite::Statement sm(*m_pDatabase, strSQL);
+		sm.bindNoCopy(1, item.id);
+		sm.bind(2, item.match_category);
+		sm.bind(3, item.descrition);
+		sm.bind(4, item.hand);
+		sm.bindNoCopy(5, item.start_time);
+		sm.bindNoCopy(6, item.last_buy_time);
+		std::string data;
+		for (auto& bet : item.subjects) {
+			CStringATL betInfo;
+			if (data.empty()) {
+				betInfo.Format("%d;%d;%.2f", (int)bet.tid, (int)bet.betCode, bet.odds);
+			} else {
+				betInfo.Format("|%d;%d;%.2f", (int)bet.tid, (int)bet.betCode, bet.odds);
+			}
+			data += betInfo;
+		}
+		sm.bindNoCopy(7, data);
+		if (sm.exec() > 0) {
+		}
+	}
+	return TRUE;
+}
+
+BOOL DanLueDialog::UpdateItemResultToDB(const std::string& id, const std::string& result) {
+	CStringATL strSQL;
+	strSQL.Format(_T("SELECT ID FROM JCZQ WHERE ID='%s'"), id.c_str());
+	if (TRUE) {
+		SQLite::Statement sm(*m_pDatabase, strSQL);
+		if (!sm.executeStep()) {
+			return FALSE;
+		}
+	}
+	strSQL = _T("UPDATE JCZQ SET RESULT=? WHERE ID=?");
+	if (TRUE) {
+		SQLite::Statement sm(*m_pDatabase, strSQL);
+		sm.bind(1, result);
+		sm.bind(2, id);
+		if (sm.exec()) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
 
