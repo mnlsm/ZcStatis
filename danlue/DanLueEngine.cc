@@ -487,5 +487,5 @@ void DanLueEngine::getResults(int start, int max_count,
 		}
 		records.push_back(vecRecord);
 	}
-	last = (i < m_vecResults.size());
+	last = (i >= m_vecResults.size());
 }

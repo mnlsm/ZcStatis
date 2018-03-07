@@ -607,22 +607,23 @@ int DanLueDialog::doHeMaiImpl_FuShi(const CStlStrxyArray& records, const CStlStr
 	root["token"] = m_LoginToken;
 	root["uploadstate"] = "0";
 	root["userId"] = 0;
-	temp.Format("%dc1", matchIDs.size() + vecFixedSources.size() + 1);
+	temp.Format("%dc1", matchIDs.size() + vecFixedSources.size());
 	root["passtype"] = (LPCSTR)temp;//todo
 
 	strRecords.Empty();
 	for (const auto& record : records) {
 		//const auto& record = records[i];
-		CStlString item, itemFixed;
+		CStlString item;
 		for (int i = 0; i < record.size(); i++) {
 			const auto& code = record[i];
 			const auto& match = matchIDs[i];
 			if (!item.empty()) {
 				item += "|";
 			}
-			item = match + ":" + code + ":" + "0";
+			item = item + match + ":" + code + ":" + "0";
 		}
 		for (const auto& fixed : vecFixedSources) {
+			CStlString itemFixed;
 			for (const auto& code : fixed.bets) {
 				if (itemFixed.empty()) {
 					itemFixed = CStlString("|") + fixed.id + ":" + code.betCode();
