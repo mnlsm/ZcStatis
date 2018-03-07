@@ -286,8 +286,8 @@ LRESULT DanLueDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHa
 		int lIndex = m_lstResult.InsertItem(index++, strResult);
 		for (const auto& item : r) {
 			bouns = bouns * item.bet.odds;
-			char sz[32] = { '\0' };
-			sprintf(sz, "%d-%d(%.2f)", item.bet.tid, item.bet.code, item.bet.odds);
+			char sz[64] = { '\0' };
+			sprintf(sz, "[%s]%d-%d(%.2f)", item.id.c_str(), item.bet.tid, item.bet.code, item.bet.odds);
 			if (!strCodes.IsEmpty()) {
 				strCodes += " ,";
 			}
@@ -376,8 +376,6 @@ LRESULT DanLueDialog::OnRefreshBiFen(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 	return 1L;
 }
 
-
-
 void DanLueDialog::InitControls() {
 	mMatchListFont.CreateFont(/*32*/-14, // nHeight 
 		0, // nWidth 
@@ -456,8 +454,6 @@ void DanLueDialog::InitControls() {
 	rcItem.right = rcc.right;
 	m_stSep2.SetWindowPos(NULL, rcItem.left, rcItem.top, rcItem.Width(), rcItem.Height(), SWP_NOZORDER);
 
-
-
 	//insert header;
 	int colIndex = 0;
 	m_lstMatch.InsertColumn(colIndex, "ÆÚºÅ", LVCFMT_CENTER, 100);    //70
@@ -491,8 +487,6 @@ void DanLueDialog::InitControls() {
 	//m_lstMatch.setItemH
 	//set sort type
 }
-
-
 
 void DanLueDialog::ReloadMatchListData() {
 	m_lstMatch.DeleteAllItems();
@@ -577,6 +571,7 @@ BOOL DanLueDialog::GetItemFromDB(const std::string& id, JCMatchItem& item) {
 			sub.betCode = atoi(arrBetInfos[1].c_str());
 			sub.odds = atof(arrBetInfos[2].c_str());
 			sub.calcTip(item.hand);
+			sub.checked = false;
 			item.subjects.push_back(sub);
 		}
 		return TRUE;

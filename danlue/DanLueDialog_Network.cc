@@ -8,11 +8,11 @@ LRESULT DanLueDialog::OnAsyncDispatch(UINT msg, WPARAM wParam, LPARAM lParam, BO
 }
 
 bool DanLueDialog::AddOneAsyncFunc(talk_base::IAsyncFuncCall *pAsyncFunc) {
-	bool bRet = PostMessage(DanLueDialog::WM_ASYNC_DISPATCH, 0, 0);
+	BOOL bRet = PostMessage(DanLueDialog::WM_ASYNC_DISPATCH, 0, 0);
 	if (bRet) {
 		bRet = CAsyncFuncDispatcher::AddOneAsyncFunc(pAsyncFunc);
 	}
-	return bRet;
+	return (bRet == TRUE);
 }
 
 void DanLueDialog::OnHttpReturnGlobal(const CHttpRequestPtr& request, 
@@ -538,32 +538,131 @@ int DanLueDialog::doHeMai() {
 	CStlStrArray matchIDs;
 	CStlStrxyArray records;
 	int start = 0, max_count = 100;
-	m_Engine->getResults(start, max_count, records, last);
-	m_Engine->getMatchIds(matchIDs);
+	m_Engine->getResults(start, max_count, matchIDs, records, last);
 	if (records.empty() || matchIDs.empty()) {
 		MessageBoxA("请先计算结果", "错误", MB_OK | MB_ICONERROR);
 		return -1;
 	}
 	CStlString saveFile = m_Engine->getScriptFile() + ".dat";
 	DeleteFile(saveFile.c_str());
+
+	const std::vector<JcBetItemSource>& vecFixedSources = m_Engine->GetFixedSources();
 	do {
 		last = false;
 		records.clear();
-		m_Engine->getResults(start, max_count, records, last);
-		if (doHeMaiImpl(records, matchIDs, last) != 0) {
-			return -1;
+		matchIDs.clear();
+		m_Engine->getResults(start, max_count, matchIDs, records, last);
+		if (vecFixedSources.empty()) {
+			if (doHeMaiImpl(records, matchIDs, last) != 0) {
+				return -1;
+			}
+		} else {
+			if (doHeMaiImpl_FuShi(records, matchIDs, vecFixedSources, last) != 0) {
+				return -1;
+			}
 		}
 		start += records.size();
 	} while (!last);
 	return 0;
 }
 
-int DanLueDialog::doHeMaiImpl(const CStlStrxyArray& records, const CStlStrArray& matchIDs, bool last) {
 
-//	CStlStrxyArray records;
-//	CStlStrArray matchIDs;
-	//m_Engine->getResults(records);
-//	m_Engine->getMatchIds(matchIDs);
+int DanLueDialog::doHeMaiImpl_FuShi(const CStlStrxyArray& records, const CStlStrArray& matchIDs, 
+		const std::vector<JcBetItemSource>& vecFixedSources, bool last) {
+	if (records.empty() || matchIDs.empty()) {
+		return 0;
+	}
+	std::string title = m_Engine->getFanAnTitle();
+	if (title.empty()) {
+		title = Global::toUTF8("竞彩合买");
+	}
+	std::string desc = m_Engine->getFanAnDesc();
+	if (desc.empty()) {
+		desc = Global::toUTF8("信就有");
+	}
+	int nFixedRecordCount = 1;
+	for (const auto& fixed : vecFixedSources) {
+		nFixedRecordCount = nFixedRecordCount * fixed.bets.size();
+	}
+	//int nTotalRecordCount
+
+	CStringATL temp, strRecords;
+	Json::Value root;
+	Json::FastWriter writer;
+	root["title"] = title;
+	root["hemaidesc"] = desc;
+	root["baodinumber"] = 0;
+	root["brokerage"] = 0;
+
+	root["eventId"] = 227;
+	root["hemaitype"] = "5";
+	root["isshow"] = 1;
+	root["licenseId"] = "227";
+	root["mult"] = 1;
+	root["odds"] = "";
+	root["programDesc"] = "227";
+	root["hemaisuccessdesc"] = ""; //todo
+	root["hemaipaydesc"] = ""; //todo
+	root["sid"] = m_UserID;
+	root["token"] = m_LoginToken;
+	root["uploadstate"] = "0";
+	root["userId"] = 0;
+	temp.Format("%dc1", matchIDs.size() + vecFixedSources.size() + 1);
+	root["passtype"] = (LPCSTR)temp;//todo
+
+	strRecords.Empty();
+	for (const auto& record : records) {
+		//const auto& record = records[i];
+		CStlString item, itemFixed;
+		for (int i = 0; i < record.size(); i++) {
+			const auto& code = record[i];
+			const auto& match = matchIDs[i];
+			if (!item.empty()) {
+				item += "|";
+			}
+			item = match + ":" + code + ":" + "0";
+		}
+		for (const auto& fixed : vecFixedSources) {
+			for (const auto& code : fixed.bets) {
+				if (itemFixed.empty()) {
+					itemFixed = CStlString("|") + fixed.id + ":" + code.betCode();
+				} else {
+					itemFixed = itemFixed + "," + code.betCode();
+				}
+			}
+			if (!itemFixed.empty()) {
+				itemFixed = itemFixed + ":" + "0";
+				item += itemFixed;
+			}
+		}
+		int buynumber = (nFixedRecordCount * 2 / 100);
+		buynumber = buynumber + 1;
+		root["buynumber"] = buynumber; 
+		root["detail"] = item.c_str();
+		root["money"] = 2 * nFixedRecordCount;
+		root["sharenumber"] = nFixedRecordCount; 
+		std::string json = writer.write(root);
+		std::string url = "http://appserver.87.cn/lottery/hemai";
+		std::string request_id = HEMAI_REQ_PREFIX;
+		if (last) {
+			request_id = HEMAI_REQ_PREFIX_FINISH;
+		}
+		CHttpRequestPtr request = CreatePostRequest(url, request_id, json);
+		request->request_headers.insert(std::make_pair("Content-Type", "application/x-www-form-urlencoded"));
+		httpMgr_->DoHttpCommandRequest(request);
+		strRecords += item.c_str();
+		strRecords += "\r\n";
+	}
+	//备份上传 结果
+	strRecords.Replace("|", "\r\n");
+	strRecords += "\r\n";
+	CStlString saveFile = m_Engine->getScriptFile() + ".dat";
+	Global::SaveFileData(saveFile, (LPCSTR)strRecords, TRUE);
+	return 0L;
+}
+
+
+int DanLueDialog::doHeMaiImpl(const CStlStrxyArray& records, const CStlStrArray& matchIDs, bool last) {
 	if (records.empty() || matchIDs.empty()) {
 		return 0;
 	}

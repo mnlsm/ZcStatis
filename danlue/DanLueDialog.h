@@ -180,6 +180,8 @@ private:
 
 	int doHeMai();
 	int doHeMaiImpl(const CStlStrxyArray& records, const CStlStrArray& matchIDs, bool last);
+	int doHeMaiImpl_FuShi(const CStlStrxyArray& records, const CStlStrArray& matchIDs, 
+		const std::vector<JcBetItemSource>& vecFixedSources, bool last);
 	void OnHeMaiReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
 	int doBiFen();

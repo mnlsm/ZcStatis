@@ -2,11 +2,77 @@
 #include "DanLueEngine.h"
 #include "Global.h"
 
+std::string BetStruct::betCode() const {
+	std::string ret;
+	char cb[20] = { '\0' };
+	sprintf(cb, "%d-%d", (int)tid, (int)code);
+	ret = cb;
+	return ret;
+}
+
+int BetStruct::getPan() const {
+	int ret = 0;
+	if (odds == 0.00) {
+		return 0;
+	}
+	if (tid == 6) {
+		if (hand < 0) {
+			if (code == 3) {
+				ret = -1;
+			}
+			else if (code == 1) {
+				ret = 3;
+			}
+			else if (code == 0) {
+				ret = 4;
+			}
+		}
+		else {
+			if (code == 3) {
+				ret = 4;
+			}
+			else if (code == 1) {
+				ret = 3;
+			}
+			else if (code == 0) {
+				ret = -1;
+			}
+		}
+
+	}
+	else if (tid == 1) {
+		if (hand < 0) {
+			if (code == 3) {
+				ret = 1;
+			}
+			else if (code == 1) {
+				ret = 2;
+			}
+			else if (code == 0) {
+				ret = -2;
+			}
+		}
+		else {
+			if (code == 3) {
+				ret = -2;
+			}
+			else if (code == 1) {
+				ret = 2;
+			}
+			else if (code == 0) {
+				ret = 1;
+			}
+		}
+	}
+	return ret;
+}
+
+
 static const std::string dbgview_prefix = "";
 static const std::string dbgview_exception = "jc_exception: ";
 
 
-static int lua_table_getdouble(lua_State *L, const char *key, double defval) {
+static double lua_table_getdouble(lua_State *L, const char *key, double defval) {
 	double result = defval;
 	lua_pushstring(L, key);
 	lua_gettable(L, -2);
@@ -62,6 +128,7 @@ static std::string lua_table_getfield(lua_State *L, int index, const char *defva
 DanLueEngine::DanLueEngine(const CStlString& script, const char* logf) {
 	m_strScript = script;
 	m_dMinBonus = 0.0;
+	m_nMatchBetsLose = 0;
 #ifndef _DEBUG
 	if (logf != NULL) {
 		m_strLogPath = logf;
@@ -106,6 +173,7 @@ int __cdecl DanLueEngine::LUA_IsFilterTJ(lua_State *L) {
 
 
 BOOL DanLueEngine::CalculateAllResult(CStlString& failed_reason) {
+	m_vecFixedSources.clear();
 	m_vecSources.clear();
 	m_vecResults.clear();
 	BOOL result = CalculateAllResultImpl(failed_reason);
@@ -123,13 +191,16 @@ void DanLueEngine::SetSources(const std::vector<JcBetItemSource>& items) {
 	m_vecSources = items;
 }
 
+void DanLueEngine::SetFixedSources(const std::vector<JcBetItemSource>& items) {
+	m_vecFixedSources = items;
+}
+
 BOOL DanLueEngine::CalculateAllResultImpl(CStlString& failed_reason) {
 	BOOL result = FALSE;
 	lua_State* lua_state = InitLua(failed_reason);
 	if (lua_state == NULL) {
 		return FALSE;
 	}
-	
 	double bonus = 0.0;
 	TBetResult allResult, tempAll;
 	if (GeneratorBets(m_vecSources, allResult)) {
@@ -145,13 +216,56 @@ BOOL DanLueEngine::CalculateAllResultImpl(CStlString& failed_reason) {
 		}
 		m_vecResults.swap(tempAll);
 		result = TRUE;
-	}
-	else {
+	} else {
 		failed_reason = "GeneratorCodes failed!";
 	}
-
 	TermLua(lua_state);
 	return result;
+}
+
+static void getJcBetItemSource(lua_State* L, const char*key, std::vector<JcBetItemSource>& sources) {
+	sources.clear();
+	CStlStrArray arrMatchBets;
+	//"kMatchBets"
+	if (lua_getglobal(L, key) == LUA_TTABLE) {
+		int index = 0;
+		while (++index > 0) {
+			std::string codes = lua_table_getfield(L, index, "none");
+			if (codes == "none") {
+				break;
+			}
+			arrMatchBets.push_back(codes);
+		}
+		lua_pop(L, 1);
+	}
+	if (arrMatchBets.empty()) {
+		return ;
+	}
+	for (const auto& match : arrMatchBets) {
+		CStlStrArray arrParts;
+		Global::DepartString(match, ";", arrParts);
+		if (arrParts.size() < 3) {
+			return;
+		}
+		JcBetItemSource jbs;
+		jbs.id = arrParts[0];
+		int hand = atoi(arrParts[1].c_str());
+		for (int i = 2; i < arrParts.size(); i++) {
+			CStlStrArray arrBets;
+			Global::DepartString(arrParts[i], ",", arrBets);
+			if (arrBets.size() != 3) {
+				return ;
+			}
+			BetStruct bs;
+			bs.hand = hand;
+			bs.tid = atoi(arrBets[0].c_str());
+			bs.code = atoi(arrBets[1].c_str());
+			bs.odds = atof(arrBets[2].c_str());
+			jbs.bets.push_back(bs);
+		}
+		sources.push_back(jbs);
+	}
+
 }
 
 lua_State* DanLueEngine::InitLua(CStlString& failed_reason) {
@@ -181,6 +295,11 @@ lua_State* DanLueEngine::InitLua(CStlString& failed_reason) {
 		return NULL;
 	}
 
+	if (lua_getglobal(L, "kMatchBetsLose") == LUA_TNUMBER) {
+		m_nMatchBetsLose = lua_tointeger(L, -1);
+		lua_pop(L, 1);
+	}
+
 	if (lua_getglobal(L, "kMinBonus") == LUA_TNUMBER) {
 		m_dMinBonus = lua_tonumber(L, -1);
 		lua_pop(L, 1);
@@ -195,59 +314,19 @@ lua_State* DanLueEngine::InitLua(CStlString& failed_reason) {
 		m_strFanAnDesc = lua_tostring(L, -1);
 		lua_pop(L, 1);
 	}
-
-	CStlStrArray arrMatchBets;
-	if (lua_getglobal(L, "kMatchBets") == LUA_TTABLE) {
-		int index = 0;
-		while (++index > 0) {
-			std::string codes = lua_table_getfield(L, index, "none");
-			if (codes == "none") {
-				break;
-			}
-			arrMatchBets.push_back(codes);
-		}
-		lua_pop(L, 1);
-	}
-	if (arrMatchBets.empty()) {
-		failed_reason = _T("no match scores!!");
-		lua_close(L);
-		return NULL;
-	}
 	std::vector<JcBetItemSource> sources;
-	for (const auto& match : arrMatchBets) {
-		CStlStrArray arrParts;
-		Global::DepartString(match, ";", arrParts);
-		if (arrParts.size() < 3) {
-			failed_reason = _T("match score format error 1!");
-			lua_close(L);
-			return NULL;
-		}
-		JcBetItemSource jbs;
-		jbs.id = arrParts[0];
-		int hand = atoi(arrParts[1].c_str());
-		for (int i = 2; i < arrParts.size(); i++) {
-			CStlStrArray arrBets;
-			Global::DepartString(arrParts[i], ",", arrBets);
-			if (arrBets.size() != 3) {
-				failed_reason = _T("match score format error 2!");
-				lua_close(L);
-				return NULL;
-			}
-			BetStruct bs;
-			bs.hand = hand;
-			bs.tid = atoi(arrBets[0].c_str());
-			bs.code = atoi(arrBets[1].c_str());
-			bs.odds = atof(arrBets[2].c_str());
-			jbs.bets.push_back(bs);
-		}
-		sources.push_back(jbs);
-	}
+	getJcBetItemSource(L, "kMatchBets", sources);
 	if (sources.empty()) {
 		failed_reason = _T("no match scores 1 !!");
 		lua_close(L);
 		return NULL;
 	}
 	SetSources(sources);
+	if (m_nMatchBetsLose + 1 >= sources.size()) {
+		m_nMatchBetsLose = 0;
+	}
+	getJcBetItemSource(L, "kMatchBetsFixed", sources);
+	SetFixedSources(sources);
 
 	return L;
 }
@@ -258,23 +337,27 @@ void DanLueEngine::TermLua(lua_State* L) {
 	}
 }
 
-static void gatherMatchBets(const std::vector<JcBetItemSource>& split_scores,
+void DanLueEngine::gatherMatchBets(const std::vector<JcBetItemSource>& split_scores,
 	int index, std::vector<JcBetItem>& record, TBetResult& result) {
-	if (record.size() == split_scores.size()) {
+	int maxMatchCount = split_scores.size() - m_nMatchBetsLose;
+	if (record.size() >= maxMatchCount) {
 		result.push_back(record);
-	}
-	if (index >= split_scores.size()) {
 		return;
 	}
-	const auto& codes = split_scores[index];
-	{
-		for (const auto& code : codes.bets) {
-			JcBetItem item;
-			item.id = codes.id;
-			item.bet = code;
-			record.push_back(item);
-			gatherMatchBets(split_scores, index + 1, record, result);
-			record.pop_back();
+	//if (index >= split_scores.size()) {
+	//	return;
+	//}
+	for (int i = index; i < split_scores.size(); i++) {
+		const auto& codes = split_scores[i];
+		{
+			for (const auto& code : codes.bets) {
+				JcBetItem item;
+				item.id = codes.id;
+				item.bet = code;
+				record.push_back(item);
+				gatherMatchBets(split_scores, i + 1, record, result);
+				record.pop_back();
+			}
 		}
 	}
 }
@@ -369,16 +452,18 @@ void DanLueEngine::push_scriptfunc_params(lua_State *L, const std::vector<JcBetI
 
 }
 
-void DanLueEngine::getMatchIds(CStlStrArray& matchIds) {
+void DanLueEngine::getAllMatchIds(CStlStrArray& matchIds) {
 	matchIds.clear();
 	for (const auto& v : m_vecSources) {
 		matchIds.push_back(v.id);
 	}
 }
 
-void DanLueEngine::getResults(int start, int max_count, CStlStrxyArray& records, bool& last) {
+void DanLueEngine::getResults(int start, int max_count, 
+		CStlStrArray& matchIds, CStlStrxyArray& records, bool& last) {
 	last = false;
 	records.clear();
+	matchIds.clear();
 	if (start >= m_vecResults.size()) {
 		return;
 	}
@@ -388,11 +473,17 @@ void DanLueEngine::getResults(int start, int max_count, CStlStrxyArray& records,
 			break;
 		}
 		const auto& record = m_vecResults.at(i);
-		CStlStrArray vecRecord;
+		CStlStrArray vecRecord, vecMatchIds;
 		for (const auto& item : record) {
 			char bet[32] = {'\0'};
 			sprintf(bet, "%d-%d", item.bet.tid, item.bet.code);
+			vecMatchIds.push_back(item.id);
 			vecRecord.push_back(bet);
+		}
+		if (matchIds.empty()) {
+			matchIds = vecMatchIds;
+		} else if (matchIds != vecMatchIds) {
+			break;
 		}
 		records.push_back(vecRecord);
 	}
