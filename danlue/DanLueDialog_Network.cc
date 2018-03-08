@@ -429,7 +429,7 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 														int64 cID = -1;
 														GetStringFromJsonObject(playValue, "hn2", &v1);
 														GetStringFromJsonObject(playValue, "an2", &v2);
-														ji->descrition = v1 + "   VS   " + v2;
+														ji->descrition = Global::toFixedLengthString(v1, 18, true) + "   VS   " + Global::toFixedLengthString(v2, 18, false);
 														ji->descrition = Global::fromUTF8(ji->descrition);
 														GetStringFromJsonObject(playValue, "lid", &v1);
 														ji->match_category = Global::fromUTF8(v1);
@@ -1157,6 +1157,18 @@ DanLueDialog::JCMatchItem::Subject* DanLueDialog::get_subjects(const std::string
 	}
 	return NULL;
 }
+
+DanLueDialog::JCMatchItem::Subject* DanLueDialog::JCMatchItem::get_subject(int tid, const char* tip) {
+	DanLueDialog::JCMatchItem::Subject* result = NULL;
+	for (auto& subject : subjects) {
+		if (subject.tid == tid && subject.tip.compare(tip) == 0) {
+			result = &subject;
+			break;
+		}
+	}
+	return result;
+}
+
 
 
 

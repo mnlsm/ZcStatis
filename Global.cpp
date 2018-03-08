@@ -173,13 +173,21 @@ BOOL Global::SaveFileData(const CStlString& filename, const std::string& filedat
 	return TRUE;
 }
 
-CStlString Global::toFixedLengthString(const CStlString& src, size_t fixed_length) {
+
+CStlString Global::toFixedLengthString(const CStlString& src, size_t fixed_length, bool right_align) {
+	if (src.size() >= fixed_length) {
+		return src;
+	}
 	_ASSERT(fixed_length < 4096);
 	CStlString result(fixed_length, _T(' '));
-	memcpy((char*)result.data(), src.data(), 
-		src.length() < result.length() ? src.length() : result.length());
+	if (!right_align) {
+		memcpy((char*)result.data(), src.data(), src.length());
+	} else {
+		memcpy((char*)result.data() + result.size() - src.length(), src.data(), src.length());
+	}
 	return result;
 }
+
 
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -250,3 +258,4 @@ std::string Global::SysWideToMultiByte(const wchar_t* wide, UINT code_page)
 	mb.erase(strlen(mb.c_str()));
 	return mb;
 }
+

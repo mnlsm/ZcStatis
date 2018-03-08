@@ -182,22 +182,7 @@ private:
 	int doBiFen();
 	void OnBiFenReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
-
-private:
-	std::string m_LoginToken;
-	std::string m_NickName;
-	std::string m_UserID;
-	std::string m_RcUserID;
-	std::string m_RcUserToken;
-	int64 m_slwId;
-	struct LotteryCategories {
-		std::string description;
-		std::string id;
-		std::string label;
-		std::string path;
-	};
-	std::vector<LotteryCategories> m_LotteryCategories;
-
+public:
 	struct JCMatchItem {
 		std::string id;
 		std::string match_category;
@@ -220,7 +205,25 @@ private:
 		};
 		std::vector<Subject> subjects;
 		Subject* get_subject(int tid, int betCode);
+		Subject* get_subject(int tid, const char* tip);
 	};
+
+private:
+	std::string m_LoginToken;
+	std::string m_NickName;
+	std::string m_UserID;
+	std::string m_RcUserID;
+	std::string m_RcUserToken;
+	int64 m_slwId;
+	struct LotteryCategories {
+		std::string description;
+		std::string id;
+		std::string label;
+		std::string path;
+	};
+	std::vector<LotteryCategories> m_LotteryCategories;
+
+
 	std::multimap<std::string, std::shared_ptr<JCMatchItem>> m_JCMatchItems;
 	std::shared_ptr<JCMatchItem> m_CurrentMatchItem;
 	JCMatchItem::Subject* get_subjects(const std::string& id, int tid, int code);

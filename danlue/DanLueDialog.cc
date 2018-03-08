@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "DanLueDialog.h"
 #include "Global.h"
-//"http://appserver.87.cn/jc/match"
+#include "DanLueStat.h"
 
 static const CStlString LUA_FILTER_NAME = _T("½Å±¾ÎÄ¼þ(*.lua)");
 static const CStlString LUA_FILTER = _T("*.lua");
@@ -374,6 +374,8 @@ LRESULT DanLueDialog::OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
 
 LRESULT DanLueDialog::OnRefreshBiFen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	//doBiFen();
+	DanLueStat dlg(m_pDatabase);
+	dlg.DoModal();
 	return 1L;
 }
 

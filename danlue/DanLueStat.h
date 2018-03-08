@@ -27,9 +27,10 @@ public:
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+		COMMAND_ID_HANDLER(IDC_BUSEARCH, OnQuery)
+		COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
 		CHAIN_MSG_MAP(CAxDialogImpl<DanLueStat>)
 		REFLECT_NOTIFICATIONS()
-
 		ALT_MSG_MAP(100) //normal
 	END_MSG_MAP()
 
@@ -37,11 +38,13 @@ public:
 	LRESULT OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
-	LRESULT OnSearch(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-
+	LRESULT OnQuery(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 private:
 	void InitControls();
+	void InitData();
+	void DoQuery();
 
 private:
 	CSortListViewCtrlEx<DanLueStat> m_lstResult;
