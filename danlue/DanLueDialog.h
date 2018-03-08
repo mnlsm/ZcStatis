@@ -61,8 +61,6 @@ public:
 		COMMAND_ID_HANDLER(IDC_COPY_CHOICES, OnCopyChoices)
 		COMMAND_ID_HANDLER(IDC_BUBIFEN, OnRefreshBiFen)
 		
-
-
 		CHAIN_MSG_MAP(CAxDialogImpl<DanLueDialog>)
 		REFLECT_NOTIFICATIONS()
 		ALT_MSG_MAP(1)
@@ -100,9 +98,6 @@ public:
 	LRESULT OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnRefreshBiFen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-
-	
-
 
 	LRESULT OnBetAreaLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnBetAreaEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

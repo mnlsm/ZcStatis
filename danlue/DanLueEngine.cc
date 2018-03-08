@@ -183,6 +183,7 @@ BOOL DanLueEngine::CalculateAllResult(CStlString& failed_reason) {
 		}
 		CStlString trace = dbgview_exception + failed_reason;
 		OutputDebugStringA(trace.c_str());
+		Global::SaveFileData(m_strLogPath.c_str(), trace, TRUE);
 	}
 	return result;
 }
@@ -204,8 +205,6 @@ BOOL DanLueEngine::CalculateAllResultImpl(CStlString& failed_reason) {
 	double bonus = 0.0;
 	TBetResult allResult, tempAll;
 	if (GeneratorBets(m_vecSources, allResult)) {
-		//std::stable_sort(allResult.begin(), allResult.end());
-		//allResult.erase(std::unique(allResult.begin(), allResult.end()), allResult.end());
 		for (const auto& record : allResult) {
 			if (IsAValidRecordImpl(record, lua_state, bonus, &failed_reason)) {
 				tempAll.push_back(record);
@@ -269,7 +268,6 @@ static void getJcBetItemSource(lua_State* L, const char*key, std::vector<JcBetIt
 }
 
 lua_State* DanLueEngine::InitLua(CStlString& failed_reason) {
-	//m_strMatchScores.clear();
 	lua_State* L = luaL_newstate();
 	if (L == NULL) {
 		failed_reason = _T("luaL_newstate failed!");
@@ -339,14 +337,15 @@ void DanLueEngine::TermLua(lua_State* L) {
 
 void DanLueEngine::gatherMatchBets(const std::vector<JcBetItemSource>& split_scores,
 	int index, std::vector<JcBetItem>& record, TBetResult& result) {
-	int maxMatchCount = split_scores.size() - m_nMatchBetsLose;
-	if (record.size() >= maxMatchCount) {
+	int matchCount = split_scores.size() - m_nMatchBetsLose;
+	int leftCount = split_scores.size() - index;
+	if (record.size() >= matchCount) {
 		result.push_back(record);
 		return;
 	}
-	//if (index >= split_scores.size()) {
-	//	return;
-	//}
+	if (leftCount + record.size() < matchCount) {
+		return;
+	}
 	for (int i = index; i < split_scores.size(); i++) {
 		const auto& codes = split_scores[i];
 		{

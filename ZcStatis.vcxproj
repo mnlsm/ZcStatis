@@ -132,6 +132,7 @@
     <ClCompile Include="danlue\DanLueDialog_Network.cc" />
     <ClCompile Include="danlue\DanLueEngine.cc" />
     <ClCompile Include="danlue\DanLueEngine_BetArea.cpp" />
+    <ClCompile Include="danlue\DanLueStat.cc" />
     <ClCompile Include="DialogDB.cpp" />
     <ClCompile Include="DialogGambel.cpp" />
     <ClCompile Include="DialogTZ.cpp" />
@@ -333,6 +334,7 @@
     <ClInclude Include="CRCUtility.h" />
     <ClInclude Include="danlue\DanLueDialog.h" />
     <ClInclude Include="danlue\DanLueEngine.h" />
+    <ClInclude Include="danlue\DanLueStat.h" />
     <ClInclude Include="DialogDB.h" />
     <ClInclude Include="DialogGambel.h" />
     <ClInclude Include="DialogTZ.h" />

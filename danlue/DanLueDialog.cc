@@ -273,9 +273,10 @@ LRESULT DanLueDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHa
 			}
 		}
 	}
+	m_lstResult.DeleteAllItems();
+	m_stResult.SetWindowText("结果列表:");
 	DoRefreshMatchListResults();
 	m_stBetArea.Invalidate();
-	m_lstResult.DeleteAllItems();
 
 	int index = 0;
 	for (const auto& r : m_Engine->getResult()) {
@@ -372,7 +373,7 @@ LRESULT DanLueDialog::OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
 }
 
 LRESULT DanLueDialog::OnRefreshBiFen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-	doBiFen();
+	//doBiFen();
 	return 1L;
 }
 
@@ -412,7 +413,6 @@ void DanLueDialog::InitControls() {
 	HICON hIconBig = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR | LR_SHARED, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON));
 	SetIcon(hIconBig, TRUE);
 	HICON hIconSmall = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR | LR_SHARED, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CXSMICON));
-	SetIcon(hIconBig, TRUE);
 	SetIcon(hIconSmall, FALSE);
 
 	DWORD dwStyleEx = LVS_EX_GRIDLINES | LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP

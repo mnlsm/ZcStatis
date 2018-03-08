@@ -243,6 +243,9 @@
     <ClCompile Include="danlue\DanLueEngine_BetArea.cpp">
       <Filter>danlue</Filter>
     </ClCompile>
+    <ClCompile Include="danlue\DanLueStat.cc">
+      <Filter>danlue</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua\lctype.h">
@@ -426,6 +429,9 @@
       <Filter>danlue</Filter>
     </ClInclude>
     <ClInclude Include="danlue\DanLueEngine.h">
+      <Filter>danlue</Filter>
+    </ClInclude>
+    <ClInclude Include="danlue\DanLueStat.h">
       <Filter>danlue</Filter>
     </ClInclude>
   </ItemGroup>

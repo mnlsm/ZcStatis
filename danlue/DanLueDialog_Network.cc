@@ -526,6 +526,7 @@ void DanLueDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 		}
 		m_JCMatchItems.swap(temp);
 	}
+	doBiFen();
 	ReloadMatchListData();
 }
 
@@ -901,7 +902,6 @@ void DanLueDialog::OnBiFenReturn(const CHttpRequestPtr& request, const CHttpResp
 		for (const auto& bf : mapBiFen) {
 			UpdateItemResultToDB((LPCSTR)bf.first, (LPCSTR)bf.second);
 		}
-
 	}
 	return;
 }

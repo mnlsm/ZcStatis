@@ -15,6 +15,7 @@
 #define IDD_DIALOG_GAMBEL               205
 #define IDD_JQC                         206
 #define IDD_DANLUE_LOGIN                207
+#define IDD_DANLUE_STAT                 208
 #define IDR_MENU1                       214
 #define IDC_STATIS_LIST                 1001
 #define IDC_LIST_QH                     1002
@@ -59,6 +60,11 @@
 #define IDC_SEP1                        1033
 #define IDC_SEP2                        1034
 #define IDC_STATIC_RESULT               1035
+#define IDC_COMBO_IDS                   1038
+#define IDC_CHECK_IDS                   1040
+#define IDC_EDIT_CAT                    1041
+#define IDC_CHECK_CATS                  1042
+#define IDC_CHECK_CAT                   1042
 #define IDC_CORESULT1                   1078
 #define IDC_CORESULT2                   1079
 #define IDC_CORESULT3                   1080
@@ -106,7 +112,6 @@
 #define IDC_BUUPLOAD                    1122
 #define IDC_COPY_CHOICES                1123
 #define IDC_OPEN_SCRIPT                 1124
-#define IDC_BUKAIJIANG                  1124
 #define IDC_BUBIFEN                     1124
 #define IDC_STMATCHONE1                 8001
 #define IDC_STMATCHONE2                 8002
@@ -132,9 +137,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        206
+#define _APS_NEXT_RESOURCE_VALUE        209
 #define _APS_NEXT_COMMAND_VALUE         32777
-#define _APS_NEXT_CONTROL_VALUE         1036
+#define _APS_NEXT_CONTROL_VALUE         1042
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif
