@@ -29,8 +29,12 @@ public:
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
 		COMMAND_ID_HANDLER(IDC_BUSEARCH, OnQuery)
 		COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
+		COMMAND_HANDLER(IDC_COMBO_IDS, CBN_SELCHANGE, OnSelIdsChanged)
+
 		CHAIN_MSG_MAP(CAxDialogImpl<DanLueStat>)
 		REFLECT_NOTIFICATIONS()
+		ALT_MSG_MAP(1)
+		MESSAGE_HANDLER(WM_RBUTTONDOWN, OnListRButtonDown)
 		ALT_MSG_MAP(100) //normal
 	END_MSG_MAP()
 
@@ -39,12 +43,17 @@ public:
 	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 	LRESULT OnQuery(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnSelIdsChanged(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+
+	LRESULT OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 private:
 	void InitControls();
 	void InitData();
 	void DoQuery();
+
+	void DoMatchListMenuCommand(UINT cmd, UINT index);
 
 private:
 	CSortListViewCtrlEx<DanLueStat> m_lstResult;

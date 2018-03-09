@@ -308,8 +308,51 @@ void DanLueStat::DoQuery() {
 
 			}
 		}
-
 	}
-
-
+	m_lstResult.DoSortItems(0, false);
 }
+
+LRESULT DanLueStat::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	LRESULT lRet = m_lstResult.DefWindowProc(uMsg, wParam, lParam);
+	CPoint pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+	LVHITTESTINFO lvh = { 0 };
+	lvh.pt = pt;
+	UINT index = m_lstResult.HitTest(&lvh);
+	if (index != -1) {
+		CMenu menu;
+		if (menu.CreatePopupMenu()) {
+			menu.AppendMenu(MF_STRING, 100, _T("¸´ÖÆÈüÊÂ"));
+//			menu.AppendMenu(MF_SEPARATOR);
+			m_lstResult.ClientToScreen(&pt);
+			UINT cmd = menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RETURNCMD, pt.x, pt.y, m_hWnd);
+			DoMatchListMenuCommand(cmd, index);
+			menu.DestroyMenu();
+		}
+	}
+	return lRet;
+}
+
+LRESULT DanLueStat::OnSelIdsChanged(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	return 1L;
+}
+
+void DanLueStat::DoMatchListMenuCommand(UINT cmd, UINT index) {
+	if (cmd == 100) {
+		CStringATL strCat;
+		m_lstResult.GetItemText(index, 1, strCat);
+		if (OpenClipboard()) {
+			EmptyClipboard();
+			if (!strCat.IsEmpty()) {
+				HGLOBAL hGlobal = GlobalAlloc(GHND, strCat.GetLength() + 1);
+				if (hGlobal != NULL) {
+					char* buffer = (char*)GlobalLock(hGlobal);
+					memcpy(buffer, strCat, strCat.GetLength());
+					GlobalUnlock(hGlobal);
+					SetClipboardData(CF_TEXT, hGlobal);
+				}
+			}
+			CloseClipboard();
+		}
+	}
+}
+
