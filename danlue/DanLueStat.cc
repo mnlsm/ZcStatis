@@ -5,7 +5,7 @@
 
 
 DanLueStat::DanLueStat(const std::shared_ptr<SQLite::Database>& db) : 
-	m_lstResult(this, 100),
+	m_lstResult(this, 1),
 	m_buSearch(this, 100),
 	m_coIDs(this, 100),
 	m_chkIDs(this, 100),
@@ -143,13 +143,16 @@ void DanLueStat::DoQuery() {
 		m_edCat.GetWindowText(strCat);
 	}
 	if (!strCat.IsEmpty()) {
-		strSQL += _T(" CATEGORY=?");
+		strSQL += _T(" AND CATEGORY=?");
 	}
 	strSQL += _T(" ORDER BY ID ASC");
 	if (strDate.IsEmpty() && strCat.IsEmpty()) {
 		return;
 	}
 	SQLite::Statement sm(*m_pDatabase, strSQL);
+	if (!strCat.IsEmpty()) {
+		sm.bind(1, strCat);
+	}
 	int iIndex = 0;
 	while (sm.executeStep()) {
 		int colIndex = 0;
@@ -230,18 +233,18 @@ void DanLueStat::DoQuery() {
 				}
 				if (full_home > full_away) {
 					bqcTip += "胜";
-					if (full_away > 2) {
+					if (full_away > 2 && full_home > 2) {
 						bfTip = "胜其它";
 					}
 				}
 				else if (full_home == full_away) {
 					bqcTip += "平";
-					if (full_away > 2) {
+					if (full_away > 2 && full_home > 2) {
 						bfTip = "平其它";
 					}
 				}
 				else {
-					if (full_away > 2) {
+					if (full_away > 2 && full_home > 2) {
 						bfTip = "负其它";
 					}
 					bqcTip += "负";

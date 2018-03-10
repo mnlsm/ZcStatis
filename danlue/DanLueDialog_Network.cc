@@ -786,7 +786,7 @@ void static getBiFenDateInfo(CStringATL& beginDay, CStringATL& endDay, CStringAT
 	li.HighPart = ftime.dwHighDateTime;
 	li.LowPart = ftime.dwLowDateTime;
 	__int64 PER_SECOND = 1l * 10l * 1000l * 1000l;
-	li.QuadPart -= 2l * 24l * 3600l * PER_SECOND;
+	li.QuadPart -= 1l * 24l * 3600l * PER_SECOND;
 	ftime.dwHighDateTime = li.HighPart;
 	ftime.dwLowDateTime = li.LowPart;
 	FileTimeToSystemTime(&ftime, &time_prev);
