@@ -65,6 +65,10 @@
 #define IDC_EDIT_CAT                    1041
 #define IDC_CHECK_CATS                  1042
 #define IDC_CHECK_CAT                   1042
+#define IDC_CHECK_CAT3                  1043
+#define IDC_EDIT_CAT3                   1044
+#define IDC_EDIT_TEAM                   1044
+#define IDC_CHECK_CAT4                  1045
 #define IDC_CORESULT1                   1078
 #define IDC_CORESULT2                   1079
 #define IDC_CORESULT3                   1080

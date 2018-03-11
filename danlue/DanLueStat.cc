@@ -10,8 +10,10 @@ DanLueStat::DanLueStat(const std::shared_ptr<SQLite::Database>& db) :
 	m_coIDs(this, 100),
 	m_chkIDs(this, 100),
 	m_edCat(this, 100),
-	m_chkCat(this, 100)
-{
+	m_chkCat(this, 100),
+	m_edTeam(this, 100),
+	m_chkTeamHome(this, 100),
+	m_chkTeamAway(this, 100) {
 	m_pDatabase = db;
 }
 
@@ -72,36 +74,54 @@ void DanLueStat::InitControls() {
 	int colIndex = 0;
 	m_lstResult.InsertColumn(colIndex, "期号", LVCFMT_CENTER, 100);    //70
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
-	m_lstResult.InsertColumn(colIndex, "赛事", LVCFMT_CENTER, 100);    //90
+	m_lstResult.InsertColumn(colIndex, "赛事", LVCFMT_CENTER, 120);    //90
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
-	m_lstResult.InsertColumn(colIndex, "对阵", LVCFMT_CENTER, 180);    //90
+	m_lstResult.InsertColumn(colIndex, "对阵", LVCFMT_CENTER, 250);    //90
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-	m_lstResult.InsertColumn(colIndex, "比赛时间", LVCFMT_CENTER, 110);    //90
+	m_lstResult.InsertColumn(colIndex, "比赛时间", LVCFMT_CENTER, 150);    //90
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-	m_lstResult.InsertColumn(colIndex, "胜平负", LVCFMT_CENTER, 120);    //90
+	m_lstResult.InsertColumn(colIndex, "胜平负", LVCFMT_CENTER, 150);    //90
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-	m_lstResult.InsertColumn(colIndex, "让胜平负", LVCFMT_CENTER, 120);  //90
+	m_lstResult.InsertColumn(colIndex, "让胜平负", LVCFMT_CENTER, 150);  //90
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-	m_lstResult.InsertColumn(colIndex, "比分结果", LVCFMT_CENTER, 100);  //90
+	m_lstResult.InsertColumn(colIndex, "比分结果", LVCFMT_CENTER, 80);  //90
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-	m_lstResult.InsertColumn(colIndex, "胜平负结果", LVCFMT_CENTER, 80);    //90
+	m_lstResult.InsertColumn(colIndex, "胜平负结果", LVCFMT_CENTER, 100);    //90
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-	m_lstResult.InsertColumn(colIndex, "让胜平负结果", LVCFMT_CENTER, 80);    //90
+	m_lstResult.InsertColumn(colIndex, "让胜平负结果", LVCFMT_CENTER, 110);    //90
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
-	m_lstResult.InsertColumn(colIndex, "盘路", LVCFMT_CENTER, 80);  //90
+	m_lstResult.InsertColumn(colIndex, "盘路", LVCFMT_CENTER, 60);  //90
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
 	m_lstResult.InsertColumn(colIndex, "进球总数", LVCFMT_CENTER, 80);  //90
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
-	m_lstResult.InsertColumn(colIndex, "半全场", LVCFMT_CENTER, 80);  //90
+	m_lstResult.InsertColumn(colIndex, "半全场", LVCFMT_CENTER, 120);  //90
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
-	m_lstResult.InsertColumn(colIndex, "比分", LVCFMT_CENTER, 80);  //90
+	m_lstResult.InsertColumn(colIndex, "比分", LVCFMT_CENTER, 110);  //90
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
+
+	mResultListFont.CreateFont(/*32*/-14, // nHeight 
+		0, // nWidth 
+		0, // nEscapement 
+		0, // nOrientation 
+		FW_NORMAL, // nWeight 
+		FALSE, // bItalic 
+		FALSE, // bUnderline 
+		0, // cStrikeOut 
+		DEFAULT_CHARSET, // nCharSet 
+		OUT_DEFAULT_PRECIS, // nOutPrecision 
+		CLIP_DEFAULT_PRECIS, // nClipPrecision 
+		DEFAULT_QUALITY, // nQuality 
+		DEFAULT_PITCH | FF_SWISS, // nPitchAndFamily 
+		_T("微软雅黑"));
+	m_lstResult.SetFont(mResultListFont);
 
 	m_chkIDs.SetCheck(BST_CHECKED);
 	m_chkCat.SetCheck(BST_UNCHECKED);
 }
 
 void DanLueStat::InitData() {
+	CStringATL beginDay, endDay, beginWeekDay;
+	Global::getBiFenDateInfo(beginDay, endDay, beginWeekDay);
 	CStringATL strSQL = (_T("SELECT ID FROM JCZQ WHERE ID LIKE ? ORDER BY ID DESC"));
 	std::set<CStringATL> ids;
 	if (TRUE) {
@@ -121,14 +141,21 @@ void DanLueStat::InitData() {
 		m_coIDs.AddString(id);
 	}
 	if (m_coIDs.GetCount() > 0) {
-		m_coIDs.SetCurSel(0);
+		beginDay.Replace(_T("-"), _T(""));
+		int sel = m_coIDs.FindString(-1, beginDay);
+		if (sel >= 0) {
+			m_coIDs.SetCurSel(sel);
+		} else {
+			m_coIDs.SetCurSel(0);
+		}
 	}
 	DoQuery();
+
 }
 
 void DanLueStat::DoQuery() {
 	m_lstResult.DeleteAllItems();
-	CStringATL strDate, strCat;
+	CStringATL strDate, strCat, strTeam;
 	if (m_chkIDs.GetCheck() == BST_CHECKED && m_coIDs.GetCurSel() >= 0) {
 		m_coIDs.GetLBText(m_coIDs.GetCurSel(), strDate);
 		strDate += "___";
@@ -142,17 +169,49 @@ void DanLueStat::DoQuery() {
 	if (m_chkCat.GetCheck() == BST_CHECKED) {
 		m_edCat.GetWindowText(strCat);
 	}
+	BOOL isFirstConn = (strSQL.Find("WHERE ") == -1);
 	if (!strCat.IsEmpty()) {
-		strSQL += _T(" AND CATEGORY=?");
+		if (isFirstConn) {
+			strSQL += _T(" CATEGORY=?");
+		} else {
+			strSQL += _T(" AND CATEGORY=?");
+		}
 	}
+	if (m_chkTeamHome.GetCheck() == BST_CHECKED || m_chkTeamAway.GetCheck() == BST_CHECKED) {
+		m_edTeam.GetWindowText(strTeam);
+	}
+	CStringATL dim = _T("   VS   ");
+	if (!strTeam.IsEmpty()) {
+		isFirstConn = (strSQL.Find("WHERE ") == -1);
+		if (isFirstConn) {
+			strSQL += _T(" DESCRIPTION LIKE ?");
+		} else {
+			strSQL += _T(" AND DESCRIPTION LIKE ?");
+		}
+		if (m_chkTeamHome.GetCheck() == BST_CHECKED && m_chkTeamAway.GetCheck() == BST_CHECKED) {
+			strTeam = strTeam;
+		} else if (m_chkTeamHome.GetCheck() == BST_CHECKED) {
+			strTeam = strTeam + dim;
+		} else if (m_chkTeamAway.GetCheck() == BST_CHECKED) {
+			strTeam = dim + strTeam;
+		}
+	}
+
+
 	strSQL += _T(" ORDER BY ID ASC");
-	if (strDate.IsEmpty() && strCat.IsEmpty()) {
+	if (strDate.IsEmpty() && strCat.IsEmpty() && strTeam.IsEmpty()) {
 		return;
 	}
 	SQLite::Statement sm(*m_pDatabase, strSQL);
 	if (!strCat.IsEmpty()) {
 		sm.bind(1, strCat);
+		if (!strTeam.IsEmpty()) {
+			sm.bind(2, strTeam);
+		}
+	} else if (!strTeam.IsEmpty()) {
+		sm.bind(1, CStringATL(_T("%")) + dim + CStringATL(_T("%")));
 	}
+
 	int iIndex = 0;
 	while (sm.executeStep()) {
 		int colIndex = 0;
@@ -160,6 +219,11 @@ void DanLueStat::DoQuery() {
 		item.id = sm.getColumn(0).getString().c_str();
 		item.match_category = sm.getColumn(1).getString();
 		item.descrition = sm.getColumn(2).getString();
+		if (!strTeam.IsEmpty()) {
+			if (item.descrition.find(strTeam) == CStlString::npos) {
+				continue;
+			}
+		}
 		item.hand = sm.getColumn(3).getInt64();
 		item.start_time = sm.getColumn(4).getString();
 		item.last_buy_time = sm.getColumn(5).getString();
@@ -325,6 +389,8 @@ LRESULT DanLueStat::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, B
 		CMenu menu;
 		if (menu.CreatePopupMenu()) {
 			menu.AppendMenu(MF_STRING, 100, _T("复制赛事"));
+			menu.AppendMenu(MF_STRING, 101, _T("复制主队"));
+			menu.AppendMenu(MF_STRING, 102, _T("复制客队"));
 //			menu.AppendMenu(MF_SEPARATOR);
 			m_lstResult.ClientToScreen(&pt);
 			UINT cmd = menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RETURNCMD, pt.x, pt.y, m_hWnd);
@@ -350,6 +416,29 @@ void DanLueStat::DoMatchListMenuCommand(UINT cmd, UINT index) {
 				if (hGlobal != NULL) {
 					char* buffer = (char*)GlobalLock(hGlobal);
 					memcpy(buffer, strCat, strCat.GetLength());
+					GlobalUnlock(hGlobal);
+					SetClipboardData(CF_TEXT, hGlobal);
+				}
+			}
+			CloseClipboard();
+		}
+	} else if (cmd == 101 || cmd == 102) {
+		CStringATL strTeam;
+		m_lstResult.GetItemText(index, 2, strTeam);
+		CStringATL dim = _T("   VS   ");
+		CStringATL strHome;
+		strHome = strTeam.Left(strTeam.Find(dim));
+		strTeam.Replace(strHome, _T(""));
+		strTeam.Replace(dim, _T(""));
+		strTeam.Trim(); strHome.Trim();
+		CStringATL strCopy = (cmd == 101) ? strHome : strTeam;
+		if (OpenClipboard()) {
+			EmptyClipboard();
+			if (!strCopy.IsEmpty()) {
+				HGLOBAL hGlobal = GlobalAlloc(GHND, strCopy.GetLength() + 1);
+				if (hGlobal != NULL) {
+					char* buffer = (char*)GlobalLock(hGlobal);
+					memcpy(buffer, strCopy, strCopy.GetLength());
 					GlobalUnlock(hGlobal);
 					SetClipboardData(CF_TEXT, hGlobal);
 				}

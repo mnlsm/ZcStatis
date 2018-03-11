@@ -20,7 +20,10 @@ public:
 
 		DDX_CONTROL(IDC_EDIT_CAT, m_edCat)
 		DDX_CONTROL(IDC_CHECK_CAT, m_chkCat)
-		
+
+		DDX_CONTROL(IDC_EDIT_TEAM, m_edTeam)
+		DDX_CONTROL(IDC_CHECK_CAT3, m_chkTeamHome)
+		DDX_CONTROL(IDC_CHECK_CAT4, m_chkTeamAway)
 	END_DDX_MAP()
 
 	BEGIN_MSG_MAP(DanLueStat)
@@ -65,7 +68,11 @@ private:
 	CContainedWindowT<CEdit> m_edCat;
 	CContainedWindowT<CButton> m_chkCat;
 
+	CContainedWindowT<CEdit> m_edTeam;
+	CContainedWindowT<CButton> m_chkTeamHome;
+	CContainedWindowT<CButton> m_chkTeamAway;
 
+	CFont mResultListFont;
 private:
 	std::shared_ptr<SQLite::Database> m_pDatabase;
 

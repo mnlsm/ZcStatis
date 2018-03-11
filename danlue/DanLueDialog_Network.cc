@@ -773,50 +773,11 @@ void DanLueDialog::OnHeMaiReturn(const CHttpRequestPtr& request, const CHttpResp
 	}
 }
 
-void static getBiFenDateInfo(CStringATL& beginDay, CStringATL& endDay, CStringATL& beginWeekDay) {
-	SYSTEMTIME time = { 0 }, time_prev = { 0 };
-	FILETIME ftime;
-	GetLocalTime(&time);
-	time.wHour = 0;
-	time.wMinute = 0;
-	time.wSecond = 0;
-	time.wMilliseconds = 0;
-	SystemTimeToFileTime(&time, &ftime);
-	LARGE_INTEGER li = { 0 };
-	li.HighPart = ftime.dwHighDateTime;
-	li.LowPart = ftime.dwLowDateTime;
-	__int64 PER_SECOND = 1l * 10l * 1000l * 1000l;
-	li.QuadPart -= 1l * 24l * 3600l * PER_SECOND;
-	ftime.dwHighDateTime = li.HighPart;
-	ftime.dwLowDateTime = li.LowPart;
-	FileTimeToSystemTime(&ftime, &time_prev);
-	beginDay.Format("%04d-%02d-%02d", time_prev.wYear, time_prev.wMonth, time_prev.wDay);
-	endDay.Format("%04d-%02d-%02d", time.wYear, time.wMonth, time.wDay);
-	if (time_prev.wDayOfWeek == 0) {
-		beginWeekDay = "周日";
-	} else if (time_prev.wDayOfWeek == 1) {
-		beginWeekDay = "周一";
-	}
-	else if (time_prev.wDayOfWeek == 2) {
-		beginWeekDay = "周二";
-	}
-	else if (time_prev.wDayOfWeek == 3) {
-		beginWeekDay = "周三";
-	}
-	else if (time_prev.wDayOfWeek == 4) {
-		beginWeekDay = "周四";
-	}
-	else if (time_prev.wDayOfWeek == 5) {
-		beginWeekDay = "周五";
-	}
-	else if (time_prev.wDayOfWeek == 6) {
-		beginWeekDay = "周六";
-	}
-}
+
 
 int DanLueDialog::doBiFen() {
 	CStringATL beginDay, endDay, beginWeekDay;
-	getBiFenDateInfo(beginDay, endDay, beginWeekDay);
+	Global::getBiFenDateInfo(beginDay, endDay, beginWeekDay);
 	CStringATL url;
 	url.Format("http://www.okooo.com/jingcai/kaijiang/?LotteryType=SportteryWDL&StartDate=%s&EndDate=%s", 
 		beginDay, endDay);
@@ -838,7 +799,7 @@ void DanLueDialog::OnBiFenReturn(const CHttpRequestPtr& request, const CHttpResp
 	if (response->httperror == talk_base::HE_NONE) {
 		std::map<CStringATL, CStringATL> mapBiFen;
 		CStringATL beginDay, endDay, beginWeekDay;
-		getBiFenDateInfo(beginDay, endDay, beginWeekDay);
+		Global::getBiFenDateInfo(beginDay, endDay, beginWeekDay);
 		CStringATL html = response->response_content.c_str();
 		int nFindRow = html.Find(strRowBegin);
 		int nFindRow1 = html.Find(strRowBegin1);
