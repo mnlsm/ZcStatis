@@ -299,6 +299,8 @@ void DanLueStat::DoQuery() {
 					bqcTip += "胜";
 					if (full_away > 2 && full_home > 2) {
 						bfTip = "胜其它";
+					} else if (full_home > 5) {
+						bfTip = "胜其它";
 					}
 				}
 				else if (full_home == full_away) {
@@ -309,6 +311,8 @@ void DanLueStat::DoQuery() {
 				}
 				else {
 					if (full_away > 2 && full_home > 2) {
+						bfTip = "负其它";
+					} else if (full_away > 5) {
 						bfTip = "负其它";
 					}
 					bqcTip += "负";
