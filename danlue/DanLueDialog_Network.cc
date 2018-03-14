@@ -767,13 +767,11 @@ void DanLueDialog::OnHeMaiReturn(const CHttpRequestPtr& request, const CHttpResp
 			}
 		}
 	}
-	if (request->request_id == HEMAI_REQ_PREFIX_FINISH) {
+	if (request->request_id.find(HEMAI_REQ_PREFIX_FINISH) == 0) {
 		m_buUpload.EnableWindow(TRUE);
 		MessageBox(strMsg, "ÌבÊ¾", MB_ICONINFORMATION | MB_OK);
 	}
 }
-
-
 
 int DanLueDialog::doBiFen() {
 	CStringATL beginDay, endDay, beginWeekDay;
