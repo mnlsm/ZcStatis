@@ -208,8 +208,10 @@ BOOL DanLueEngine::CalculateAllResultImpl(CStlString& failed_reason) {
 		for (const auto& record : allResult) {
 			if (IsAValidRecordImpl(record, lua_state, bonus, &failed_reason)) {
 				tempAll.push_back(record);
-				if (bonus < m_dMinBonus) {
+				double multi_bonus = bonus;
+				while (multi_bonus < m_dMinBonus) {
 					tempAll.push_back(record);
+					multi_bonus += bonus;
 				}
 			}
 		}
