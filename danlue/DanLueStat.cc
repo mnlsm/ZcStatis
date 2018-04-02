@@ -126,9 +126,9 @@ void DanLueStat::InitData() {
 	std::set<CStringATL> ids;
 	if (TRUE) {
 		SYSTEMTIME st = { 0 };
-		GetLocalTime(&st);
 		CStringATL strParam, id;
-		strParam.Format("%04u%02u_____", st.wYear, st.wMonth);
+		GetLocalTime(&st);
+		strParam.Format("%04u_______", st.wYear);
 		SQLite::Statement sm(*m_pDatabase, strSQL);
 		sm.bind(1, strParam);
 		while (sm.executeStep()) {
