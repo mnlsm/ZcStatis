@@ -65,6 +65,7 @@
 #define IDC_EDIT_CAT                    1041
 #define IDC_CHECK_CATS                  1042
 #define IDC_CHECK_CAT                   1042
+#define IDC_CUSTOM1                     1042
 #define IDC_CHECK_CAT3                  1043
 #define IDC_EDIT_CAT3                   1044
 #define IDC_EDIT_TEAM                   1044
@@ -143,7 +144,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        209
 #define _APS_NEXT_COMMAND_VALUE         32777
-#define _APS_NEXT_CONTROL_VALUE         1042
+#define _APS_NEXT_CONTROL_VALUE         1043
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

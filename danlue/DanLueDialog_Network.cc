@@ -2,15 +2,23 @@
 #include "DanLueDialog.h"
 #include "Global.h"
 
+BOOL DanLueDialog::OnIdle() {
+	int async_count = GetAsyncFuncCount();
+	if (async_count > 0) {
+		PostMessage(DanLueDialog::WM_ASYNC_DISPATCH, 0, 0);
+	}
+	return FALSE;
+}
+
 LRESULT DanLueDialog::OnAsyncDispatch(UINT msg, WPARAM wParam, LPARAM lParam, BOOL &bHandled) {
 	DispathOneAsyncFunc();
 	return 1L;
 }
 
 bool DanLueDialog::AddOneAsyncFunc(talk_base::IAsyncFuncCall *pAsyncFunc) {
-	BOOL bRet = PostMessage(DanLueDialog::WM_ASYNC_DISPATCH, 0, 0);
+	BOOL bRet = CAsyncFuncDispatcher::AddOneAsyncFunc(pAsyncFunc);
 	if (bRet) {
-		bRet = CAsyncFuncDispatcher::AddOneAsyncFunc(pAsyncFunc);
+		bRet = PostMessage(DanLueDialog::WM_ASYNC_DISPATCH, 0, 0);
 	}
 	return (bRet == TRUE);
 }

@@ -6,6 +6,7 @@
 
 class DanLueDialog :
 	public CAxDialogImpl<DanLueDialog>,
+	public CIdleHandler,
 	public CAsyncFuncDispatcher,
 	public CWinDataExchange<DanLueDialog> {
 
@@ -18,6 +19,7 @@ public:
 
 public:
 	virtual bool AddOneAsyncFunc(talk_base::IAsyncFuncCall *pAsyncFunc);
+	virtual BOOL OnIdle();
 
 public:
 	enum { IDD = IDD_DANLUE_LOGIN, WM_ASYNC_DISPATCH = WM_APP + 0x360 };

@@ -54,6 +54,11 @@ DanLueDialog::DanLueDialog() :
 }
 
 LRESULT DanLueDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	
+	CMessageLoop* pLoop = _Module.GetMessageLoop();
+	ATLASSERT(pLoop != NULL);
+	pLoop->AddIdleHandler(this);
+
 	DoDataExchange(FALSE);
 
 	CRect rcDesktop;
@@ -71,6 +76,7 @@ LRESULT DanLueDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 }
 
 LRESULT DanLueDialog::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	_Module.GetMessageLoop()->RemoveIdleHandler(this);
 	LRESULT lRet = CAxDialogImpl<DanLueDialog>::OnDestroy(uMsg, wParam, lParam, bHandled);
 	//doLogOff();
 	return lRet;

@@ -12,6 +12,8 @@
 #include "JQC/JQCDialog.h"
 #include "danlue/DanLueDialog.h"
 #include <SQLiteCpp/SQLiteCpp.h>
+extern CMainDlg dlgMain;
+
 
 CMainDlg::CMainDlg() : m_lstStatis(this, 1) {
 }

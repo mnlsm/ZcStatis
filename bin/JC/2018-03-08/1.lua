@@ -5,11 +5,9 @@ local function trace(level, info)
 	end
 end
 
-
-
 kMinBonus = 0.0;
 kMatchTitle = "竞猜足球 合买";
-kMatchDesc = "7串1过滤";
+kMatchDesc = "过滤";
 kMatchBets = {
     "20180308001;-1;6,3,2.02",         --AC米兰   VS   阿森纳
     "20180308002;-2;6,3,1.15",         --马德里竞技   VS   莫斯科火车头
@@ -42,6 +40,18 @@ function GetMatchIdsCount(ids, codes)
 	end
 	return found_count;
 end 
+
+function GetCodeCount(codes, tid, code)
+	local found_count = 0;
+	for j = 1, #codes do
+		if(tid == codes[j].id and code == codes[j].code) then
+			found_count = found_count + 1;
+			break;
+		end
+	end
+	return found_count;
+end 
+
 
 function IsFilterLua(params)
 	local errorCount = 0;
