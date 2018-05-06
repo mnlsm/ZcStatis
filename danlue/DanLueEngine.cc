@@ -178,7 +178,7 @@ BOOL DanLueEngine::CalculateAllResult(CStlString& failed_reason) {
 	m_vecResults.clear();
 	BOOL result = CalculateAllResultImpl(failed_reason);
 	if (!result) {
-		if (!failed_reason.empty()) {
+		if (failed_reason.empty()) {
 			failed_reason = "unknow";
 		}
 		CStlString trace = dbgview_exception + failed_reason;

@@ -260,7 +260,7 @@ BOOL CHttpClientSession::Close()
 	{
 		CStringATL strLog;
 		strLog.Format(_T("m_strRequestURL = %s | m_emRequestMethod = %u") , m_strRequestURL , m_emRequestMethod);
-		ClientLogger::CommInfo(_T("wininet.http") , _T("") , strLog);
+//		ClientLogger::CommInfo(_T("wininet.http") , _T("") , strLog);
 	}
 #endif
 
