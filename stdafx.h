@@ -55,8 +55,8 @@ typedef ATL::CString CStringATL;
 #define TOTO_COUNT 14
 #define TOTO_MAXLOSE TOTO_COUNT - 1
 
-#include <hash_map>
-#include <hash_set>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "libjingleinc.h"
 

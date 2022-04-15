@@ -88,7 +88,7 @@ CHttpRequestPtr CHttpClientMgr::FindRequestCommand(const std::string &identity, 
 	if( TRUE )
 	{
 		CComCritSecLock< CComCriticalSection > guard( csObj_ );
-		stdext::hash_map< std::string, CHttpRequestPtr >::iterator iter = pend_requests_.find(identity);
+		std::unordered_map< std::string, CHttpRequestPtr >::iterator iter = pend_requests_.find(identity);
 		if( iter != pend_requests_.end() )
 		{
 			ptr = iter->second;

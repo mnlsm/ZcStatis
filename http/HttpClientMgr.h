@@ -58,8 +58,8 @@ private:
 
 private:
 	talk_base::Thread session_thread_; 
-	stdext::hash_map< std::string, CHttpRequestPtr > pend_requests_;
-	stdext::hash_map< std::string , BOOL > running_requests_;
+	std::unordered_map< std::string, CHttpRequestPtr > pend_requests_;
+	std::unordered_map< std::string , BOOL > running_requests_;
 
 	talk_base::Thread thread_pool_[THREADCOUNT];
 	DWORD pool_task_count_;

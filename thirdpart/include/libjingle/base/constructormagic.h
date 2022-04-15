@@ -27,7 +27,6 @@
 
 #ifndef TALK_BASE_CONSTRUCTORMAGIC_H_
 #define TALK_BASE_CONSTRUCTORMAGIC_H_
-#include "libjingle/base/basicdefs.h"
 
 #define DISALLOW_ASSIGN(TypeName) \
   void operator=(const TypeName&)

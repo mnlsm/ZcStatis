@@ -120,6 +120,7 @@ inline const wchar_t* strstr( const wchar_t* haystack, const wchar_t* needle )
     return wcsstr( haystack, needle );
 }
 #ifndef vsnprintf
+/*
 inline int vsnprintf( char* buf, size_t n, const char* fmt, va_list args )
 {
     return _vsnprintf( buf, n, fmt, args );
@@ -128,6 +129,7 @@ inline int vsnprintf( wchar_t* buf, size_t n, const wchar_t* fmt, va_list args )
 {
     return _vsnwprintf( buf, n, fmt, args );
 }
+*/
 #endif // !vsnprintf
 inline unsigned long strtoul( const wchar_t* snum, wchar_t** end, int base )
 {
@@ -314,7 +316,7 @@ inline size_t asccpyn( char* buffer, size_t buflen,
     return strcpyn( buffer, buflen, source, srclen );
 }
 
-#if defined(_MSC_VER)
+#ifdef WIN32
 
 typedef wchar_t( *CharacterTransformation )( wchar_t );
 inline wchar_t identity( wchar_t c )
@@ -392,13 +394,6 @@ bool ends_with( const char *s1, const char *s2 );
 
 // Remove leading and trailing whitespaces.
 std::string string_trim( const std::string& s );
-
-int64 currentTimeMillis();
-
-uint32 BigEndian32(uint32 val);
-
-uint16 BigEndian16(uint16 val);
-
 
 }  // namespace talk_base
 

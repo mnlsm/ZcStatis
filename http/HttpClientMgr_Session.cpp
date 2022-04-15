@@ -68,7 +68,7 @@ void CHttpClientMgr::AbortHttpRequest( const std::string &request_id ) {
 BOOL CHttpClientMgr::IsHttpRequestAborted( const std::string &request_id ) {
 	CComCritSecLock< CComCriticalSection > guard( csObj_ );
 	if( abortall_ ) return TRUE;
-	stdext::hash_map< std::string , BOOL >::iterator iter = running_requests_.find( request_id );
+	std::unordered_map< std::string , BOOL >::iterator iter = running_requests_.find( request_id );
 	if( iter != running_requests_.end() ) {
 		if( iter->second )
 			return TRUE;

@@ -274,9 +274,8 @@ private:
 // own the adapted stream.
 ///////////////////////////////////////////////////////////////////////////////
 
-class StreamAdapterInterface 
-	: public StreamInterface,
-      public sigslot::has_slots<>
+class StreamAdapterInterface : public StreamInterface,
+    public sigslot::has_slots<>
 {
 public:
     explicit StreamAdapterInterface( StreamInterface* stream, bool owned = true );

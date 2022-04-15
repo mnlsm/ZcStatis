@@ -216,15 +216,6 @@
     <ClCompile Include="JQC\JQCEngine.cc">
       <Filter>JQC</Filter>
     </ClCompile>
-    <ClCompile Include="http\HttpClientItem.cpp">
-      <Filter>http</Filter>
-    </ClCompile>
-    <ClCompile Include="http\HttpClientMgr.cpp">
-      <Filter>http</Filter>
-    </ClCompile>
-    <ClCompile Include="http\HttpClientMgr_Session.cpp">
-      <Filter>http</Filter>
-    </ClCompile>
     <ClCompile Include="ZlibStream.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -257,6 +248,15 @@
     </ClCompile>
     <ClCompile Include="wininet\HttpResponseHeaders.cpp">
       <Filter>wininet</Filter>
+    </ClCompile>
+    <ClCompile Include="http\HttpClientItem.cpp">
+      <Filter>http</Filter>
+    </ClCompile>
+    <ClCompile Include="http\HttpClientMgr.cpp">
+      <Filter>http</Filter>
+    </ClCompile>
+    <ClCompile Include="http\HttpClientMgr_Session.cpp">
+      <Filter>http</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -422,12 +422,6 @@
     <ClInclude Include="JQC\JQCEngine.h">
       <Filter>JQC</Filter>
     </ClInclude>
-    <ClInclude Include="http\HttpClientItem.h">
-      <Filter>http</Filter>
-    </ClInclude>
-    <ClInclude Include="http\HttpClientMgr.h">
-      <Filter>http</Filter>
-    </ClInclude>
     <ClInclude Include="ZlibStream.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -454,6 +448,12 @@
     </ClInclude>
     <ClInclude Include="wininet\HttpResponseHeaders.h">
       <Filter>wininet</Filter>
+    </ClInclude>
+    <ClInclude Include="http\HttpClientItem.h">
+      <Filter>http</Filter>
+    </ClInclude>
+    <ClInclude Include="http\HttpClientMgr.h">
+      <Filter>http</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

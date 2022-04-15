@@ -294,11 +294,6 @@ void LogMultiline( LoggingSeverity level, const char* label, bool input,
 #endif
 #endif  // !defined(LOGGING)
 
-#if defined(LOGGING)
- #undef LOGGING
-#endif
-#define LOGGING 1
-
 #ifndef LOG
 #if LOGGING
 

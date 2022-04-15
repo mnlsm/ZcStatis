@@ -513,6 +513,13 @@ BOOL CHttpClientSession::RequestGet(const CStringATL& strURI)
         }
     }
 
+    DWORD dwFlags;
+    DWORD dwBuffLen = sizeof(dwFlags);
+    InternetQueryOption(m_hHTTPRequest, INTERNET_OPTION_SECURITY_FLAGS, (LPVOID)&dwFlags, &dwBuffLen);
+    dwFlags |= SECURITY_FLAG_IGNORE_UNKNOWN_CA;
+    dwFlags |= SECURITY_FLAG_IGNORE_REVOCATION;
+    InternetSetOption(m_hHTTPRequest, INTERNET_OPTION_SECURITY_FLAGS, &dwFlags, sizeof(dwFlags));
+
     do
     {
         SetLastError(0);
@@ -584,6 +591,13 @@ BOOL CHttpClientSession::RequestPost(const CStringATL& strURI)
             return FALSE;
         }
     }
+
+    DWORD dwFlags;
+    DWORD dwBuffLen = sizeof(dwFlags);
+    InternetQueryOption(m_hHTTPRequest, INTERNET_OPTION_SECURITY_FLAGS, (LPVOID)&dwFlags, &dwBuffLen);
+    dwFlags |= SECURITY_FLAG_IGNORE_UNKNOWN_CA;
+    dwFlags |= SECURITY_FLAG_IGNORE_REVOCATION;
+    InternetSetOption(m_hHTTPRequest, INTERNET_OPTION_SECURITY_FLAGS, &dwFlags, sizeof(dwFlags));
 
     do
     {

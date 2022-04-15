@@ -32,7 +32,7 @@
 //#ifdef USE_SSLSTREAM
 //#pragma comment( lib , "libjingle_based.lib")
 //#else
-#pragma comment( lib , "libjingle_baseNoTLSd.lib")
+#pragma comment( lib , "libjingle_based.lib")
 //#endif
 //#pragma comment( lib , "libprotobuf-lited.lib")
 #pragma comment( lib , "Ws2_32.lib")
@@ -40,18 +40,20 @@
 
 #pragma comment(lib, "Rpcrt4.lib")
 #pragma comment(lib, "Wininet.lib")
+#pragma comment(lib, "Crypt32.lib")
 #else
 //#pragma comment( lib , "libexpatMT.lib")
 //#ifdef USE_SSLSTREAM
 //#pragma comment( lib , "libjingle_base.lib")
 //#else
-#pragma comment( lib , "libjingle_baseNoTLS.lib")
+#pragma comment( lib , "libjingle_base.lib")
 //#endif
 //#pragma comment( lib , "libprotobuf-lite.lib")
 #pragma comment( lib , "Ws2_32.lib")
 #pragma comment(lib, "zlib.lib")
 #pragma comment(lib, "Rpcrt4.lib")
 #pragma comment(lib, "Wininet.lib")
+#pragma comment(lib, "Crypt32.lib")
 #endif
 
 bool ParseJsonString(const std::string& data, Json::Value& result) {

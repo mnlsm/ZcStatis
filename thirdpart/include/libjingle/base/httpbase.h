@@ -82,13 +82,9 @@ protected:
 private:
     enum State
     {
-        ST_LEADER, 
-		ST_HEADERS,
-        ST_CHUNKSIZE, 
-		ST_CHUNKTERM, 
-		ST_TRAILERS,
-        ST_DATA, 
-		ST_COMPLETE
+        ST_LEADER, ST_HEADERS,
+        ST_CHUNKSIZE, ST_CHUNKTERM, ST_TRAILERS,
+        ST_DATA, ST_COMPLETE
     } state_;
     bool chunked_;
     size_t data_size_;
@@ -107,7 +103,6 @@ public:
     virtual HttpError onHttpHeaderComplete( bool chunked, size_t& data_size ) = 0;
     virtual void onHttpComplete( HttpMode mode, HttpError err ) = 0;
     virtual void onHttpClosed( HttpError err ) = 0;
-	virtual bool onHttpAborted(){ return false; }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -122,7 +117,7 @@ public:
 
 class HttpBase
     : private HttpParser,
-	  public sigslot::has_slots<>
+  public sigslot::has_slots<>
 {
 public:
     HttpBase();

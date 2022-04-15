@@ -1,9 +1,9 @@
 #ifndef XMPPXEP_HTTPCLIENTITEM_H__
 #define XMPPXEP_HTTPCLIENTITEM_H__
 
-#include "libjingle/base/sslsocketfactory.h"
-#include "libjingle/base/httpcommon.h"
-
+//#include "libjingle/base/sslsocketfactory.h"
+//#include "libjingle/base/httpcommon.h"
+#include "wininet/HttpClientSession.h"
 
 class CHttpClientMgr;
 
@@ -27,7 +27,7 @@ struct THttpResponseData
 	std::string request_id;
 	talk_base::HttpErrorType httperror;
 	EWebResponseCategory response_type;
-	talk_base::HttpData::HeaderMap response_headers;
+	CStringATL response_headers;
 	uint32 http_response_code;
 	std::string response_content; //response_type=RESPONSEFILE时 ， 为临时文件名
 };
@@ -91,15 +91,11 @@ public:
 protected:
 	CHttpClientItem( CHttpClientMgr *httpclientmgr );
 	void StartAsyncRequest(talk_base::Url<char>& purl);
-	void AddFixedRequestHeader( talk_base::HttpClient *http );
-	void OnHeaderAvailable( talk_base::HttpClient *http , bool last , size_t hsize );
-    void OnHttpClientComplete( talk_base::HttpClient *http, talk_base::HttpErrorType type );
-	void OnSignalCheckAbort( talk_base::HttpClient *http , bool *abort );
+	void AddFixedRequestHeader( pcutil::CHttpClientSession *http );
+	void OnHeaderAvailable( pcutil::CHttpClientSession *http , bool last , size_t hsize );
+    void OnHttpClientComplete( pcutil::CHttpClientSession *http, talk_base::HttpErrorType type );
+	void OnSignalCheckAbort( pcutil::CHttpClientSession *http , bool *abort );
 
-	BOOL DoResolverUrl(const talk_base::Url<char>& purl, talk_base::SocketAddress& server);
-
-private:
-	static void* ResolverThreadRun(void* pv);
 
 private:
 	std::string request_id_;
@@ -109,14 +105,14 @@ private:
 	BOOL is_closed_;
 	BOOL is_abort_check_arrived;
 
-	talk_base::scoped_ptr< talk_base::SslSocketFactory > sslsocketfactory_;
-	talk_base::scoped_ptr< talk_base::HttpClientDefault > http_;
+	//talk_base::scoped_ptr< talk_base::SslSocketFactory > sslsocketfactory_;
+	talk_base::scoped_ptr< pcutil::CHttpClientSession > http_;
 	std::vector< std::pair< std::string , std::string > > fixed_requestheaders_;
 	std::string url_;
 	std::string agent_;
 	talk_base::ProxyInfo proxy_;
 	EWebRequestCategory request_type_;
-	talk_base::HttpData::HeaderMap response_headers_;
+	CStringATL response_headers_;
 	uint32 http_response_code_;
 	std::string response_data_;
 	std::string request_data_;

@@ -45,7 +45,6 @@
 // JSON Helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-
 // Robust conversion operators, better than the ones in JsonCpp.
 bool GetIntFromJson( const Json::Value& in, int* out );
 bool GetUIntFromJson( const Json::Value& in, unsigned int* out );

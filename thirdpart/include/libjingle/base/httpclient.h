@@ -137,12 +137,7 @@ public:
         return ( REDIRECT_NEVER == redirect_action_ );
     }
 
-    enum UriForm 
-	{ 
-		URI_DEFAULT, 
-		URI_ABSOLUTE, 
-		URI_RELATIVE 
-	};
+    enum UriForm { URI_DEFAULT, URI_ABSOLUTE, URI_RELATIVE };
     void set_uri_form( UriForm form )
     {
         uri_form_ = form;
@@ -204,7 +199,8 @@ public:
 
     // convenience methods
     void prepare_get( const std::string& url );
-    void prepare_post( const std::string& url, const std::string& content_type, StreamInterface* request_doc );
+    void prepare_post( const std::string& url, const std::string& content_type,
+                       StreamInterface* request_doc );
 
     // Convert HttpClient to a pull-based I/O model.
     StreamInterface* GetDocumentStream();
@@ -220,8 +216,6 @@ public:
     // challenge.  The third parameter indicates the length of the response
     // document, or else SIZE_UNKNOWN.  Note: Do NOT abort the request in response
     // to this signal.
-    sigslot::signal2<HttpClient*, bool* > SignalCheckAbort;
-
     sigslot::signal3<HttpClient*, bool, size_t> SignalHeaderAvailable;
     // Signalled when the current request finishes.  On success, err is 0.
     sigslot::signal2<HttpClient*, HttpErrorType> SignalHttpClientComplete;
@@ -249,12 +243,6 @@ protected:
     virtual HttpError onHttpHeaderComplete( bool chunked, size_t& data_size );
     virtual void onHttpComplete( HttpMode mode, HttpError err );
     virtual void onHttpClosed( HttpError err );
-	virtual bool onHttpAborted()
-	{ 
-		bool b = false;
-		SignalCheckAbort( this , &b );
-		return b;
-	}
 
 private:
     enum CacheState { CS_READY, CS_WRITING, CS_READING, CS_VALIDATING };
@@ -282,12 +270,11 @@ private:
 // HttpClientDefault - Default implementation of HttpClient
 //////////////////////////////////////////////////////////////////////
 
-class HttpClientDefault 
-	:public ReuseSocketPool, 
-	 public HttpClient
+class HttpClientDefault : public ReuseSocketPool, public HttpClient
 {
 public:
-    HttpClientDefault( SocketFactory* factory, const std::string& agent, HttpTransaction* transaction = NULL );
+    HttpClientDefault( SocketFactory* factory, const std::string& agent,
+                       HttpTransaction* transaction = NULL );
 };
 
 //////////////////////////////////////////////////////////////////////

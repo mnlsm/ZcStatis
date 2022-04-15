@@ -57,10 +57,6 @@ public:
 
     ~ByteBuffer();
 
-	const char* Base() const
-	{
-		return bytes_;
-	}
     const char* Data() const
     {
         return bytes_ + start_;
@@ -86,10 +82,6 @@ public:
     // Appends next |len| bytes from the buffer to |val|. Returns false
     // if there is less than |len| bytes left.
     bool ReadString( std::string* val, size_t len );
-	bool ReadSizeString( std::string* val );
-	bool ReadShortSizeString( std::string* val );
-
-
 
     // Write value to the buffer. Resizes the buffer when it is
     // neccessary.
@@ -101,9 +93,6 @@ public:
     void WriteString( const std::string& val );
     void WriteBytes( const char* val, size_t len );
 
-	void WriteSizeString( const std::string& val );
-	void WriteShortSizeString( const std::string& val );
-
     // Resize the buffer to the specified |size|.
     void Resize( size_t size );
 
@@ -114,12 +103,6 @@ public:
     // Drops |size| bytes from the front of the buffer. Return false if
     // there is less than |size| bytes left in the buffer.
     bool Shift( size_t size );
-
-	void ReadPos( size_t pos );
-	size_t ReadPos();
-
-	void WritePos( size_t pos );
-	size_t WritePos();
 
 private:
     void Construct( const char* bytes, size_t size, ByteOrder byte_order );

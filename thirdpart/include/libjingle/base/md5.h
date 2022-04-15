@@ -22,22 +22,22 @@
 extern "C" {
 #endif
 
-    typedef long unsigned int md5_uint32;
+    typedef long unsigned int uint32;
     typedef struct MD5Context MD5_CTX;
 
 #define md5byte unsigned char
 
     struct MD5Context
     {
-        md5_uint32 buf[4];
-        md5_uint32 bits[2];
-        md5_uint32 in[16];
+        uint32 buf[4];
+        uint32 bits[2];
+        uint32 in[16];
     };
 
     void MD5Init( struct MD5Context *context );
     void MD5Update( struct MD5Context *context, md5byte const *buf, unsigned len );
     void MD5Final( unsigned char digest[16], struct MD5Context *context );
-    void MD5Transform( md5_uint32 buf[4], md5_uint32 const in[16] );
+    void MD5Transform( uint32 buf[4], uint32 const in[16] );
 
 #ifdef __cplusplus
 };

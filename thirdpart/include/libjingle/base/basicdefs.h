@@ -32,16 +32,6 @@
 #include "config.h"
 #endif
 
-#if defined(_MSC_VER)
-	#ifndef _CRTDBG_MAP_ALLOC
-		#define _CRTDBG_MAP_ALLOC
-		#include <stdlib.h>
-		#include <crtdbg.h>
-	#endif
-#endif
-
-
-
 //#define ARRAY_SIZE(x) (static_cast<int>((sizeof(x)/sizeof(x[0]))))
 
 #endif // TAKL_BASE_BASICDEFS_H__

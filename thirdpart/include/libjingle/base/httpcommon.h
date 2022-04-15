@@ -75,20 +75,13 @@ enum HttpCode
 
 enum HttpVersion
 {
-    HVER_1_0, 
-	HVER_1_1, 
-	HVER_UNKNOWN,
+    HVER_1_0, HVER_1_1, HVER_UNKNOWN,
     HVER_LAST = HVER_UNKNOWN
 };
 
 enum HttpVerb
 {
-    HV_GET, 
-	HV_POST, 
-	HV_PUT, 
-	HV_DELETE, 
-	HV_CONNECT, 
-	HV_HEAD,
+    HV_GET, HV_POST, HV_PUT, HV_DELETE, HV_CONNECT, HV_HEAD,
     HV_LAST = HV_HEAD
 };
 
@@ -106,8 +99,7 @@ enum HttpError
     HE_CERTIFICATE_EXPIRED, // During SSL negotiation
     HE_STREAM,              // Problem reading or writing to the document
     HE_CACHE,               // Problem reading from cache
-    HE_DEFAULT,
-	HE_CONTENT_ENCODE
+    HE_DEFAULT
 };
 
 enum HttpHeader
@@ -387,7 +379,6 @@ struct HttpData
 
     HttpData() : version( HVER_1_1 ) { }
 
-	HeaderMap& Headers(){ return headers_ ;}
     enum HeaderCombine { HC_YES, HC_NO, HC_AUTO, HC_REPLACE, HC_NEW };
     void changeHeader( const std::string& name, const std::string& value,
                        HeaderCombine combine );
