@@ -34,7 +34,7 @@ public:
 
 	virtual void AddPostRawText(  const std::string& szValue );
 	virtual void AddPostCStringATLBody( const CStringATL& strBody );
-	virtual BOOL AddOneRequestHeader( const CStringATL &strHeader, DWORD dwFlag = HTTP_ADDREQ_FLAG_ADD_IF_NEW );
+	virtual BOOL AddOneRequestHeader( const CStringATL &strHeader, DWORD dwFlag = HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE);
 	virtual void RemoveAllRequestHeader();
 
 	virtual BOOL Request( LPCTSTR szURL, CHttpClientSession::RequestMethod Method = CHttpClientSession::RequestGetMethod , BOOL bAutoClose = TRUE );

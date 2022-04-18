@@ -12,6 +12,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2EFBDF09-0736-44A0-9CAB-86E518C0EE3A}</ProjectGuid>
+    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -39,10 +40,11 @@
     <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>Debug\</OutDir>
+    <OutDir>.\bin</OutDir>
     <IntDir>Debug\</IntDir>
     <LinkIncremental>true</LinkIncremental>
     <EmbedManifest>false</EmbedManifest>
+    <TargetName>ZcStatisd</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>Release\</OutDir>
@@ -292,6 +294,10 @@
     <ClCompile Include="MainDlg.cpp" />
     <ClCompile Include="MiscHelper.cc" />
     <ClCompile Include="MyPrintInfo.cpp" />
+    <ClCompile Include="okooo\OkoooDialog.cc" />
+    <ClCompile Include="okooo\OkoooDialog_BetArea.cc" />
+    <ClCompile Include="okooo\OkoooDialog_Network.cc" />
+    <ClCompile Include="okooo\OkoooEngine.cc" />
     <ClCompile Include="PrintWnd.cpp" />
     <ClCompile Include="sqlite3\sqlite3.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -324,6 +330,10 @@
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="tinyxml2.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="wininet\HttpClientSession.cpp" />
     <ClCompile Include="wininet\HttpPostArgument.cpp" />
@@ -379,6 +389,8 @@
     <ClInclude Include="MainDlg.h" />
     <ClInclude Include="MiscHelper.h" />
     <ClInclude Include="MyPrintInfo.h" />
+    <ClInclude Include="okooo\OkoooDialog.h" />
+    <ClInclude Include="okooo\OkoooEngine.h" />
     <ClInclude Include="PrintWnd.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="sqlite3\sqlite3.h" />
@@ -393,6 +405,7 @@
     <ClInclude Include="sqlite3\SQLiteCpp\VariadicBind.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StlFiles.h" />
+    <ClInclude Include="tinyxml2.h" />
     <ClInclude Include="wininet\HttpClientSession.h" />
     <ClInclude Include="wininet\HttpPostArgument.h" />
     <ClInclude Include="wininet\HttpResponseHeaders.h" />

@@ -43,6 +43,9 @@
     <Filter Include="wininet">
       <UniqueIdentifier>{cf56c231-6d1a-4899-ae81-dd1c365d8631}</UniqueIdentifier>
     </Filter>
+    <Filter Include="okooo">
+      <UniqueIdentifier>{43b1ba48-8d35-4e57-9386-a2b5b3dd7945}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lua\lbitlib.c">
@@ -258,6 +261,21 @@
     <ClCompile Include="http\HttpClientMgr_Session.cpp">
       <Filter>http</Filter>
     </ClCompile>
+    <ClCompile Include="okooo\OkoooDialog.cc">
+      <Filter>okooo</Filter>
+    </ClCompile>
+    <ClCompile Include="okooo\OkoooEngine.cc">
+      <Filter>okooo</Filter>
+    </ClCompile>
+    <ClCompile Include="okooo\OkoooDialog_BetArea.cc">
+      <Filter>okooo</Filter>
+    </ClCompile>
+    <ClCompile Include="okooo\OkoooDialog_Network.cc">
+      <Filter>okooo</Filter>
+    </ClCompile>
+    <ClCompile Include="tinyxml2.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua\lctype.h">
@@ -454,6 +472,15 @@
     </ClInclude>
     <ClInclude Include="http\HttpClientMgr.h">
       <Filter>http</Filter>
+    </ClInclude>
+    <ClInclude Include="okooo\OkoooDialog.h">
+      <Filter>okooo</Filter>
+    </ClInclude>
+    <ClInclude Include="okooo\OkoooEngine.h">
+      <Filter>okooo</Filter>
+    </ClInclude>
+    <ClInclude Include="tinyxml2.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

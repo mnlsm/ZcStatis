@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ generated include file.
-// Used by ZcStatis.rc
+// Microsoft Visual C++ 生成的包含文件。
+// 供 ZcStatis.rc 使用
 //
 #define IDM_REFRESH                     0
 #define IDM_NEXT                        1
@@ -137,13 +137,16 @@
 #define IDM_JQC                         32774
 #define ID_32775                        32775
 #define IDM_DANLUE                      32776
+#define ID_32777                        32777
+#define ID_OKOOO                        32778
+#define IDM_OKOOO                       32779
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        209
-#define _APS_NEXT_COMMAND_VALUE         32777
+#define _APS_NEXT_COMMAND_VALUE         32780
 #define _APS_NEXT_CONTROL_VALUE         1043
 #define _APS_NEXT_SYMED_VALUE           102
 #endif

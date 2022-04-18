@@ -129,7 +129,7 @@ void CHttpClientItem::StartAsyncRequest(Url<char>& purl) {
 			throw 0;
 		}
 		AddFixedRequestHeader(http_.get());
-		CStringATL url = CA2T(purl.full_path().c_str()).m_psz;
+		CStringATL url = CA2T(purl.url().c_str()).m_psz;
 		BOOL result = FALSE;
 		if( request_type_ == HTTP_REQUEST_GET ) {
 			result = http_->Request(url, pcutil::CHttpClientSession::RequestGetMethod);

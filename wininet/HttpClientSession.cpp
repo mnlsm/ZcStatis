@@ -361,7 +361,7 @@ BOOL CHttpClientSession::Request(LPCTSTR szURL,
         }
 
         CStringATL strHostHeader;
-        strHostHeader.Format(_T("Host: %s\r\n") , strAddress);
+        strHostHeader.Format(_T("Host:%s\r\n") , strAddress);
         AddOneRequestHeader(strHostHeader);
 
         if (Connect(strAddress, nPort))

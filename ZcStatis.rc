@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Chinese (Simplified, PRC) resources
+// 中文(简体，中国) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -296,6 +296,7 @@ BEGIN
         MENUITEM "进球彩",                         IDM_JQC
         MENUITEM "刷新(&R)",                      IDM_REFRESH
         MENUITEM "胆略",                          IDM_DANLUE
+        MENUITEM "澳客",                          IDM_OKOOO
     END
 END
 
@@ -308,12 +309,12 @@ BEGIN
     END
 END
 
-#endif    // Chinese (Simplified, PRC) resources
+#endif    // 中文(简体，中国) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// English (United States) resources
+// 英语(美国) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
@@ -353,6 +354,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\ZcStatis.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -504,7 +506,7 @@ BEGIN
     ATL_IDS_MRU_FILE        "Open this document4r"
 END
 
-#endif    // English (United States) resources
+#endif    // 英语(美国) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

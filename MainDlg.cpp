@@ -11,6 +11,7 @@
 #include "DialogGambel.h"
 #include "JQC/JQCDialog.h"
 #include "danlue/DanLueDialog.h"
+#include "okooo/OkoooDialog.h"
 #include <SQLiteCpp/SQLiteCpp.h>
 extern CMainDlg dlgMain;
 
@@ -121,6 +122,11 @@ LRESULT CMainDlg::OnRefresh(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 
 LRESULT CMainDlg::OnDanLue(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	DanLueDialog::PopUp(this->m_pDatabase);
+	return 1L;
+}
+
+LRESULT CMainDlg::OnOkooo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	OkoooDialog::PopUp(this->m_pDatabase);
 	return 1L;
 }
 
