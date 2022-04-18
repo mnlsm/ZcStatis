@@ -276,6 +276,9 @@
     <ClCompile Include="tinyxml2.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="okooo\OkoooStat.cc">
+      <Filter>okooo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua\lctype.h">
@@ -481,6 +484,9 @@
     </ClInclude>
     <ClInclude Include="tinyxml2.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="okooo\OkoooStat.h">
+      <Filter>okooo</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

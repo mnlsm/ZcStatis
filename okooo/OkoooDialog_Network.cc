@@ -259,17 +259,28 @@ void OkoooDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 				}
 			}
 			else if (class_value == "listItemjczq") {
-				std::shared_ptr<JCMatchItem> ji(new JCMatchItem());
-				ji->id = date + (LPCSTR)GetElementText(FindElementByClassAttr(child, "xuhao"));
-				CMiscHelper::string_replace(ji->id, "-", "");
-				ji->match_category = GetElementText(FindElementByClassAttr(child, "liansai"));
-				ji->start_time = ji->last_buy_time = GetElementText(FindElementByClassAttr(child, "timetxt"));
+				tinyxml2::XMLElement* son = child->FirstChildElement();
+				while (son != nullptr) {
+					//""<div class = "width320">
+					CStringA son_class_value = GetElementClassAttrValue(son);
+					if (son_class_value == "clearfix center listItem ctrl_eachmatch") {
+						tinyxml2::XMLElement* son_child = son->FirstChildElement();
+						if (son_child != nullptr) {
+							std::shared_ptr<JCMatchItem> ji(new JCMatchItem());
+							ji->id = date + (LPCSTR)GetElementText(FindElementByClassAttr(son_child, "xuhao"));
+							CMiscHelper::string_replace(ji->id, "-", "");
+							ji->match_category = GetElementText(FindElementByClassAttr(son_child, "liansai"));
+							ji->start_time = ji->last_buy_time = GetElementText(FindElementByClassAttr(son_child, "timetxt"));
 
-				tempElement = FindElementByClassAttr(child, "fr listmore ctrl_addmore");
-				ji->descrition = GetElementAttrValue(tempElement, "hn") + " VS " + GetElementAttrValue(tempElement, "an");
-				ji->orderid = GetElementAttrValue(tempElement, "orderid");
-				items.insert(std::make_pair(date, ji));
-				order_items.insert(std::make_pair(ji->orderid, ji));
+							tempElement = FindElementByClassAttr(son_child, "fr listmore ctrl_addmore");
+							ji->descrition = GetElementAttrValue(tempElement, "hn") + " VS " + GetElementAttrValue(tempElement, "an");
+							ji->orderid = GetElementAttrValue(tempElement, "orderid");
+							items.insert(std::make_pair(date, ji));
+							order_items.insert(std::make_pair(ji->orderid, ji));
+						}
+					}
+					son = son->NextSiblingElement();
+				}
 			}
 			child = child->NextSiblingElement();
 		}
@@ -373,12 +384,12 @@ void OkoooDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 	if (!items.empty()) {
 		for (auto& iter : items) {
 			JCMatchItem item;
-			//if (GetItemFromDB(iter.second->id, item)) {
-			//	*iter.second = item;
-			//}
-			//else {
+			if (GetItemFromDB(iter.second->id, item)) {
+				*iter.second = item;
+			}
+			else {
 				InsertItemToDB(*iter.second);
-			//}
+			}
 		}
 		m_JCMatchItems.swap(items);
 	}

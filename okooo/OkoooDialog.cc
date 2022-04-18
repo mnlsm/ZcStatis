@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "OkoooDialog.h"
+#include "OkoooStat.h"
 #include "Global.h"
 
 
@@ -387,8 +388,8 @@ LRESULT OkoooDialog::OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 
 LRESULT OkoooDialog::OnRefreshBiFen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	//doBiFen();
-	//DanLueStat dlg(m_pDatabase);
-	//dlg.DoModal();
+	OkoooStat dlg(m_pDatabase);
+	dlg.DoModal();
 	return 1L;
 }
 
@@ -509,7 +510,7 @@ void OkoooDialog::ReloadMatchListData() {
 	auto& iter = m_JCMatchItems.begin();// equal_range((LPCSTR)m_strQH);
 	int iIndex = 0;
 	for (; iter != m_JCMatchItems.end(); ++iter) {
-		if (iter->first.find(m_strQH) != 0) {
+		if (iter->first.compare(m_strQH) < 0) {
 			continue;
 		}
 		int colIndex = 0;

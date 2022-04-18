@@ -298,6 +298,7 @@
     <ClCompile Include="okooo\OkoooDialog_BetArea.cc" />
     <ClCompile Include="okooo\OkoooDialog_Network.cc" />
     <ClCompile Include="okooo\OkoooEngine.cc" />
+    <ClCompile Include="okooo\OkoooStat.cc" />
     <ClCompile Include="PrintWnd.cpp" />
     <ClCompile Include="sqlite3\sqlite3.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -391,6 +392,7 @@
     <ClInclude Include="MyPrintInfo.h" />
     <ClInclude Include="okooo\OkoooDialog.h" />
     <ClInclude Include="okooo\OkoooEngine.h" />
+    <ClInclude Include="okooo\OkoooStat.h" />
     <ClInclude Include="PrintWnd.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="sqlite3\sqlite3.h" />
