@@ -8,6 +8,9 @@
 
 #include "Global.h"
 #include "BasicExcel.hpp"
+
+#include <deque>
+
 CAppModule _Module;
 
 //http://odds.500.com/europe_sfc.shtml
@@ -32,8 +35,40 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	return nRet;
 }
 
+void proguard_gen(const std::vector<char>& src, std::deque<char>& tmp,
+		std::vector<std::string>& result) {
+	if (tmp.size() >= 3) {
+		std::string temp;
+		temp.assign(tmp.begin(), tmp.end()).append("qwk");
+		result.push_back(temp);
+		if (tmp.size() >= 10) {
+			return;
+		}
+	}
+	for (const auto& item : src) {
+		tmp.push_back(item);
+		proguard_gen(src, tmp, result);
+		tmp.pop_back();
+	}
+}
+
+
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
+	/*
+	std::vector<char> src = { '1', 'l', 'I' };
+	std::deque<char> tmp;
+	std::vector<std::string> result;
+	proguard_gen(src, tmp, result);
+	std::sort(result.begin(), result.end(), [](const std::string& A, const std::string& B) -> bool {
+		return A.size() < B.size(); 
+	});
+	std::string lines;
+	for (const auto& item : result) {
+		lines.append(item).append("\n");
+	}
+	Global::SaveFileData("d:\\proguard.txt", lines, FALSE);
+	*/
 	//HRESULT hRes = ::CoInitialize(NULL);
 	HRESULT hRes = OleInitialize(NULL);
 // If you are running on NT 4.0 or higher you can use the following call instead to 

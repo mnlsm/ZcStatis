@@ -73,6 +73,7 @@ LRESULT OkoooDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	InitControls();
 
 	//ReloadStatisData();
+	SetWindowText("澳客菠菜");
 	return TRUE;
 }
 
@@ -290,6 +291,46 @@ LRESULT OkoooDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 	DoRefreshMatchListResults();
 	m_stBetArea.Invalidate();
 
+	std::map<CStringATL, std::tuple<int, double>> rows;
+	for (const auto& r : m_Engine->getResult()) {
+		double bouns = 2.0;
+		CStringATL strCodes;
+		for (const auto& item : r) {
+			bouns = bouns * item.bet.odds;
+			char sz[64] = { '\0' };
+			sprintf(sz, "[%s]%d-%d(%.2f)", item.id.c_str(), item.bet.tid, item.bet.code, item.bet.odds);
+			if (!strCodes.IsEmpty()) {
+				strCodes += ",";
+			}
+			strCodes += sz;
+		}
+		auto& iter = rows.find(strCodes);
+		if (iter != rows.end()) {
+			std::get<0>(iter->second) += 1;
+			std::get<1>(iter->second) += bouns;
+		}
+		else {
+			std::tuple<int, double> tup;
+			std::get<0>(tup) = 1;
+			std::get<1>(tup) = bouns;
+			rows[strCodes] = tup;
+		}
+	}
+
+	int index = 0;
+	for (const auto& row : rows) {
+		int colIndex = 0;
+		CStringATL strResult;
+		strResult.Format("%d", index + 1);
+		int lIndex = m_lstResult.InsertItem(index++, strResult);
+		strResult.Format("%.2f", std::get<1>(row.second));
+		m_lstResult.SetItemText(lIndex, ++colIndex, strResult);
+		strResult.Format("%d", std::get<0>(row.second));
+		m_lstResult.SetItemText(lIndex, ++colIndex, strResult);
+		m_lstResult.SetItemText(lIndex, ++colIndex, row.first);
+	}
+
+	/*
 	int index = 0;
 	for (const auto& r : m_Engine->getResult()) {
 		int colIndex = 0;
@@ -302,7 +343,7 @@ LRESULT OkoooDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 			char sz[64] = { '\0' };
 			sprintf(sz, "[%s]%d-%d(%.2f)", item.id.c_str(), item.bet.tid, item.bet.code, item.bet.odds);
 			if (!strCodes.IsEmpty()) {
-				strCodes += " ,";
+				strCodes += ",";
 			}
 			strCodes += sz;
 		}
@@ -310,8 +351,9 @@ LRESULT OkoooDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 		m_lstResult.SetItemText(lIndex, ++colIndex, strResult);
 		m_lstResult.SetItemText(lIndex, ++colIndex, strCodes);
 	}
+	*/
 	CStringATL temp;
-	temp.Format("结果列表(%d):", m_Engine->getResult().size());
+	temp.Format("结果列表(%d注):", m_Engine->getResult().size());
 	m_stResult.SetWindowText(temp);
 
 	return 1L;
@@ -497,7 +539,10 @@ void OkoooDialog::InitControls() {
 	m_lstResult.InsertColumn(colIndex, "奖金(元)", LVCFMT_CENTER, 90);    //70
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
 
-	m_lstResult.InsertColumn(colIndex, "结果", LVCFMT_CENTER, rcItem.Width() - 160);    //70
+	m_lstResult.InsertColumn(colIndex, "倍数", LVCFMT_CENTER, 90);    //70
+	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
+
+	m_lstResult.InsertColumn(colIndex, "结果", LVCFMT_CENTER, rcItem.Width() - 250);    //70
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
 
 	//m_lstMatch.setItemH

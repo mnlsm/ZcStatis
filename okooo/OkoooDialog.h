@@ -162,7 +162,6 @@ private:
 
 	int doJcMatchList();
 	void OnJcMatchListReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
-	void OnJcMatchListReturnOld(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
 
 
