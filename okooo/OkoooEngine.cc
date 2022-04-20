@@ -66,6 +66,7 @@ OkoooEngine::OkoooEngine(const CStlString& script, const char* logf) {
 	m_strScript = script;
 	m_dMinBonus = 0.0;
 	m_nMatchBetsLose = 0;
+	m_nAvgMultiple = 0;
 #ifndef _DEBUG
 	if (logf != NULL) {
 		m_strLogPath = logf;
@@ -114,6 +115,7 @@ BOOL OkoooEngine::CalculateAllResult(CStlString& failed_reason) {
 	m_vecFixedSources.clear();
 	m_vecSources.clear();
 	m_vecResults.clear();
+	m_vecDiscardResults.clear();
 	BOOL result = CalculateAllResultImpl(failed_reason);
 	if (!result) {
 		if (failed_reason.empty()) {
@@ -141,27 +143,75 @@ BOOL OkoooEngine::CalculateAllResultImpl(CStlString& failed_reason) {
 		return FALSE;
 	}
 	double bonus = 0.0;
-	TBetResult allResult, tempAll;
+	TBetResult allResult, tempAll, discardAll, validAll;
 	if (GeneratorBets(m_vecSources, allResult)) {
 		for (const auto& record : allResult) {
 			if (IsAValidRecordImpl(record, lua_state, bonus, &failed_reason)) {
-				tempAll.push_back(record);
-				double multi_bonus = bonus;
-				while (multi_bonus < m_dMinBonus) {
-					tempAll.push_back(record);
-					multi_bonus += bonus;
-				}
+				validAll.push_back(record);
+			} else {
+				discardAll.push_back(record);
 			}
 		}
+		doAvgMultipleResult(validAll, tempAll);
 		m_vecResults.swap(tempAll);
+		m_vecDiscardResults.swap(discardAll);
 		result = TRUE;
-	}
-	else {
+	} else {
 		failed_reason = "GeneratorCodes failed!";
 	}
 	TermLua(lua_state);
 	return result;
 }
+
+void OkoooEngine::doAvgMultipleResult(const TBetResult& validResult, TBetResult& result) {
+	result.clear();
+	double avg_bonus = 0.0;
+	for (const auto& row : validResult) {
+		double row_bonus = 0.0;
+		for (const auto& col : row) {
+			if (row_bonus == 0.0) {
+				row_bonus = col.bet.odds;
+			} else {
+				row_bonus = row_bonus * col.bet.odds;
+			}
+		}
+		row_bonus = row_bonus * 2;
+		avg_bonus += row_bonus;
+		if (m_nAvgMultiple == 0) {
+			result.push_back(row);
+			double multi_bonus = row_bonus;
+			while (multi_bonus < m_dMinBonus) {
+				result.push_back(row);
+				multi_bonus += row_bonus;
+			}
+		}
+	}
+	avg_bonus = avg_bonus / validResult.size();
+	if (m_nAvgMultiple > 0) {
+		result.clear();
+		for (const auto& row : validResult) {
+			double row_bonus = 0.0;
+			for (const auto& col : row) {
+				if (row_bonus == 0.0) {
+					row_bonus = col.bet.odds;
+				} else {
+					row_bonus = row_bonus * col.bet.odds;
+				}
+			}
+			row_bonus = row_bonus * 2;
+			int multiple = (int)(round((double)m_nAvgMultiple * (avg_bonus / row_bonus)));
+			if (multiple <= 0) multiple = 1;
+			if (row_bonus * multiple < m_dMinBonus && m_dMinBonus > 0.0) {
+				multiple = multiple + 1;
+			}
+			while (multiple > 0) {
+				result.push_back(row);
+				multiple = multiple - 1;
+			}
+		}
+	}
+}
+
 
 static void getJcBetItemSource(lua_State* L, const char* key, std::vector<JcBetItemSource>& sources) {
 	sources.clear();
@@ -236,6 +286,11 @@ lua_State* OkoooEngine::InitLua(CStlString& failed_reason) {
 
 	if (lua_getglobal(L, "kMatchBetsLose") == LUA_TNUMBER) {
 		m_nMatchBetsLose = lua_tointeger(L, -1);
+		lua_pop(L, 1);
+	}
+
+	if (lua_getglobal(L, "kAvgMultiple") == LUA_TNUMBER) {
+		m_nAvgMultiple = lua_tointeger(L, -1);
 		lua_pop(L, 1);
 	}
 
@@ -350,7 +405,6 @@ BOOL OkoooEngine::IsAValidRecordImpl(const std::vector<JcBetItem>& record,
 
 void OkoooEngine::push_scriptfunc_params(lua_State* L, const std::vector<JcBetItem>& record) {
 	lua_newtable(L);
-
 	double betbouns = 0.0;
 	lua_pushstring(L, "betcodes");
 	lua_newtable(L);
@@ -376,8 +430,7 @@ void OkoooEngine::push_scriptfunc_params(lua_State* L, const std::vector<JcBetIt
 			lua_settable(L, -3);
 			if (betbouns == 0.0) {
 				betbouns = item.bet.odds;
-			}
-			else {
+			} else {
 				betbouns = betbouns * item.bet.odds;
 			}
 			lua_pushstring(L, "pan");
@@ -391,7 +444,6 @@ void OkoooEngine::push_scriptfunc_params(lua_State* L, const std::vector<JcBetIt
 	lua_pushstring(L, "betbouns");
 	lua_pushnumber(L, 2 * betbouns);
 	lua_settable(L, -3);
-
 }
 
 void OkoooEngine::getAllMatchIds(CStlStrArray& matchIds) {

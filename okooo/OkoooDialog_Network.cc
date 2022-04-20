@@ -297,6 +297,10 @@ void OkoooDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 		Json::Value rootValue, itemValue, dataValue, tempValue;
 		//std::map<std::string, std::map<int, double>> odds;
 		if (ParseJsonString((LPCSTR)jsText, rootValue) && rootValue.isObject()) {
+			bool first = false;
+#ifdef _DEBUG
+			first = true;
+#endif
 			for (auto& item : order_items) {
 				GetValueFromJsonObject(rootValue, item.first, &itemValue);
 				if (itemValue.isObject()) {
@@ -374,8 +378,15 @@ void OkoooDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 							sub.calcTip(item.second->hand);
 							item.second->subjects.push_back(sub);
 						}
-
 					}
+				}
+				if (first) {
+					first = false;
+					std::string lines;
+					for (const auto& sub : item.second->subjects) {
+						lines += sub.lineStr();
+					}
+					Global::SaveFileData("e:\\zcjc.txt", lines, FALSE);
 				}
 			}
 		}
@@ -564,15 +575,49 @@ void OkoooDialog::JCMatchItem::Subject::calcTip(int hand) {
 			tip = iter->second;
 		}
 	}
-
 }
 
-std::string OkoooDialog::JCMatchItem::Subject::betStr() {
+std::string OkoooDialog::JCMatchItem::Subject::betStr() const {
 	std::string ret;
 	char cb[20] = { '\0' };
 	sprintf(cb, "%d-%d(%.2f)", (int)tid, (int)betCode, odds);
 	ret = cb;
 	return ret;
+}
+
+std::string OkoooDialog::JCMatchItem::Subject::lineStr() const {
+	std::string ret;
+	std::string buy = buyStr();
+	ret.resize(64, ' ');
+	char* pos = (char*)ret.c_str();
+	char tmp[30] = { '\0' };
+	sprintf(tmp, "tid=%I64d,", this->tid);
+	memcpy(pos, tmp, strlen(tmp));
+
+	pos += 8;
+	sprintf(tmp, "code=%I64d,", this->betCode);
+	memcpy(pos, tmp, strlen(tmp));
+
+	pos += 10;
+	sprintf(tmp, "tip=%s", buy.c_str());
+	memcpy(pos, tmp, strlen(tmp));
+
+	ret.append(1, '\n');
+	return ret;
+}
+
+std::string OkoooDialog::JCMatchItem::Subject::buyStr() const {
+	std::string tipa = this->tip;
+	if (tid == 1 && betCode == 3) {
+		tipa = "»√ §";
+	}
+	else if (tid == 1 && betCode == 1) {
+		tipa = "»√∆Ω";
+	}
+	else if (tid == 1 && betCode == 0) {
+		tipa = "»√∏∫";
+	}
+	return tipa;
 }
 
 int OkoooDialog::JCMatchItem::Subject::getPan(int hand) const {

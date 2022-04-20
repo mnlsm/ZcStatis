@@ -20,6 +20,8 @@ public:
 	
 	static BOOL ReadFileData(const CStlString& filename, std::string& filedata);
 	static BOOL SaveFileData(const CStlString& filename, const std::string& filedata, BOOL append);
+	static BOOL SaveFileData(const CStlString& filename, LPBYTE data, DWORD len, BOOL append);
+
 
 	static CStlString toFixedLengthString(const CStlString& src, size_t fixed_length, bool right_align);
 	static void getBiFenDateInfo(CStringATL& beginDay, CStringATL& endDay, CStringATL& beginWeekDay);

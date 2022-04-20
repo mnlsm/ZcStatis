@@ -200,7 +200,7 @@ LRESULT CDialogDB::OnClickedExcel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 
 		ws->getLongInt(row, 0, matchNo);
 		if (matchNo != -1) {
-			_stprintf(szR, _T("%02u."), matchNo);
+			_stprintf(szR, _T("%I64d."), matchNo);
 			TCHAR* dataPos = (TCHAR*)strMatchPrefix.data();
 			memcpy(dataPos, szR, _tcslen(szR) * sizeof(TCHAR));
 			matchNameState++;

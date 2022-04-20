@@ -140,6 +140,12 @@ BOOL Global::ReadFileData(const CStlString& filename, std::string& filedata) {
 	return TRUE;
 }
 
+BOOL Global::SaveFileData(const CStlString& filename, LPBYTE data, DWORD len, BOOL append) {
+	std::string cdata;
+	cdata.append((const char*)data, len);
+	return Global::SaveFileData(filename, cdata, append);
+}
+
 BOOL Global::SaveFileData(const CStlString& filename, const std::string& filedata, BOOL append) {
 
 	//OPEN_ALWAYS

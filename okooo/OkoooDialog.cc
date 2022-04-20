@@ -41,6 +41,7 @@ OkoooDialog::OkoooDialog() :
 	m_stSep2(this, 100),
 	m_buCopy(this, 100),
 	m_stResult(this, 100),
+	m_buExtractLua(this, 1),
 	m_buUpload(this, 100) {
 	m_FirstDrawBetArea = true;
 	SYSTEMTIME tm = { 0 };
@@ -246,7 +247,7 @@ LRESULT OkoooDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 	CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
 		szFilterName, m_hWnd);
 	dlg.m_ofn.lpstrInitialDir = m_strWorkDir;
-	CStringATL strInitFileName = _T("1.lua");;
+	CStringATL strInitFileName = _T("1.lua");
 	TCHAR szFileName[MAX_PATH + 1] = { _T('\0') };
 	_tcscpy(szFileName, strInitFileName);
 	dlg.m_ofn.lpstrFile = szFileName;
@@ -297,8 +298,13 @@ LRESULT OkoooDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 		CStringATL strCodes;
 		for (const auto& item : r) {
 			bouns = bouns * item.bet.odds;
+			JCMatchItem::Subject sub;
+			sub.tid = item.bet.tid;
+			sub.betCode = item.bet.code;
+			sub.calcTip(item.bet.hand);
 			char sz[64] = { '\0' };
-			sprintf(sz, "[%s]%d-%d(%.2f)", item.id.c_str(), item.bet.tid, item.bet.code, item.bet.odds);
+			const std::string&& temp = sub.buyStr();
+			sprintf(sz, "[%s]%s(%.2f)", item.id.c_str(), temp.c_str(), item.bet.odds);
 			if (!strCodes.IsEmpty()) {
 				strCodes += ",";
 			}
@@ -318,6 +324,7 @@ LRESULT OkoooDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 	}
 
 	int index = 0;
+	double maxBonus = 0.0, minBonus = -1;
 	for (const auto& row : rows) {
 		int colIndex = 0;
 		CStringATL strResult;
@@ -328,34 +335,37 @@ LRESULT OkoooDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 		strResult.Format("%d", std::get<0>(row.second));
 		m_lstResult.SetItemText(lIndex, ++colIndex, strResult);
 		m_lstResult.SetItemText(lIndex, ++colIndex, row.first);
-	}
-
-	/*
-	int index = 0;
-	for (const auto& r : m_Engine->getResult()) {
-		int colIndex = 0;
-		double bouns = 2.0;
-		CStringATL strResult, strCodes;
-		strResult.Format("%d", index + 1);
-		int lIndex = m_lstResult.InsertItem(index++, strResult);
-		for (const auto& item : r) {
-			bouns = bouns * item.bet.odds;
-			char sz[64] = { '\0' };
-			sprintf(sz, "[%s]%d-%d(%.2f)", item.id.c_str(), item.bet.tid, item.bet.code, item.bet.odds);
-			if (!strCodes.IsEmpty()) {
-				strCodes += ",";
-			}
-			strCodes += sz;
+		double bonus = std::get<1>(row.second);
+		if (bonus < minBonus || minBonus < 0) {
+			minBonus = bonus;
 		}
-		strResult.Format("%.2f", bouns);
-		m_lstResult.SetItemText(lIndex, ++colIndex, strResult);
-		m_lstResult.SetItemText(lIndex, ++colIndex, strCodes);
+		if (bonus > maxBonus) {
+			maxBonus = bonus;
+		}
 	}
-	*/
+	minBonus = (minBonus - 2 * m_Engine->getResult().size()) / (2 * m_Engine->getResult().size()) * 100;
+	maxBonus = (maxBonus - 2 * m_Engine->getResult().size()) / (2 * m_Engine->getResult().size()) * 100;
+	CStringATL maxBonusRate, minBonusRate;
+	maxBonusRate.Format("%d", (int)maxBonus); maxBonusRate += "%";
+	minBonusRate.Format("%d", (int)minBonus); minBonusRate += "%";
 	CStringATL temp;
-	temp.Format("结果列表(%d注):", m_Engine->getResult().size());
+	temp.Format("结果列表(共%d注,  盈亏[%s-%s]):" , 
+		m_Engine->getResult().size(), minBonusRate, maxBonusRate);
 	m_stResult.SetWindowText(temp);
 
+	return 1L;
+}
+
+LRESULT OkoooDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	auto dwTick = GetTickCount64();
+	CStringATL file_path;
+	file_path.Format("%s\\%I64u.lua", this->m_strWorkDir, dwTick);
+	DeleteFile(file_path);
+	CResource res;
+	if (res.Load(_T("ADDIN"), MAKEINTRESOURCE(IDR_ADDIN2))) {
+		Global::SaveFileData((LPCSTR)file_path, (uint8_t*)res.Lock(),
+			res.GetSize(), FALSE);
+	}
 	return 1L;
 }
 

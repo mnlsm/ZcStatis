@@ -422,6 +422,9 @@
   <ItemGroup>
     <ResourceCompile Include="ZcStatis.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="res\ADDIN\template.lua" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

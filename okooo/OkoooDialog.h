@@ -44,6 +44,8 @@ public:
 		DDX_CONTROL(IDC_BUCLEARALL, m_buClear)
 		DDX_CONTROL(IDC_BUREFRESH, m_buRefresh)
 		DDX_CONTROL(IDC_COPY_CHOICES, m_buCopy)
+		DDX_CONTROL(IDC_EXTRACT_LUA, m_buExtractLua)
+
 
 	END_DDX_MAP()
 
@@ -63,6 +65,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_BUREFRESH, OnRefresh)
 		COMMAND_ID_HANDLER(IDC_COPY_CHOICES, OnCopyChoices)
 		COMMAND_ID_HANDLER(IDC_BUBIFEN, OnRefreshBiFen)
+		COMMAND_ID_HANDLER(IDC_EXTRACT_LUA, OnExtractLua)
 
 		CHAIN_MSG_MAP(CAxDialogImpl<OkoooDialog>)
 		REFLECT_NOTIFICATIONS()
@@ -101,7 +104,9 @@ public:
 	LRESULT OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnRefreshBiFen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
+	
 	LRESULT OnBetAreaLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnBetAreaEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnBetAreaPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -136,6 +141,7 @@ private:
 	CContainedWindowT<CButton> m_buCopy;
 	CContainedWindowT<CButton> m_buCalc;
 	CContainedWindowT<CButton> m_buUpload;
+	CContainedWindowT<CButton> m_buExtractLua;
 	CFont mMatchListFont;
 	CFont mBetAreaFont;
 
@@ -185,7 +191,9 @@ public:
 			std::string tip;
 			bool checked;
 			void calcTip(int hand);
-			std::string betStr();
+			std::string betStr() const;
+			std::string lineStr() const;
+			std::string buyStr() const;
 			int getPan(int hand) const;
 			//std::string oddsStr();
 		};

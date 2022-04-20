@@ -32,6 +32,7 @@ protected:
 	void push_scriptfunc_params(lua_State* L, const std::vector<JcBetItem>& record);
 	void gatherMatchBets(const std::vector<JcBetItemSource>& split_scores,
 		int index, std::vector<JcBetItem>& record, TBetResult& result);
+	void doAvgMultipleResult(const TBetResult& validResult, TBetResult& result);
 
 protected:
 	CStlString m_strScript;
@@ -40,8 +41,10 @@ protected:
 	std::vector<JcBetItemSource> m_vecSources;
 	std::vector<JcBetItemSource> m_vecFixedSources;
 	TBetResult m_vecResults;
-	CStlString m_strFanAnTitle, m_strFanAnDesc;
-	double m_dMinBonus;
-	int m_nMatchBetsLose;
+	TBetResult m_vecDiscardResults;
 
+	CStlString m_strFanAnTitle, m_strFanAnDesc;
+	int m_nMatchBetsLose;
+	double m_dMinBonus;
+	int m_nAvgMultiple;
 };

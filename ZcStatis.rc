@@ -182,7 +182,7 @@ BEGIN
     LTEXT           "赛事列表:",IDC_STATIC,10,45,37,8
     LTEXT           "选择区域:",IDC_STBETAREA1,555,47,37,8
     CONTROL         "",IDC_RESULT_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,6,495,854,36
-    LTEXT           "结果列表: ",IDC_STATIC_RESULT,8,477,105,8
+    LTEXT           "结果列表: ",IDC_STATIC_RESULT,8,477,415,8
     PUSHBUTTON      "登录",IDC_BULOGIN,8,13,45,15,NOT WS_TABSTOP
     PUSHBUTTON      "登出",IDC_BULOGOFF,59,13,45,15,WS_DISABLED | NOT WS_TABSTOP
     PUSHBUTTON      "清空选择",IDC_BUCLEARALL,166,13,45,15,NOT WS_TABSTOP
@@ -192,6 +192,7 @@ BEGIN
     CONTROL         "",IDC_YZM,"Static",SS_BLACKFRAME | NOT WS_VISIBLE,846,7,5,20
     PUSHBUTTON      "复制选择",IDC_COPY_CHOICES,219,13,45,15,NOT WS_TABSTOP
     PUSHBUTTON      "查看统计",IDC_BUBIFEN,388,13,45,15,NOT WS_TABSTOP
+    PUSHBUTTON      "脚本模板",IDC_EXTRACT_LUA,443,13,45,15,NOT WS_TABSTOP
 END
 
 IDD_DANLUE_STAT DIALOGEX 0, 0, 595, 340
@@ -308,6 +309,25 @@ BEGIN
         MENUITEM "上一页",                         IDM_PREV
     END
 END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_DANLUE_LOGIN AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// ADDIN
+//
+
+IDR_ADDIN2              ADDIN                   "res\\ADDIN\\template.lua"
 
 #endif    // 中文(简体，中国) resources
 /////////////////////////////////////////////////////////////////////////////
