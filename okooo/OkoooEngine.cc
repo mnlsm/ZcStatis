@@ -255,7 +255,6 @@ static void getJcBetItemSource(lua_State* L, const char* key, std::vector<JcBetI
 		}
 		sources.push_back(jbs);
 	}
-
 }
 
 lua_State* OkoooEngine::InitLua(CStlString& failed_reason) {
@@ -332,7 +331,7 @@ void OkoooEngine::TermLua(lua_State* L) {
 }
 
 void OkoooEngine::gatherMatchBets(const std::vector<JcBetItemSource>& split_scores,
-	int index, std::vector<JcBetItem>& record, TBetResult& result) {
+		int index, std::vector<JcBetItem>& record, TBetResult& result) {
 	int matchCount = split_scores.size() - m_nMatchBetsLose;
 	int leftCount = split_scores.size() - index;
 	if (record.size() >= matchCount) {

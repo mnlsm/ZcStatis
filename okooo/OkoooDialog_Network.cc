@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "OkoooDialog.h"
 #include "Global.h"
-#include "tinyxml2.h"
 #include "ZlibStream.h"
 #include "MiscHelper.h"
 
@@ -148,8 +147,7 @@ void OkoooDialog::OnLoginReturn(const CHttpRequestPtr& request, const CHttpRespo
 	if (response->httperror == talk_base::HE_NONE && response->response_content.size() > 0) {
 		m_UserID = "temp";
 		doJcMatchList();
-	}
-	else {
+	} else {
 		MessageBoxA("µÇÂ¼Ê§°Ü£¬ÍøÂç´íÎó!", "ÌáÊ¾", MB_OK);
 		m_buLogin.EnableWindow(TRUE);
 		m_buLogoff.EnableWindow(FALSE);
@@ -173,48 +171,16 @@ int OkoooDialog::doJcMatchList() {
 	return 0l;
 }
 
-CStringA GetElementAttrValue(tinyxml2::XMLElement* root, const CStringA& name) {
-	if (root == nullptr) {
-		return "";
-	}
-	auto result = root->Attribute(name, nullptr);
-	if (result == nullptr) {
-		return "";
-	}
+CStringA CreateMatchDescription(const CStringA& ahost, const CStringA& aaway) {
+	const char* vs("  VS  ");
+	const char* buf = "               ";
+	CStringA result;
+	CStringA host(buf), away(buf);
+	memcpy((char*)(LPCSTR)host + host.GetLength() - ahost.GetLength(), (LPCSTR)ahost, ahost.GetLength());
+	memcpy((char*)(LPCSTR)away, (LPCSTR)aaway, aaway.GetLength());
+	result = host + vs + away;
 	return result;
 }
-
-CStringA GetElementClassAttrValue(tinyxml2::XMLElement* root) {
-	return GetElementAttrValue(root, "class");
-}
-
-CStringA GetElementText(tinyxml2::XMLElement* root) {
-	if (root == nullptr) {
-		return "";
-	}
-	const char* v = root->GetText();
-	if (v == nullptr) {
-		v = "";
-	}
-	return v;
-}
-
-tinyxml2::XMLElement* FindElementByClassAttr(tinyxml2::XMLElement* root, const CStringA& class_value) {
-	while (root != nullptr) {
-		CStringA v = GetElementClassAttrValue(root);
-		if (v == class_value) {
-			return root;
-		}
-		tinyxml2::XMLElement* child = root->FirstChildElement();
-		tinyxml2::XMLElement* result = FindElementByClassAttr(child, class_value);
-		if (result != nullptr) {
-			return result;
-		}
-		root = root->NextSiblingElement();
-	}
-	return nullptr;
-}
-
 
 void OkoooDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 	const CHttpResponseDataPtr& response) {
@@ -270,10 +236,9 @@ void OkoooDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 							ji->id = date + (LPCSTR)GetElementText(FindElementByClassAttr(son_child, "xuhao"));
 							CMiscHelper::string_replace(ji->id, "-", "");
 							ji->match_category = GetElementText(FindElementByClassAttr(son_child, "liansai"));
-							ji->start_time = ji->last_buy_time = GetElementText(FindElementByClassAttr(son_child, "timetxt"));
-
+							ji->start_time = ji->last_buy_time = date + std::string(" ") + (LPCSTR)GetElementText(FindElementByClassAttr(son_child, "timetxt"));
 							tempElement = FindElementByClassAttr(son_child, "fr listmore ctrl_addmore");
-							ji->descrition = GetElementAttrValue(tempElement, "hn") + " VS " + GetElementAttrValue(tempElement, "an");
+							ji->descrition = CreateMatchDescription(GetElementAttrValue(tempElement, "hn"), GetElementAttrValue(tempElement, "an"));
 							ji->orderid = GetElementAttrValue(tempElement, "orderid");
 							items.insert(std::make_pair(date, ji));
 							order_items.insert(std::make_pair(ji->orderid, ji));
@@ -284,7 +249,6 @@ void OkoooDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 			}
 			child = child->NextSiblingElement();
 		}
-
 		section_begin = "var oddsData = ";
 		section_end = "};";
 		nFindBegin = temp.Find(section_begin);
@@ -397,8 +361,7 @@ void OkoooDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 			JCMatchItem item;
 			if (GetItemFromDB(iter.second->id, item)) {
 				*iter.second = item;
-			}
-			else {
+			} else {
 				InsertItemToDB(*iter.second);
 			}
 		}
@@ -406,6 +369,8 @@ void OkoooDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 	}
 	doBiFen();
 	ReloadMatchListData();
+	m_buLogin.EnableWindow(FALSE);
+	m_buLogoff.EnableWindow(TRUE);
 }
 
 int OkoooDialog::doBiFen() {
@@ -511,41 +476,33 @@ void OkoooDialog::JCMatchItem::Subject::calcTip(int hand) {
 	if (tid == 6) {
 		if (betCode == 3) {
 			tip = "Ê¤";
-		}
-		else if (betCode == 1) {
+		} else if (betCode == 1) {
 			tip = "Æ½";
-		}
-		else if (betCode == 0) {
+		} else if (betCode == 0) {
 			tip = "¸º";
 		}
-	}
-	else if (tid == 1) {
+	} else if (tid == 1) {
 		if (betCode == 3) {
 			if (hand >= 0) {
 				temp.Format("Ê¤(+%d)", hand);
-			}
-			else {
+			} else {
 				temp.Format("Ê¤(%d)", hand);
 			}
 			tip = temp;
-		}
-		else if (betCode == 1) {
+		} else if (betCode == 1) {
 			tip = "Æ½";
-		}
-		else if (betCode == 0) {
+		} else if (betCode == 0) {
 			tip = "¸º";
 		}
 	}
 	else if (tid == 2) {
 		if (betCode < 7) {
 			temp.Format("%dÇò", betCode);
-		}
-		else {
+		} else {
 			temp.Format("%d+Çò", betCode);
 		}
 		tip = temp;
-	}
-	else if (tid == 4) {
+	} else if (tid == 4) {
 		std::map<int, std::string> pair = {
 			{0, "Ê¤/Ê¤"},
 			{1, "Ê¤/Æ½"},
@@ -629,47 +586,35 @@ int OkoooDialog::JCMatchItem::Subject::getPan(int hand) const {
 		if (hand < 0) {
 			if (betCode == 3) {
 				ret = -1;
-			}
-			else if (betCode == 1) {
+			} else if (betCode == 1) {
 				ret = 3;
-			}
-			else if (betCode == 0) {
+			} else if (betCode == 0) {
 				ret = 4;
 			}
-		}
-		else {
+		} else {
 			if (betCode == 3) {
 				ret = 4;
-			}
-			else if (betCode == 1) {
+			} else if (betCode == 1) {
 				ret = 3;
-			}
-			else if (betCode == 0) {
+			} else if (betCode == 0) {
 				ret = -1;
 			}
 		}
-
-	}
-	else if (tid == 1) {
+	} else if (tid == 1) {
 		if (hand < 0) {
 			if (betCode == 3) {
 				ret = 1;
-			}
-			else if (betCode == 1) {
+			} else if (betCode == 1) {
 				ret = 2;
-			}
-			else if (betCode == 0) {
+			} else if (betCode == 0) {
 				ret = -2;
 			}
-		}
-		else {
+		} else {
 			if (betCode == 3) {
 				ret = -2;
-			}
-			else if (betCode == 1) {
+			} else if (betCode == 1) {
 				ret = 2;
-			}
-			else if (betCode == 0) {
+			} else if (betCode == 0) {
 				ret = 1;
 			}
 		}

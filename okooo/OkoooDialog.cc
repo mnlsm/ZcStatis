@@ -2,6 +2,7 @@
 #include "OkoooDialog.h"
 #include "OkoooStat.h"
 #include "Global.h"
+#include "MiscHelper.h"
 
 
 static const CStlString LUA_FILTER_NAME = _T("脚本文件(*.lua)");
@@ -197,25 +198,6 @@ void OkoooDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 	}
 }
 
-void OkoooDialog::DoRefreshMatchListResults() {
-	for (int i = 0; i < m_lstMatch.GetItemCount(); i++) {
-		CStringATL strID;
-		m_lstMatch.GetItemText(i, 0, strID);
-		CStringATL result;
-		for (auto& item : m_JCMatchItems) {
-			if (item.second->id.compare(strID) == 0) {
-				for (auto& sub : item.second->subjects) {
-					if (sub.checked) {
-						result += sub.betStr().c_str();
-						result += ";";
-					}
-				}
-			}
-		}
-		m_lstMatch.SetItemText(i, 6, result);
-	}
-}
-
 LRESULT OkoooDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	ShowWindow(SW_HIDE);
 	return 1L;
@@ -259,7 +241,6 @@ LRESULT OkoooDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 		MessageBox("Script文件读取失败！", "错误", MB_ICONERROR | MB_OK);
 		return 1;
 	}
-
 	std::shared_ptr<OkoooEngine> engine(new (std::nothrow) OkoooEngine(filedata, m_strWorkDir));
 	if (engine.get() != NULL) {
 		engine->setScriptFile(strLoadPath.c_str());
@@ -272,87 +253,18 @@ LRESULT OkoooDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 		}
 		engine.swap(m_Engine);
 	}
-
-	//更新显示
-	for (auto& item : m_JCMatchItems) {
-		for (auto& sub : item.second->subjects) {
-			sub.checked = false;
-		}
-	}
-	for (const auto& r : m_Engine->getSource()) {
-		for (const auto& item : r.bets) {
-			JCMatchItem::Subject* sub = get_subjects(r.id, item.tid, item.code);
-			if (sub != NULL) {
-				sub->checked = true;
-			}
-		}
-	}
-	m_lstResult.DeleteAllItems();
-	m_stResult.SetWindowText("结果列表:");
+	DoRefreshBetArea();
 	DoRefreshMatchListResults();
-	m_stBetArea.Invalidate();
-
-	std::map<CStringATL, std::tuple<int, double>> rows;
-	for (const auto& r : m_Engine->getResult()) {
-		double bouns = 2.0;
-		CStringATL strCodes;
-		for (const auto& item : r) {
-			bouns = bouns * item.bet.odds;
-			JCMatchItem::Subject sub;
-			sub.tid = item.bet.tid;
-			sub.betCode = item.bet.code;
-			sub.calcTip(item.bet.hand);
-			char sz[64] = { '\0' };
-			const std::string&& temp = sub.buyStr();
-			sprintf(sz, "[%s]%s(%.2f)", item.id.c_str(), temp.c_str(), item.bet.odds);
-			if (!strCodes.IsEmpty()) {
-				strCodes += ",";
-			}
-			strCodes += sz;
-		}
-		auto& iter = rows.find(strCodes);
-		if (iter != rows.end()) {
-			std::get<0>(iter->second) += 1;
-			std::get<1>(iter->second) += bouns;
-		}
-		else {
-			std::tuple<int, double> tup;
-			std::get<0>(tup) = 1;
-			std::get<1>(tup) = bouns;
-			rows[strCodes] = tup;
-		}
-	}
-
-	int index = 0;
-	double maxBonus = 0.0, minBonus = -1;
-	for (const auto& row : rows) {
-		int colIndex = 0;
-		CStringATL strResult;
-		strResult.Format("%d", index + 1);
-		int lIndex = m_lstResult.InsertItem(index++, strResult);
-		strResult.Format("%.2f", std::get<1>(row.second));
-		m_lstResult.SetItemText(lIndex, ++colIndex, strResult);
-		strResult.Format("%d", std::get<0>(row.second));
-		m_lstResult.SetItemText(lIndex, ++colIndex, strResult);
-		m_lstResult.SetItemText(lIndex, ++colIndex, row.first);
-		double bonus = std::get<1>(row.second);
-		if (bonus < minBonus || minBonus < 0) {
-			minBonus = bonus;
-		}
-		if (bonus > maxBonus) {
-			maxBonus = bonus;
-		}
-	}
-	minBonus = (minBonus - 2 * m_Engine->getResult().size()) / (2 * m_Engine->getResult().size()) * 100;
-	maxBonus = (maxBonus - 2 * m_Engine->getResult().size()) / (2 * m_Engine->getResult().size()) * 100;
-	CStringATL maxBonusRate, minBonusRate;
-	maxBonusRate.Format("%d", (int)maxBonus); maxBonusRate += "%";
-	minBonusRate.Format("%d", (int)minBonus); minBonusRate += "%";
-	CStringATL temp;
-	temp.Format("结果列表(共%d注,  盈亏[%s-%s]):" , 
-		m_Engine->getResult().size(), minBonusRate, maxBonusRate);
+	std::string buyLines, checkLines;
+	CStringATL&& temp = DoRefreshResultListResults(buyLines, checkLines);
 	m_stResult.SetWindowText(temp);
-
+	if (m_Engine.get() != NULL) {
+		m_Engine->setCheckResult(checkLines);
+	}
+	CStlString strBuyFilePath = strLoadPath;
+	CMiscHelper::string_replace(strBuyFilePath, ".lua", ".buy");
+	DeleteFileA(strBuyFilePath.c_str());
+	Global::SaveFileData(strBuyFilePath, buyLines, FALSE);
 	return 1L;
 }
 
@@ -370,13 +282,43 @@ LRESULT OkoooDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 }
 
 LRESULT OkoooDialog::OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-	/*
-	if (MessageBox("是否上传投注结果？", "提示", MB_ICONQUESTION | MB_YESNO) == IDYES) {
-		if (doHeMai() == 0) {
-			m_buUpload.EnableWindow(FALSE);
+	if (m_Engine.get() == nullptr) {
+		MessageBox("读取投注结果失败 0！", "错误", MB_ICONERROR | MB_OK);
+		return 1L;
+	}
+	if (m_Engine->getResult().empty()) {
+		MessageBox("读取投注结果失败 1！", "错误", MB_ICONERROR | MB_OK);
+		return 1L;
+	}
+	const CStlString& scriptData = m_Engine->getScriptFileData();
+	const CStlString& checkResult = m_Engine->getCheckResult();
+	CStringATL strSQL;
+	strSQL.Format(_T("SELECT ID FROM JCZQ_INVEST WHERE CHECK_RESULT='%s'"), checkResult.c_str());
+	if (TRUE) {
+		SQLite::Statement sm(*m_pDatabase, strSQL);
+		if (sm.executeStep()) {
+			MessageBox("该投注结果已经存在！", "错误", MB_ICONERROR | MB_OK);
+			return 1L;
 		}
 	}
-	*/
+	SYSTEMTIME tm = { 0 };
+	GetLocalTime(&tm);
+	CStringATL id;
+	id.Format("%04d-%02d-%02d %02d:%02d:%02d", 
+		(int)tm.wYear, (int)tm.wMonth, (int)tm.wDay, tm.wHour, tm.wMinute, tm.wSecond);
+	strSQL = _T("INSERT INTO JCZQ_INVEST (ID, SCRIPT, CHECK_RESULT, INVEST, INCOME) VALUES(?,?,?,?,?)");
+	if (TRUE) {
+		SQLite::Statement sm(*m_pDatabase, strSQL);
+		sm.bindNoCopy(1, id);
+		sm.bind(2, scriptData);
+		sm.bind(3, checkResult);
+		sm.bindNoCopy(4, "");
+		sm.bindNoCopy(5, "");
+		if (sm.exec() > 0) {
+			MessageBox("投注结果插入失败！", "错误", MB_ICONERROR | MB_OK);
+			return 1L;
+		}
+	}
 	return 1L;
 }
 
@@ -707,3 +649,172 @@ BOOL OkoooDialog::UpdateItemResultToDB(const std::string& id, const std::string&
 	return FALSE;
 }
 
+void OkoooDialog::DoRefreshBetArea() {
+	for (auto& item : m_JCMatchItems) {
+		for (auto& sub : item.second->subjects) {
+			sub.checked = false;
+		}
+	}
+	if (m_Engine.get() != nullptr) {
+		for (const auto& r : m_Engine->getSource()) {
+			for (const auto& item : r.bets) {
+				JCMatchItem::Subject* sub = get_subjects(r.id, item.tid, item.code);
+				if (sub != NULL) {
+					sub->checked = true;
+				}
+			}
+		}
+	}
+	m_stBetArea.Invalidate();
+}
+
+CStringATL OkoooDialog::DoRefreshResultListResults(std::string& abuyLines, std::string& acheckLines) {
+	abuyLines.clear();
+	acheckLines.clear();
+	CStringATL result = "结果列表:";
+	m_lstResult.DeleteAllItems();
+	if (m_Engine.get() == nullptr) {
+		return result;
+	}
+	std::map<CStringATL, std::tuple<int, double, CStringW, CStringATL>> rows;
+	for (const auto& r : m_Engine->getResult()) {
+		double bouns = 2.0;
+		CStringATL strCodes; 
+		CStringW strBuyLine;
+		CStringATL strCheckLine;
+		for (const auto& item : r) {
+			bouns = bouns * item.bet.odds;
+			JCMatchItem::Subject sub ;
+			sub.tid = item.bet.tid;
+			sub.betCode = item.bet.code;
+			sub.calcTip(item.bet.hand);
+			char sz[64] = { '\0' };
+			const std::string&& temp = sub.buyStr();
+			sprintf(sz, "[%s]%s(%.2f)", item.id.c_str(), temp.c_str(), item.bet.odds);
+			if (!strCodes.IsEmpty()) {
+				strCodes += ",";
+			}
+			strCodes += sz;
+			JCMatchItem m;
+			CStringA match_descrition = item.id.c_str();
+			if (GetItemFromDB(item.id, m)) {
+				match_descrition = m.descrition.c_str();
+			}
+			match_descrition.Trim();
+			sprintf(sz, "[%s]: %s", (LPCSTR)match_descrition, temp.c_str());
+			CStringW buyItem = CA2W(sz, CP_ACP).m_psz;
+			for (UINT i = buyItem.GetLength(); i < 30; i++) {
+				buyItem.AppendChar(L' ');
+			}
+			int nChineseCount = 0;
+			for (UINT i = 0; i < buyItem.GetLength(); i++) {
+				if (buyItem[i] > 127) {
+					nChineseCount++;
+				}
+			}
+			if ((nChineseCount % 2) != 0) {
+				buyItem.AppendChar(L' ');
+			}
+			if (strBuyLine.IsEmpty()) {
+				strBuyLine = buyItem;
+			} else {
+				//strBuyLine.Append(L"    ");
+				strBuyLine.Append(buyItem);
+			}
+			sprintf(sz, "%s,%d,%d", item.id.c_str(), item.bet.tid, item.bet.code);
+			if (strCheckLine.IsEmpty()) {
+				strCheckLine = sz;
+			} else {
+				strCheckLine.AppendChar(';');
+				strCheckLine.Append(sz);
+			}
+		}
+		auto& iter = rows.find(strCodes);
+		if (iter != rows.end()) {
+			std::get<0>(iter->second) += 1;
+			std::get<1>(iter->second) += bouns;
+		} else {
+			std::tuple<int, double, CStringW, CStringATL> tup;
+			std::get<0>(tup) = 1;
+			std::get<1>(tup) = bouns;
+			std::get<2>(tup) = strBuyLine;
+			std::get<3>(tup) = strCheckLine;
+			rows[strCodes] = tup;
+		}
+	}
+	CStringW buyLines;
+	CStringATL checkLines;
+	std::multimap<int, CStringW> mBuyLines;
+	for (const auto& row : rows) {
+		int multiple = std::get<0>(row.second);
+		double bonus = std::get<1>(row.second);
+		CStringW buyLine = std::get<2>(row.second);
+		CStringATL checkLine = std::get<3>(row.second);
+		buyLine.AppendFormat(L"    %d倍\n", multiple);
+		//abuyLines.append(CW2A(buyLine, CP_UTF8).m_psz);
+		checkLine.AppendFormat("|%d|%.2f\n", multiple, bonus);
+		acheckLines.append(checkLine);
+		mBuyLines.insert(std::pair<int, CStringW>(multiple, buyLine));
+	}
+	abuyLines.clear();
+	int cur_multiple = 0;
+	for (auto& buy : mBuyLines) {
+		if (abuyLines.empty()) {
+			abuyLines = CW2A(buy.second, CP_UTF8).m_psz;
+			cur_multiple = buy.first;
+		} else {
+			if (cur_multiple != buy.first) {
+				abuyLines.append("\n");
+				cur_multiple = buy.first;
+			}
+			abuyLines.append(CW2A(buy.second, CP_UTF8).m_psz);
+		}
+	}
+	int index = 0;
+	double maxBonus = 0.0, minBonus = -1;
+	for (const auto& row : rows) {
+		int colIndex = 0;
+		CStringATL strResult;
+		strResult.Format("%d", index + 1);
+		int lIndex = m_lstResult.InsertItem(index++, strResult);
+		strResult.Format("%.2f", std::get<1>(row.second));
+		m_lstResult.SetItemText(lIndex, ++colIndex, strResult);
+		strResult.Format("%d", std::get<0>(row.second));
+		m_lstResult.SetItemText(lIndex, ++colIndex, strResult);
+		m_lstResult.SetItemText(lIndex, ++colIndex, row.first);
+		double bonus = std::get<1>(row.second);
+		if (bonus < minBonus || minBonus < 0) {
+			minBonus = bonus;
+		}
+		if (bonus > maxBonus) {
+			maxBonus = bonus;
+		}
+	}
+	minBonus = (minBonus - 2 * m_Engine->getResult().size()) / (2 * m_Engine->getResult().size()) * 100;
+	maxBonus = (maxBonus - 2 * m_Engine->getResult().size()) / (2 * m_Engine->getResult().size()) * 100;
+	CStringATL maxBonusRate, minBonusRate;
+	maxBonusRate.Format("%d", (int)maxBonus); maxBonusRate += "%";
+	minBonusRate.Format("%d", (int)minBonus); minBonusRate += "%";
+	result.Format("结果列表(共%d注,  投产比范围[%s-%s]):",
+		m_Engine->getResult().size(), minBonusRate, maxBonusRate);
+	return result;
+}
+
+void OkoooDialog::DoRefreshMatchListResults() {
+	for (int i = 0; i < m_lstMatch.GetItemCount(); i++) {
+		CStringATL strID;
+		m_lstMatch.GetItemText(i, 0, strID);
+		CStringATL result;
+		for (auto& item : m_JCMatchItems) {
+			if (item.second->id.compare(strID) == 0) {
+				for (auto& sub : item.second->subjects) {
+					if (sub.checked) {
+						result += sub.betStr().c_str();
+						result += ";";
+					}
+				}
+			}
+		}
+		m_lstMatch.SetItemText(i, 6, result);
+	}
+}

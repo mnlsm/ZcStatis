@@ -1,15 +1,16 @@
 --1
-kMinBonus = 500.0;
+kMinBonus = 1027.0;
 kMatchTitle = "竞猜足球 合买";
 kMatchDesc = "过滤";
 kMatchBetsLose = 0;
-kAvgMultiple = 0;
+kAvgMultiple = 8;
 
 kMatchBets = {
-    "20220419002;1;2,1,4.30;2,2,3.25;2,3,3.60;2,4,5.80",         --索肖 VS 图卢兹
-    "20220419003;-1;2,1,4.10;2,2,3.20;2,3,3.65;2,4,6.00",         --欧塞尔 VS 第戎
-    "20220419004;-1;2,1,3.85;2,2,3.10;2,3,3.75;2,4,6.50",         --甘冈 VS 波城
+    "20220421002;-1;2,1,3.70;2,2,3.05;2,3,3.80;2,4,6.90",         --         西班牙  VS  巴列卡         
+    "20220421003;1;2,1,7.50;2,2,4.30;2,3,3.40;2,4,4.25",         --         代格福  VS  哈马比         
+    "20220421004;1;2,1,4.40;2,2,3.30;2,3,3.65;2,4,5.75",         --         伯恩利  VS  南安普         
 };
+
 
 --[[
 kMatchBetsFixed = {
@@ -68,11 +69,23 @@ function IsFilterLua(params)
 	local codes = params.betcodes;
 	local bonus = params.betbouns;
 	local trace_prefix = "jc_dbg[";
-	local jq2 =  GetCodeCount(codes, 2, 2); --选择进球数2的个数
-	local jq3 =  GetCodeCount(codes, 2, 3); --选择进球数3的个数
+	
+--	local m1_1 =  GetMatchCodeCount("20220421001", codes, 6, 1);   --m1, 平的个数
+--	local m1_bf02 =  GetMatchCodeCount("20220421001", codes, 3, 19); --m1, 选择0:2的个数
+	
+	local m4_jq1 =  GetMatchCodeCount("20220421004", codes, 2, 1); --m2, 选择进球数1的个数
+	local m4_jq4 =  GetMatchCodeCount("20220421004", codes, 2, 4); --m2, 选择进球数4的个数
 
-	if(jq2 + jq3 <= 1) then
-		ret.info = trace_prefix .. "jq2 + jq3=" .. (jq2 + jq3).."]";
+	local m2_jq1 =  GetMatchCodeCount("20220421002", codes, 2, 1); --m2, 选择进球数1的个数
+	local m2_jq4 =  GetMatchCodeCount("20220421002", codes, 2, 4); --m2, 选择进球数4的个数
+	
+	local m3_jq1 =  GetMatchCodeCount("20220421003", codes, 2, 1); --m3, 选择进球数1的个数
+	local m3_jq4 =  GetMatchCodeCount("20220421003", codes, 2, 4); --m3, 选择进球数4的个数
+	
+	local total = m4_jq1 + m4_jq4 + m2_jq1 + m2_jq4 + m3_jq1 + m3_jq4;
+
+	if(total > 1) then
+		ret.info = trace_prefix .. "total=" .. (total) .. "]";
 		trace(1, ret.info);
 		ret.code = 1;
 		return ret;

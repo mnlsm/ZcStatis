@@ -1,5 +1,6 @@
 #pragma once
 #include "StlFiles.h"
+#include "tinyxml2.h"
 
 class Global {
 public:
@@ -38,3 +39,9 @@ private:
 	static std::wstring SysMultiByteToWide(const char* mb, UINT code_page);
 	static std::string  SysWideToMultiByte(const wchar_t* wide, UINT code_page);
 };
+
+CStringA GetElementAttrValue(tinyxml2::XMLElement* root, const CStringA& name);
+CStringA GetElementClassAttrValue(tinyxml2::XMLElement* root);
+CStringA GetElementText(tinyxml2::XMLElement* root);
+tinyxml2::XMLElement* FindElementByClassAttr(tinyxml2::XMLElement* root, 
+	const CStringA& class_value);

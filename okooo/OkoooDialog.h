@@ -122,6 +122,8 @@ private:
 
 	void DoMatchListMenuCommand(UINT cmd, UINT index);
 	void DoRefreshMatchListResults();
+	CStringATL DoRefreshResultListResults(std::string& buyLines, std::string& checkLines);
+	void DoRefreshBetArea();
 
 private:
 	CSortListViewCtrlEx<OkoooDialog> m_lstMatch;
@@ -225,6 +227,7 @@ private:
 	BOOL GetItemFromDB(const std::string& id, JCMatchItem& item);
 	BOOL InsertItemToDB(const JCMatchItem& item);
 	BOOL UpdateItemResultToDB(const std::string& id, const std::string& result);
+
 
 private:
 	struct DrawBetItem {

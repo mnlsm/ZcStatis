@@ -19,6 +19,11 @@ public:
 	const CStlString& getScriptFile() { return m_strScriptFile; }
 	const std::vector<JcBetItemSource>& GetFixedSources() { return m_vecFixedSources; }
 
+	void setCheckResult(const CStlString& result) { m_strCheckResult = result; }
+	const CStlString& getCheckResult(){ return m_strCheckResult; }
+	const CStlString& getScriptFileData() { return m_strScript; }
+
+
 protected:
 	void SetSources(const std::vector<JcBetItemSource>& items);
 	void SetFixedSources(const std::vector<JcBetItemSource>& items);
@@ -47,4 +52,6 @@ protected:
 	int m_nMatchBetsLose;
 	double m_dMinBonus;
 	int m_nAvgMultiple;
+
+	CStlString m_strCheckResult;
 };

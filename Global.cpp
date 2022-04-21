@@ -306,3 +306,46 @@ void Global::getBiFenDateInfo(CStringATL& beginDay, CStringATL& endDay, CStringA
 		beginWeekDay = "ÖÜÁù";
 	}
 }
+
+CStringA GetElementAttrValue(tinyxml2::XMLElement* root, const CStringA& name) {
+	if (root == nullptr) {
+		return "";
+	}
+	auto result = root->Attribute(name, nullptr);
+	if (result == nullptr) {
+		return "";
+	}
+	return result;
+}
+
+CStringA GetElementClassAttrValue(tinyxml2::XMLElement* root) {
+	return GetElementAttrValue(root, "class");
+}
+
+CStringA GetElementText(tinyxml2::XMLElement* root) {
+	if (root == nullptr) {
+		return "";
+	}
+	const char* v = root->GetText();
+	if (v == nullptr) {
+		v = "";
+	}
+	return v;
+}
+
+tinyxml2::XMLElement* FindElementByClassAttr(tinyxml2::XMLElement* root, 
+		const CStringA& class_value) {
+	while (root != nullptr) {
+		CStringA v = GetElementClassAttrValue(root);
+		if (v == class_value) {
+			return root;
+		}
+		tinyxml2::XMLElement* child = root->FirstChildElement();
+		tinyxml2::XMLElement* result = FindElementByClassAttr(child, class_value);
+		if (result != nullptr) {
+			return result;
+		}
+		root = root->NextSiblingElement();
+	}
+	return nullptr;
+}
