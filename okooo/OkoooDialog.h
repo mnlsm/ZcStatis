@@ -224,7 +224,8 @@ private:
 	std::shared_ptr<JCMatchItem> m_CurrentMatchItem;
 	JCMatchItem::Subject* get_subjects(const std::string& id, int tid, int code);
 
-	BOOL GetItemFromDB(const std::string& id, JCMatchItem& item);
+	BOOL GetItemFromDB(const JCMatchItem& new_item, JCMatchItem& item);
+
 	BOOL InsertItemToDB(const JCMatchItem& item);
 	BOOL UpdateItemResultToDB(const std::string& id, const std::string& result);
 

@@ -42,7 +42,7 @@ OkoooDialog::OkoooDialog() :
 	m_stSep2(this, 100),
 	m_buCopy(this, 100),
 	m_stResult(this, 100),
-	m_buExtractLua(this, 1),
+	m_buExtractLua(this, 100),
 	m_buUpload(this, 100) {
 	m_FirstDrawBetArea = true;
 	SYSTEMTIME tm = { 0 };
@@ -236,16 +236,20 @@ LRESULT OkoooDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 	if (dlg.DoModal() != IDOK) {
 		return 1;
 	}
+	CWaitCursor wait;
 	CStlString strLoadPath = dlg.m_ofn.lpstrFile;
 	if (!Global::ReadFileData(strLoadPath, filedata) || filedata.size() == 0) {
+		wait.Restore();
 		MessageBox("ScriptÎÄ¼þ¶ÁÈ¡Ê§°Ü£¡", "´íÎó", MB_ICONERROR | MB_OK);
 		return 1;
 	}
+	wait.Set();
 	std::shared_ptr<OkoooEngine> engine(new (std::nothrow) OkoooEngine(filedata, m_strWorkDir));
 	if (engine.get() != NULL) {
 		engine->setScriptFile(strLoadPath.c_str());
 		CStlString reason = "";
 		if (!engine->CalculateAllResult(reason)) {
+			wait.Restore();
 			CStringATL errorStr;
 			errorStr.Format("¼ÆËã´íÎó£º %s", reason.c_str());
 			MessageBox(errorStr, "´íÎó", MB_ICONERROR | MB_OK);
@@ -268,15 +272,38 @@ LRESULT OkoooDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 	return 1L;
 }
 
+void OpenDirAndSelectFiles(const char* sFile, const std::vector<const char*>& lFilelist) {
+	if (sFile == nullptr) return;
+	ITEMIDLIST* dir = ILCreateFromPath(sFile);
+	ITEMIDLIST** selection = new ITEMIDLIST * [lFilelist.size()];
+	auto _it = lFilelist.cbegin();
+	int _index = 0;
+	for (; _it != lFilelist.end(); _it++, _index++) {
+		*(selection + _index) = ILCreateFromPath(*_it);
+	}
+	SHOpenFolderAndSelectItems(dir, lFilelist.size(), (LPCITEMIDLIST*)(selection), 0);
+	ILFree(dir);
+	for (_index = 0; _index != lFilelist.size(); _index++) {
+		ILFree(*(selection + _index));
+	}
+}
+
 LRESULT OkoooDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-	auto dwTick = GetTickCount64();
+	CWaitCursor wait;
+	Sleep(1000);
+	SYSTEMTIME tm = { 0 };
+	GetLocalTime(&tm);
 	CStringATL file_path;
-	file_path.Format("%s\\%I64u.lua", this->m_strWorkDir, dwTick);
+	file_path.Format("%s\\%04d%02d%02d%02d%02d%02d.lua", this->m_strWorkDir, 
+		tm.wYear, tm.wMonth,tm.wDay, tm.wHour, tm.wMinute, tm.wSecond);
 	DeleteFile(file_path);
 	CResource res;
 	if (res.Load(_T("ADDIN"), MAKEINTRESOURCE(IDR_ADDIN2))) {
 		Global::SaveFileData((LPCSTR)file_path, (uint8_t*)res.Lock(),
 			res.GetSize(), FALSE);
+		std::vector<const char*> select_files;
+		select_files.push_back((LPCSTR)file_path);
+		OpenDirAndSelectFiles((LPCSTR)m_strWorkDir, select_files);
 	}
 	return 1L;
 }
@@ -323,6 +350,7 @@ LRESULT OkoooDialog::OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 }
 
 LRESULT OkoooDialog::OnClearAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	CWaitCursor wait;
 	for (auto& item : m_JCMatchItems) {
 		for (auto& sub : item.second->subjects) {
 			sub.checked = false;
@@ -337,15 +365,18 @@ LRESULT OkoooDialog::OnClearAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 }
 
 LRESULT OkoooDialog::OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	CWaitCursor wait;
 	doJcMatchList();
 	return 1L;
 }
 
 LRESULT OkoooDialog::OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	CWaitCursor wait;
 	CStringATL strMatchBets = "kMatchBets = {\r\n";
+	std::vector<CStringATL> prefixs, subfixs;
+	int max_prefixs_length = 0;
 	for (auto& item : m_JCMatchItems) {
-		CStringATL strItem, strBets;
-		item.second->id;
+		CStringATL strBets;
 		for (auto& sub : item.second->subjects) {
 			if (sub.checked) {
 				char szTemp[128] = { '\0' };
@@ -357,13 +388,26 @@ LRESULT OkoooDialog::OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 			}
 		}
 		if (!strBets.IsEmpty()) {
-			strItem.Format("    \"%s;%d;%s\",         --%s\r\n", item.second->id.c_str(),
-				(int)item.second->hand, strBets, item.second->descrition.c_str());
-			strMatchBets += strItem;
+			CStringATL prefix;
+			prefix.Format("    \"%s;%d;%s\",    ", item.second->id.c_str(),
+				(int)item.second->hand, strBets);
+			prefixs.push_back(prefix);
+			if (prefix.GetLength() > max_prefixs_length) {
+				max_prefixs_length = prefix.GetLength();
+			}
+			subfixs.push_back(item.second->descrition.c_str());
 		}
 	}
+	for (int i = 0; i < prefixs.size(); i++) {
+		for (int j = prefixs[i].GetLength(); j < max_prefixs_length; j++) {
+			prefixs[i].AppendChar(' ');
+		}
+		CStringATL strItem;
+		strItem.Format("%s--%s\r\n", prefixs[i], subfixs[i]);
+		strMatchBets += strItem;
+
+	}
 	strMatchBets += "};\r\n";
-	//strMatchBets = Global::toUTF8((LPCSTR)strMatchBets).c_str();
 	if (OpenClipboard()) {
 		EmptyClipboard();
 		if (!strMatchBets.IsEmpty()) {
@@ -381,7 +425,7 @@ LRESULT OkoooDialog::OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 }
 
 LRESULT OkoooDialog::OnRefreshBiFen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-	//doBiFen();
+	doBiFen();
 	OkoooStat dlg(m_pDatabase);
 	dlg.DoModal();
 	return 1L;
@@ -521,8 +565,7 @@ void OkoooDialog::ReloadMatchListData() {
 		JCMatchItem::Subject* sub = ji->get_subject(6, 3);
 		if (sub == NULL) {
 			temp = "Î´ ¿ª ÊÛ";
-		}
-		else {
+		} else {
 			a = sub->odds;
 			sub = ji->get_subject(6, 1);
 			b = sub->odds;
@@ -557,9 +600,11 @@ void OkoooDialog::CreateWorkDir() {
 	strPath = m_strRootDir + _T("\\") + m_strQH;
 	CreateDirectory(strPath, NULL);
 	m_strWorkDir = strPath;
+	m_strWorkDir.Replace(".\\", "");
 }
 
-BOOL OkoooDialog::GetItemFromDB(const std::string& id, JCMatchItem& item) {
+BOOL OkoooDialog::GetItemFromDB(const JCMatchItem& new_item, JCMatchItem& item) {
+	const std::string& id = new_item.id;
 	item.id = "";
 	item.subjects.clear();
 	CStringATL strSQL;
@@ -587,6 +632,27 @@ BOOL OkoooDialog::GetItemFromDB(const std::string& id, JCMatchItem& item) {
 			sub.calcTip(item.hand);
 			sub.checked = false;
 			item.subjects.push_back(sub);
+		}
+		item.subjects = new_item.subjects;
+		data.clear();
+		for (auto& bet : item.subjects) {
+			CStringATL betInfo;
+			if (data.empty()) {
+				betInfo.Format("%d;%d;%.2f", (int)bet.tid, (int)bet.betCode, bet.odds);
+			}
+			else {
+				betInfo.Format("|%d;%d;%.2f", (int)bet.tid, (int)bet.betCode, bet.odds);
+			}
+			data += betInfo;
+		}
+		strSQL = _T("UPDATE JCZQ SET SUBJECTS=? WHERE ID=?");
+		if (TRUE) {
+			SQLite::Statement sm(*m_pDatabase, strSQL);
+			sm.bind(1, data);
+			sm.bind(2, id);
+			if (sm.exec()) {
+				return TRUE;
+			}
 		}
 		return TRUE;
 	}
@@ -697,13 +763,16 @@ CStringATL OkoooDialog::DoRefreshResultListResults(std::string& abuyLines, std::
 			strCodes += sz;
 			JCMatchItem m;
 			CStringA match_descrition = item.id.c_str();
+			/*
 			if (GetItemFromDB(item.id, m)) {
 				match_descrition = m.descrition.c_str();
 			}
+			*/
+			match_descrition = match_descrition.Right(match_descrition.GetLength() - 3);
 			match_descrition.Trim();
 			sprintf(sz, "[%s]: %s", (LPCSTR)match_descrition, temp.c_str());
 			CStringW buyItem = CA2W(sz, CP_ACP).m_psz;
-			for (UINT i = buyItem.GetLength(); i < 30; i++) {
+			for (UINT i = buyItem.GetLength(); i < 12; i++) {
 				buyItem.AppendChar(L' ');
 			}
 			int nChineseCount = 0;
@@ -750,7 +819,7 @@ CStringATL OkoooDialog::DoRefreshResultListResults(std::string& abuyLines, std::
 		double bonus = std::get<1>(row.second);
 		CStringW buyLine = std::get<2>(row.second);
 		CStringATL checkLine = std::get<3>(row.second);
-		buyLine.AppendFormat(L"    %d±¶\n", multiple);
+		buyLine.AppendFormat(L"  %d±¶\n", multiple);
 		//abuyLines.append(CW2A(buyLine, CP_UTF8).m_psz);
 		checkLine.AppendFormat("|%d|%.2f\n", multiple, bonus);
 		acheckLines.append(checkLine);

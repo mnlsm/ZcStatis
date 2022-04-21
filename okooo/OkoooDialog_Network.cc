@@ -359,7 +359,7 @@ void OkoooDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 	if (!items.empty()) {
 		for (auto& iter : items) {
 			JCMatchItem item;
-			if (GetItemFromDB(iter.second->id, item)) {
+			if (GetItemFromDB(*iter.second, item)) {
 				*iter.second = item;
 			} else {
 				InsertItemToDB(*iter.second);
