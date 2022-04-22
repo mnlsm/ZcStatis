@@ -40,18 +40,19 @@
     <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\bin</OutDir>
+    <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>Debug\</IntDir>
     <LinkIncremental>true</LinkIncremental>
     <EmbedManifest>false</EmbedManifest>
     <TargetName>ZcStatisd</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>Release\</OutDir>
+    <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>Release\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <EmbedManifest>false</EmbedManifest>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSdk_71A_LibraryPath_x86)</LibraryPath>
+    <TargetName>ZcStatis</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -71,7 +72,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
-      <OutputFile>.\bin\ZcStatisd.exe</OutputFile>
+      <OutputFile>$(TargetPath)</OutputFile>
       <AdditionalLibraryDirectories>./thirdpart/lib</AdditionalLibraryDirectories>
     </Link>
     <Midl>
@@ -107,7 +108,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
-      <OutputFile>.\bin\ZcStatis.exe</OutputFile>
+      <OutputFile>$(TargetPath)</OutputFile>
       <AdditionalLibraryDirectories>./thirdpart/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
@@ -130,11 +131,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CRCUtility.cpp" />
-    <ClCompile Include="danlue\DanLueDialog.cc" />
-    <ClCompile Include="danlue\DanLueDialog_Network.cc" />
-    <ClCompile Include="danlue\DanLueEngine.cc" />
-    <ClCompile Include="danlue\DanLueEngine_BetArea.cpp" />
-    <ClCompile Include="danlue\DanLueStat.cc" />
     <ClCompile Include="DialogDB.cpp" />
     <ClCompile Include="DialogGambel.cpp" />
     <ClCompile Include="DialogTZ.cpp" />
@@ -153,6 +149,7 @@
     <ClCompile Include="http\HttpClientItem.cpp" />
     <ClCompile Include="http\HttpClientMgr.cpp" />
     <ClCompile Include="http\HttpClientMgr_Session.cpp" />
+    <ClCompile Include="JC\jc_defs.cc" />
     <ClCompile Include="JQC\JQCDialog.cc" />
     <ClCompile Include="JQC\JQCEngine.cc" />
     <ClCompile Include="lua\lapi.c">
@@ -346,9 +343,6 @@
     <ClInclude Include="atlctrlsext.h" />
     <ClInclude Include="ButtonMenu.h" />
     <ClInclude Include="CRCUtility.h" />
-    <ClInclude Include="danlue\DanLueDialog.h" />
-    <ClInclude Include="danlue\DanLueEngine.h" />
-    <ClInclude Include="danlue\DanLueStat.h" />
     <ClInclude Include="DialogDB.h" />
     <ClInclude Include="DialogGambel.h" />
     <ClInclude Include="DialogTZ.h" />
@@ -359,6 +353,7 @@
     <ClInclude Include="Global.h" />
     <ClInclude Include="http\HttpClientItem.h" />
     <ClInclude Include="http\HttpClientMgr.h" />
+    <ClInclude Include="JC\jc_defs.h" />
     <ClInclude Include="JQC\JQCDialog.h" />
     <ClInclude Include="JQC\JQCEngine.h" />
     <ClInclude Include="lua\lapi.h" />

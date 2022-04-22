@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../danlue/DanLueEngine.h"
+#include "../JC/jc_defs.h"
 
 class OkoooEngine {
 
@@ -23,6 +23,7 @@ public:
 	const CStlString& getCheckResult(){ return m_strCheckResult; }
 	const CStlString& getScriptFileData() { return m_strScript; }
 
+	void setMatchItems(const std::vector<std::shared_ptr<JCMatchItem>>& items) { m_vecMatchItems = items; }
 
 protected:
 	void SetSources(const std::vector<JcBetItemSource>& items);
@@ -54,4 +55,6 @@ protected:
 	int m_nAvgMultiple;
 
 	CStlString m_strCheckResult;
+	std::vector<std::shared_ptr<JCMatchItem>> m_vecMatchItems;
+
 };

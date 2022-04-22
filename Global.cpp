@@ -38,6 +38,17 @@ void Global::TrimBlank(CStlString& str) {
 	TrimString(str, _T('\r'));
 }
 
+BOOL Global::IsFileExist(LPCTSTR lpszFileName) {
+	DWORD dwAttr = ::GetFileAttributes(lpszFileName);
+	if (dwAttr == 0xFFFFFFFF) {
+		return FALSE;
+	}
+	if ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) > 0) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
 BOOL Global::DepartString(const CStlString& strTxt, const CStlString& strDim, CStlStrArray &arrPart) {
     arrPart.clear();
     if(strDim.empty()) {
@@ -348,4 +359,20 @@ tinyxml2::XMLElement* FindElementByClassAttr(tinyxml2::XMLElement* root,
 		root = root->NextSiblingElement();
 	}
 	return nullptr;
+}
+
+void OpenDirAndSelectFiles(const char* sFile, const std::vector<const char*>& lFilelist) {
+	if (sFile == nullptr) return;
+	ITEMIDLIST* dir = ILCreateFromPath(sFile);
+	ITEMIDLIST** selection = new ITEMIDLIST * [lFilelist.size()];
+	auto _it = lFilelist.cbegin();
+	int _index = 0;
+	for (; _it != lFilelist.end(); _it++, _index++) {
+		*(selection + _index) = ILCreateFromPath(*_it);
+	}
+	SHOpenFolderAndSelectItems(dir, lFilelist.size(), (LPCITEMIDLIST*)(selection), 0);
+	ILFree(dir);
+	for (_index = 0; _index != lFilelist.size(); _index++) {
+		ILFree(*(selection + _index));
+	}
 }

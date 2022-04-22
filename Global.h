@@ -26,6 +26,8 @@ public:
 
 	static CStlString toFixedLengthString(const CStlString& src, size_t fixed_length, bool right_align);
 	static void getBiFenDateInfo(CStringATL& beginDay, CStringATL& endDay, CStringATL& beginWeekDay);
+
+	static BOOL IsFileExist(LPCTSTR lpszFileName);
 private:
 	static std::string  SysWideToUTF8(const wchar_t* wide);
 	static std::string  SysWideToUTF8(const std::wstring& wide);
@@ -45,3 +47,6 @@ CStringA GetElementClassAttrValue(tinyxml2::XMLElement* root);
 CStringA GetElementText(tinyxml2::XMLElement* root);
 tinyxml2::XMLElement* FindElementByClassAttr(tinyxml2::XMLElement* root, 
 	const CStringA& class_value);
+
+
+void OpenDirAndSelectFiles(const char* sFile, const std::vector<const char*>& lFilelist);

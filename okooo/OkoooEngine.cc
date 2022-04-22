@@ -130,6 +130,22 @@ BOOL OkoooEngine::CalculateAllResult(CStlString& failed_reason) {
 
 void OkoooEngine::SetSources(const std::vector<JcBetItemSource>& items) {
 	m_vecSources = items;
+	//调整赔率变化
+	for (auto& item : m_vecSources) {
+		for (auto& mitem : m_vecMatchItems) {
+			if (mitem->id == item.id) {
+				for (auto& sub : item.bets) {
+					for (auto& sitem : mitem->subjects) {
+						if (sub.tid == sitem.tid && sub.code == sitem.betCode) {
+							sub.odds = sitem.odds;
+							break;
+						}
+					}
+				}
+				break;
+			}
+		}
+	}
 }
 
 void OkoooEngine::SetFixedSources(const std::vector<JcBetItemSource>& items) {

@@ -37,14 +37,14 @@
     <Filter Include="http">
       <UniqueIdentifier>{edaa110f-48e3-4d70-bd4e-4416a08a902e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="danlue">
-      <UniqueIdentifier>{5b6c1657-95d4-4fb2-a428-848a0240cdd9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="wininet">
       <UniqueIdentifier>{cf56c231-6d1a-4899-ae81-dd1c365d8631}</UniqueIdentifier>
     </Filter>
     <Filter Include="okooo">
       <UniqueIdentifier>{43b1ba48-8d35-4e57-9386-a2b5b3dd7945}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="JC">
+      <UniqueIdentifier>{418d1870-6614-46e4-b362-61b3ad566f6b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -228,21 +228,6 @@
     <ClCompile Include="CRCUtility.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="danlue\DanLueDialog.cc">
-      <Filter>danlue</Filter>
-    </ClCompile>
-    <ClCompile Include="danlue\DanLueEngine.cc">
-      <Filter>danlue</Filter>
-    </ClCompile>
-    <ClCompile Include="danlue\DanLueDialog_Network.cc">
-      <Filter>danlue</Filter>
-    </ClCompile>
-    <ClCompile Include="danlue\DanLueEngine_BetArea.cpp">
-      <Filter>danlue</Filter>
-    </ClCompile>
-    <ClCompile Include="danlue\DanLueStat.cc">
-      <Filter>danlue</Filter>
-    </ClCompile>
     <ClCompile Include="wininet\HttpClientSession.cpp">
       <Filter>wininet</Filter>
     </ClCompile>
@@ -278,6 +263,9 @@
     </ClCompile>
     <ClCompile Include="okooo\OkoooStat.cc">
       <Filter>okooo</Filter>
+    </ClCompile>
+    <ClCompile Include="JC\jc_defs.cc">
+      <Filter>JC</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -452,15 +440,6 @@
     <ClInclude Include="CRCUtility.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="danlue\DanLueDialog.h">
-      <Filter>danlue</Filter>
-    </ClInclude>
-    <ClInclude Include="danlue\DanLueEngine.h">
-      <Filter>danlue</Filter>
-    </ClInclude>
-    <ClInclude Include="danlue\DanLueStat.h">
-      <Filter>danlue</Filter>
-    </ClInclude>
     <ClInclude Include="wininet\HttpClientSession.h">
       <Filter>wininet</Filter>
     </ClInclude>
@@ -487,6 +466,9 @@
     </ClInclude>
     <ClInclude Include="okooo\OkoooStat.h">
       <Filter>okooo</Filter>
+    </ClInclude>
+    <ClInclude Include="JC\jc_defs.h">
+      <Filter>JC</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

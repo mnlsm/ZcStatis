@@ -41,7 +41,6 @@ public:
 		COMMAND_ID_HANDLER(IDM_ADDRECORD, OnAddRecord)
 		COMMAND_ID_HANDLER(IDM_JQC, OnMenuJQC)
 		COMMAND_ID_HANDLER(IDM_REFRESH, OnRefresh)
-		COMMAND_ID_HANDLER(IDM_DANLUE, OnDanLue)
 		COMMAND_ID_HANDLER(IDM_OKOOO, OnOkooo)
 
 
@@ -64,7 +63,6 @@ public:
 	LRESULT OnAddRecord(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnRefresh(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnMenuJQC(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-	LRESULT OnDanLue(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnOkooo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	

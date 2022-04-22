@@ -205,6 +205,7 @@ LRESULT OkoooDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 
 LRESULT OkoooDialog::OnLoginIn(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	doLogin();
+	DoReloadBackupResult();
 	return 1L;
 }
 
@@ -216,7 +217,6 @@ LRESULT OkoooDialog::OnLoginOff(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 	m_lstResult.DeleteAllItems();
 	m_stResult.SetWindowText("结果列表:");
 	m_stBetArea.Invalidate();
-	m_LoginToken.clear();
 	doLogOff();
 	return 1L;
 }
@@ -244,8 +244,13 @@ LRESULT OkoooDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 		return 1;
 	}
 	wait.Set();
+	std::vector<std::shared_ptr<JCMatchItem>> match_items;
+	for (auto& iter : m_JCMatchItems) {
+		match_items.push_back(iter.second);
+	}
 	std::shared_ptr<OkoooEngine> engine(new (std::nothrow) OkoooEngine(filedata, m_strWorkDir));
 	if (engine.get() != NULL) {
+		engine->setMatchItems(match_items);
 		engine->setScriptFile(strLoadPath.c_str());
 		CStlString reason = "";
 		if (!engine->CalculateAllResult(reason)) {
@@ -270,22 +275,6 @@ LRESULT OkoooDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 	DeleteFileA(strBuyFilePath.c_str());
 	Global::SaveFileData(strBuyFilePath, buyLines, FALSE);
 	return 1L;
-}
-
-void OpenDirAndSelectFiles(const char* sFile, const std::vector<const char*>& lFilelist) {
-	if (sFile == nullptr) return;
-	ITEMIDLIST* dir = ILCreateFromPath(sFile);
-	ITEMIDLIST** selection = new ITEMIDLIST * [lFilelist.size()];
-	auto _it = lFilelist.cbegin();
-	int _index = 0;
-	for (; _it != lFilelist.end(); _it++, _index++) {
-		*(selection + _index) = ILCreateFromPath(*_it);
-	}
-	SHOpenFolderAndSelectItems(dir, lFilelist.size(), (LPCITEMIDLIST*)(selection), 0);
-	ILFree(dir);
-	for (_index = 0; _index != lFilelist.size(); _index++) {
-		ILFree(*(selection + _index));
-	}
 }
 
 LRESULT OkoooDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
@@ -330,22 +319,28 @@ LRESULT OkoooDialog::OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	}
 	SYSTEMTIME tm = { 0 };
 	GetLocalTime(&tm);
-	CStringATL id;
-	id.Format("%04d-%02d-%02d %02d:%02d:%02d", 
+	CStringATL id, date;
+	id.Format("%04d%02d%02d%02d%02d%02d", 
 		(int)tm.wYear, (int)tm.wMonth, (int)tm.wDay, tm.wHour, tm.wMinute, tm.wSecond);
-	strSQL = _T("INSERT INTO JCZQ_INVEST (ID, SCRIPT, CHECK_RESULT, INVEST, INCOME) VALUES(?,?,?,?,?)");
+	date = m_strQH;
+	strSQL = _T("INSERT INTO JCZQ_INVEST (ID, DATE, SCRIPT, CHECK_RESULT, INVEST, INCOME) VALUES(?,?,?,?,?,?)");
 	if (TRUE) {
-		SQLite::Statement sm(*m_pDatabase, strSQL);
-		sm.bindNoCopy(1, id);
-		sm.bind(2, scriptData);
-		sm.bind(3, checkResult);
-		sm.bindNoCopy(4, "");
-		sm.bindNoCopy(5, "");
-		if (sm.exec() > 0) {
+		try {
+			SQLite::Statement sm(*m_pDatabase, strSQL);
+			sm.bindNoCopy(1, id);
+			sm.bindNoCopy(2, date);
+			sm.bindNoCopy(3, scriptData);
+			sm.bindNoCopy(4, checkResult);
+			sm.bindNoCopy(5, "");
+			sm.bindNoCopy(6, "");
+			if (sm.exec() > 0) {
+			}
+		} catch (SQLite::Exception &e) {
 			MessageBox("投注结果插入失败！", "错误", MB_ICONERROR | MB_OK);
 			return 1L;
 		}
 	}
+	MessageBox("备份结果完成！", "info", MB_ICONINFORMATION | MB_OK);
 	return 1L;
 }
 
@@ -538,7 +533,10 @@ void OkoooDialog::InitControls() {
 	m_lstResult.InsertColumn(colIndex, "倍数", LVCFMT_CENTER, 90);    //70
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
 
-	m_lstResult.InsertColumn(colIndex, "结果", LVCFMT_CENTER, rcItem.Width() - 250);    //70
+	m_lstResult.InsertColumn(colIndex, "赔率", LVCFMT_CENTER, 90);    //70
+	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_LONG);
+
+	m_lstResult.InsertColumn(colIndex, "结果", LVCFMT_CENTER, rcItem.Width() - 340);    //70
 	m_lstResult.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
 
 	//m_lstMatch.setItemH
@@ -639,8 +637,7 @@ BOOL OkoooDialog::GetItemFromDB(const JCMatchItem& new_item, JCMatchItem& item) 
 			CStringATL betInfo;
 			if (data.empty()) {
 				betInfo.Format("%d;%d;%.2f", (int)bet.tid, (int)bet.betCode, bet.odds);
-			}
-			else {
+			} else {
 				betInfo.Format("|%d;%d;%.2f", (int)bet.tid, (int)bet.betCode, bet.odds);
 			}
 			data += betInfo;
@@ -768,7 +765,7 @@ CStringATL OkoooDialog::DoRefreshResultListResults(std::string& abuyLines, std::
 				match_descrition = m.descrition.c_str();
 			}
 			*/
-			match_descrition = match_descrition.Right(match_descrition.GetLength() - 3);
+			match_descrition = match_descrition.Right(3);
 			match_descrition.Trim();
 			sprintf(sz, "[%s]: %s", (LPCSTR)match_descrition, temp.c_str());
 			CStringW buyItem = CA2W(sz, CP_ACP).m_psz;
@@ -850,6 +847,8 @@ CStringATL OkoooDialog::DoRefreshResultListResults(std::string& abuyLines, std::
 		m_lstResult.SetItemText(lIndex, ++colIndex, strResult);
 		strResult.Format("%d", std::get<0>(row.second));
 		m_lstResult.SetItemText(lIndex, ++colIndex, strResult);
+		strResult.Format("%.2f", std::get<1>(row.second) / std::get<0>(row.second)/ 2);
+		m_lstResult.SetItemText(lIndex, ++colIndex, strResult);
 		m_lstResult.SetItemText(lIndex, ++colIndex, row.first);
 		double bonus = std::get<1>(row.second);
 		if (bonus < minBonus || minBonus < 0) {
@@ -859,13 +858,16 @@ CStringATL OkoooDialog::DoRefreshResultListResults(std::string& abuyLines, std::
 			maxBonus = bonus;
 		}
 	}
-	minBonus = (minBonus - 2 * m_Engine->getResult().size()) / (2 * m_Engine->getResult().size()) * 100;
-	maxBonus = (maxBonus - 2 * m_Engine->getResult().size()) / (2 * m_Engine->getResult().size()) * 100;
+	double maxBonusRatio = (maxBonus - 2 * m_Engine->getResult().size()) / (2 * m_Engine->getResult().size()) * 100;
+	double minBonusRatio = (minBonus - 2 * m_Engine->getResult().size()) / (2 * m_Engine->getResult().size()) * 100;
 	CStringATL maxBonusRate, minBonusRate;
-	maxBonusRate.Format("%d", (int)maxBonus); maxBonusRate += "%";
-	minBonusRate.Format("%d", (int)minBonus); minBonusRate += "%";
-	result.Format("结果列表(共%d注,  投产比范围[%s-%s]):",
-		m_Engine->getResult().size(), minBonusRate, maxBonusRate);
+	maxBonusRate.Format("%d", (int)maxBonusRatio); maxBonusRate += "%";
+	minBonusRate.Format("%d", (int)minBonusRatio); minBonusRate += "%";
+	result.Format("结果列表(共%d注,  投产比范围[%s-%s], 收益范围[%.2f-%.2f]):",
+		m_Engine->getResult().size(), 
+		minBonusRate, maxBonusRate,
+		minBonus - 2 * m_Engine->getResult().size(), maxBonus - 2 * m_Engine->getResult().size()
+	);
 	return result;
 }
 
@@ -886,4 +888,29 @@ void OkoooDialog::DoRefreshMatchListResults() {
 		}
 		m_lstMatch.SetItemText(i, 6, result);
 	}
+}
+
+void OkoooDialog::DoReloadBackupResult() {
+	CStringATL strSQL;
+	strSQL.Format(_T("SELECT ID, SCRIPT FROM JCZQ_INVEST WHERE DATE='%s'"), m_strQH);
+	if (TRUE) {
+		SQLite::Statement sm(*m_pDatabase, strSQL);
+		while (sm.executeStep()) {
+			std::string id = sm.getColumn(0).getString();
+			std::string script = sm.getColumn(1).getString();
+			std::string fp = m_strWorkDir + "\\" + id.c_str() + ".lua";
+			if (!Global::IsFileExist(fp.c_str())) {
+				Global::SaveFileData(fp, script, FALSE);
+			}
+		}
+	}
+}
+
+JCMatchItem::Subject* OkoooDialog::get_subjects(const std::string& id, int tid, int code) {
+	for (const auto& item : m_JCMatchItems) {
+		if (item.second->id == id) {
+			return item.second->get_subject(tid, code);
+		}
+	}
+	return NULL;
 }

@@ -125,6 +125,8 @@ private:
 	CStringATL DoRefreshResultListResults(std::string& buyLines, std::string& checkLines);
 	void DoRefreshBetArea();
 
+	void DoReloadBackupResult();
+
 private:
 	CSortListViewCtrlEx<OkoooDialog> m_lstMatch;
 	CSortListViewCtrlEx<OkoooDialog> m_lstResult;
@@ -177,48 +179,9 @@ private:
 	void OnBiFenReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
 public:
-	struct JCMatchItem {
-		std::string id;
-		std::string match_category;
-		std::string descrition;
-		std::string start_time;
-		std::string last_buy_time;
-		int64 hand;
-		std::string result;
-		std::string orderid;
-		struct Subject {
-			int64 tid;
-			int64 betCode;
-			double odds;
-			std::string tip;
-			bool checked;
-			void calcTip(int hand);
-			std::string betStr() const;
-			std::string lineStr() const;
-			std::string buyStr() const;
-			int getPan(int hand) const;
-			//std::string oddsStr();
-		};
-		std::vector<Subject> subjects;
-		Subject* get_subject(int tid, int betCode);
-		Subject* get_subject(int tid, const char* tip);
-	};
+
 
 private:
-	std::string m_LoginToken;
-	std::string m_NickName;
-	std::string m_UserID;
-	std::string m_RcUserID;
-	std::string m_RcUserToken;
-	int64 m_slwId;
-	struct LotteryCategories {
-		std::string description;
-		std::string id;
-		std::string label;
-		std::string path;
-	};
-	std::vector<LotteryCategories> m_LotteryCategories;
-
 
 	std::multimap<std::string, std::shared_ptr<JCMatchItem>> m_JCMatchItems;
 	std::shared_ptr<JCMatchItem> m_CurrentMatchItem;

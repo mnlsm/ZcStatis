@@ -215,7 +215,7 @@ void OkoooStat::DoQuery() {
 	int iIndex = 0;
 	while (sm.executeStep()) {
 		int colIndex = 0;
-		OkoooDialog::JCMatchItem item;
+		JCMatchItem item;
 		item.id = sm.getColumn(0).getString().c_str();
 		item.match_category = sm.getColumn(1).getString();
 		item.descrition = sm.getColumn(2).getString();
@@ -235,7 +235,7 @@ void OkoooStat::DoQuery() {
 			CStlStrArray arrBetInfos;
 			Global::DepartString(bet, ";", arrBetInfos);
 			if (arrBetInfos.size() != 3) return ;
-			OkoooDialog::JCMatchItem::Subject sub;
+			JCMatchItem::Subject sub;
 			sub.tid = atoi(arrBetInfos[0].c_str());
 			sub.betCode = atoi(arrBetInfos[1].c_str());
 			sub.odds = atof(arrBetInfos[2].c_str());
@@ -250,7 +250,7 @@ void OkoooStat::DoQuery() {
 
 		CStringATL temp;
 		double a = 0.00, b = 0.00, c = 0.00;
-		OkoooDialog::JCMatchItem::Subject* sub = item.get_subject(6, 3);
+		JCMatchItem::Subject* sub = item.get_subject(6, 3);
 		if (sub == NULL) {
 			temp = "Î´ ¿ª ÊÛ";
 		}

@@ -14,7 +14,7 @@
 CAppModule _Module;
 
 //http://odds.500.com/europe_sfc.shtml
-int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
+int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWMAXIMIZED)
 {
 	CMessageLoop theLoop;
 	_Module.AddMessageLoop(&theLoop);
@@ -86,6 +86,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 
 	AtlAxWinInit();
 
+	nCmdShow = SW_SHOWMAXIMIZED;
 	int nRet = Run(lpstrCmdLine, nCmdShow);
 
 	_Module.Term();

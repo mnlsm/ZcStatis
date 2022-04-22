@@ -42,7 +42,7 @@ LRESULT OkoooDialog::OnBetAreaLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lPara
 		}
 
 		if (pItem != NULL) {
-			OkoooDialog::JCMatchItem::Subject* sub = m_CurrentMatchItem->get_subject(pItem->tid, pItem->betCode);
+			JCMatchItem::Subject* sub = m_CurrentMatchItem->get_subject(pItem->tid, pItem->betCode);
 			if (sub != NULL) {
 				sub->checked = !sub->checked;
 				m_stBetArea.Invalidate();

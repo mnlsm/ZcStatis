@@ -10,7 +10,6 @@
 #include "Engine.h"
 #include "DialogGambel.h"
 #include "JQC/JQCDialog.h"
-#include "danlue/DanLueDialog.h"
 #include "okooo/OkoooDialog.h"
 #include <SQLiteCpp/SQLiteCpp.h>
 extern CMainDlg dlgMain;
@@ -95,7 +94,7 @@ LRESULT CMainDlg::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 LRESULT CMainDlg::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
     DestroyWindow();
-	DanLueDialog::Destroy();
+	OkoooDialog::Destroy();
     ::PostQuitMessage(wID);
     return 1L;
 }
@@ -118,11 +117,6 @@ LRESULT CMainDlg::OnMenuJQC(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 LRESULT CMainDlg::OnRefresh(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
     ReloadStatisData();
     return 1L;
-}
-
-LRESULT CMainDlg::OnDanLue(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	DanLueDialog::PopUp(this->m_pDatabase);
-	return 1L;
 }
 
 LRESULT CMainDlg::OnOkooo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
