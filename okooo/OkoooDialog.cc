@@ -271,10 +271,11 @@ LRESULT OkoooDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 		m_Engine->setCheckResult(checkLines);
 	}
 	CStlString strBuyFilePath = strLoadPath;
-	CMiscHelper::string_replace(strBuyFilePath, ".lua", ".buy");
+	CMiscHelper::string_replace(strBuyFilePath, ".lua", ".txt");
 	DeleteFileA(strBuyFilePath.c_str());
 	Global::SaveFileData(strBuyFilePath, buyLines, FALSE);
 	return 1L;
+//https://www.hipdf.cn/txt-to-pdf
 }
 
 LRESULT OkoooDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
@@ -824,14 +825,19 @@ CStringATL OkoooDialog::DoRefreshResultListResults(std::string& abuyLines, std::
 	}
 	abuyLines.clear();
 	int cur_multiple = 0;
+	int line_count = 0;
 	for (auto& buy : mBuyLines) {
+		line_count++;
 		if (abuyLines.empty()) {
 			abuyLines = CW2A(buy.second, CP_UTF8).m_psz;
 			cur_multiple = buy.first;
 		} else {
 			if (cur_multiple != buy.first) {
-				abuyLines.append("\n");
+				//abuyLines.append("\n");
 				cur_multiple = buy.first;
+			}
+			if ((line_count % 5) == 0) {
+				abuyLines.append("\n");
 			}
 			abuyLines.append(CW2A(buy.second, CP_UTF8).m_psz);
 		}

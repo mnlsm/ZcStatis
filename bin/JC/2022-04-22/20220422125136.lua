@@ -1,5 +1,5 @@
 --1
-kMinBonus = 2000.0;
+kMinBonus = 1971.0;
 kMatchTitle = "竞彩足球 合买";
 kMatchDesc = "过滤";
 kMatchBetsLose = 0;
