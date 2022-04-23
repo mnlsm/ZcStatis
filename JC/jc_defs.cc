@@ -66,7 +66,6 @@ int BetStruct::getPan() const {
 	return ret;
 }
 
-
 void JCMatchItem::Subject::calcTip(int hand) {
 	CStringATL temp;
 	if (tid == 6) {
@@ -79,8 +78,7 @@ void JCMatchItem::Subject::calcTip(int hand) {
 		else if (betCode == 0) {
 			tip = "¸º";
 		}
-	}
-	else if (tid == 1) {
+	} else if (tid == 1) {
 		if (betCode == 3) {
 			if (hand >= 0) {
 				temp.Format("Ê¤(+%d)", hand);
@@ -247,8 +245,6 @@ JCMatchItem::Subject* JCMatchItem::get_subject(int tid, int betCode) {
 	}
 	return result;
 }
-
-
 
 JCMatchItem::Subject* JCMatchItem::get_subject(int tid, const char* tip) {
 	JCMatchItem::Subject* result = NULL;

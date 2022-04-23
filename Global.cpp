@@ -49,6 +49,37 @@ BOOL Global::IsFileExist(LPCTSTR lpszFileName) {
 	return TRUE;
 }
 
+CStringATL Global::GetFileName(LPCTSTR fullName) {
+	CStlString strFullName = fullName;
+	int npos = -1;
+	npos = strFullName.find_last_of(_T('\\'));
+	if (npos != -1) {
+		++npos;
+		return CStringATL(strFullName.substr(npos, strFullName.size() - npos).c_str());
+	}
+	return CStringATL(fullName);
+}
+
+CStringATL Global::GetFilePath(LPCTSTR fullName) {
+	CStlString strFullName = fullName;
+	int npos = -1;
+	npos = strFullName.find_last_of(_T('\\'));
+	if (npos != -1) {
+		strFullName[npos] = '\0';
+	}
+	return CStringATL(strFullName.c_str());
+}
+
+CStringATL Global::GetFileNameExt(LPCTSTR fileName) {
+	CStlString strFileName = fileName;
+	int npos = -1;
+	npos = strFileName.find_last_of(_T('.'));
+	if (npos != -1) {
+		return CStringATL(strFileName.substr(npos, strFileName.size() - npos).c_str());
+	}
+	return CStringATL();
+}
+
 BOOL Global::DepartString(const CStlString& strTxt, const CStlString& strDim, CStlStrArray &arrPart) {
     arrPart.clear();
     if(strDim.empty()) {

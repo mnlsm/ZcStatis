@@ -1,15 +1,16 @@
 --1
-kMinBonus = 500.0;
+kMinBonus = -5000000.0;
 kMatchTitle = "竞彩足球 合买";
 kMatchDesc = "过滤";
 kMatchBetsLose = 0;
 kAvgMultiple = 0;
 
 kMatchBets = {
-    "20220419002;1;2,1,4.30;2,2,3.25;2,3,3.60;2,4,5.80",         --索肖 VS 图卢兹
-    "20220419003;-1;2,1,4.10;2,2,3.20;2,3,3.65;2,4,6.00",         --欧塞尔 VS 第戎
-    "20220419004;-1;2,1,3.85;2,2,3.10;2,3,3.75;2,4,6.50",         --甘冈 VS 波城
+    "20220422002;-1;2,1,5.65;2,2,3.90;2,3,3.35;2,4,4.60",    --         卡尔斯  VS  因戈尔         
+    "20220422003;-1;2,1,4.40;2,2,3.30;2,3,3.60;2,4,5.65",    --         特温特  VS  鹿特丹         
+    "20220422004;-1;2,1,5.30;2,2,3.85;2,3,3.50;2,4,4.75",    --           埃门  VS  罗达J          
 };
+
 
 --[[
 kMatchBetsFixed = {
@@ -61,24 +62,73 @@ function GetMatchCodeCount(id, codes, tid, code)
 	return found_count;
 end 
 
+function GetCodeSum(codes, tid)
+	local sum = 0;
+	for j = 1, #codes do
+		if(tid == codes[j].tid) then
+			sum = sum + codes[j].code;
+		end
+	end
+	return sum;
+end 
 
 function IsFilterLua(params)
 	local errorCount = 0;
-	local ret = {code=0, info="ok", bonus=params.betbouns};
+	local ret = {code=1, info="failed", bonus=params.betbouns};
 	local codes = params.betcodes;
 	local bonus = params.betbouns;
 	local trace_prefix = "jc_dbg[";
+	local jq0 =  GetCodeCount(codes, 2, 0); --选择进球数0的个数
+	local jq1 =  GetCodeCount(codes, 2, 1); --选择进球数1的个数
 	local jq2 =  GetCodeCount(codes, 2, 2); --选择进球数2的个数
 	local jq3 =  GetCodeCount(codes, 2, 3); --选择进球数3的个数
+	local jq4 =  GetCodeCount(codes, 2, 4); --选择进球数4的个数
+	local jq5 =  GetCodeCount(codes, 2, 5); --选择进球数5的个数
+	local jq6 =  GetCodeCount(codes, 2, 6); --选择进球数6的个数
+	local jq7 =  GetCodeCount(codes, 2, 7); --选择进球数7的个数
+	local jq_sum = GetCodeSum(codes, 2);    --选择进球总数
 
-	if(jq2 + jq3 <= 1) then
-		ret.info = trace_prefix .. "jq2 + jq3=" .. (jq2 + jq3).."]";
+--[[	
+	if(jq1 > 2) then
+		ret.info = trace_prefix .."jq1>2]";
 		trace(1, ret.info);
-		ret.code = 1;
 		return ret;
 	end
-	
+	if(jq2 == 3) then
+		ret.info = trace_prefix .."jq2=3]";
+		trace(1, ret.info);
+		return ret;
+	end
+	if(jq3 == 3) then
+		ret.info = trace_prefix .."jq3=3]";
+		trace(1, ret.info);
+		return ret;
+	end
+	if(jq4 > 2) then
+		ret.info = trace_prefix .."jq4>2]";
+		trace(1, ret.info);
+		return ret;
+	end
+	if(jq2 + jq3 >= 2) then
+		ret.info = trace_prefix .. "ok 1]";
+		trace(1, ret.info);
+		ret.code = 0;
+		return ret;
+	end
+	if(jq1 + jq2 + jq3 == 3) then
+		ret.info = trace_prefix .. "ok 2]";
+		trace(1, ret.info);
+		ret.code = 0;
+		return ret;
+	end
 
+	if(jq4 + jq2 + jq3 == 3) then
+		ret.info = trace_prefix .. "ok 3]";
+		trace(1, ret.info);
+		ret.code = 0;
+		return ret;
+	end
+--]]	
 	return ret;
 end
 

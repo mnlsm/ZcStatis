@@ -28,6 +28,11 @@ public:
 	static void getBiFenDateInfo(CStringATL& beginDay, CStringATL& endDay, CStringATL& beginWeekDay);
 
 	static BOOL IsFileExist(LPCTSTR lpszFileName);
+
+	static CStringATL GetFileName(LPCTSTR fullName);
+	static CStringATL GetFileNameExt(LPCTSTR fileName);
+	static CStringATL GetFilePath(LPCTSTR fullName);
+
 private:
 	static std::string  SysWideToUTF8(const wchar_t* wide);
 	static std::string  SysWideToUTF8(const std::wstring& wide);

@@ -67,13 +67,11 @@ OkoooEngine::OkoooEngine(const CStlString& script, const char* logf) {
 	m_dMinBonus = 0.0;
 	m_nMatchBetsLose = 0;
 	m_nAvgMultiple = 0;
-#ifndef _DEBUG
 	if (logf != NULL) {
 		m_strLogPath = logf;
 		m_strLogPath += "\\debug.log";
 		DeleteFileA(m_strLogPath.c_str());
 	}
-#endif
 }
 
 int __cdecl OkoooEngine::LUA_DbgTrace(lua_State* L) {
@@ -112,18 +110,22 @@ int __cdecl OkoooEngine::LUA_IsFilterTJ(lua_State* L) {
 
 
 BOOL OkoooEngine::CalculateAllResult(CStlString& failed_reason) {
+	failed_reason.clear();
 	m_vecFixedSources.clear();
 	m_vecSources.clear();
 	m_vecResults.clear();
 	m_vecDiscardResults.clear();
+	DeleteFile(m_strLogPath.c_str());
 	BOOL result = CalculateAllResultImpl(failed_reason);
 	if (!result) {
 		if (failed_reason.empty()) {
 			failed_reason = "unknow";
 		}
+	}
+	Global::TrimBlank(failed_reason);
+	if (!failed_reason.empty()) {
 		CStlString trace = dbgview_exception + failed_reason;
-		OutputDebugStringA(trace.c_str());
-		Global::SaveFileData(m_strLogPath.c_str(), trace, TRUE);
+		Global::SaveFileData(m_strLogPath.c_str(), trace, FALSE);
 	}
 	return result;
 }
@@ -162,10 +164,14 @@ BOOL OkoooEngine::CalculateAllResultImpl(CStlString& failed_reason) {
 	TBetResult allResult, tempAll, discardAll, validAll;
 	if (GeneratorBets(m_vecSources, allResult)) {
 		for (const auto& record : allResult) {
-			if (IsAValidRecordImpl(record, lua_state, bonus, &failed_reason)) {
+			CStlString error_text;
+			if (IsAValidRecordImpl(record, lua_state, bonus, &error_text)) {
 				validAll.push_back(record);
 			} else {
 				discardAll.push_back(record);
+			}
+			if (!error_text.empty()) {
+				failed_reason.append("\n").append(error_text);
 			}
 		}
 		doAvgMultipleResult(validAll, tempAll);
@@ -173,7 +179,7 @@ BOOL OkoooEngine::CalculateAllResultImpl(CStlString& failed_reason) {
 		m_vecDiscardResults.swap(discardAll);
 		result = TRUE;
 	} else {
-		failed_reason = "GeneratorCodes failed!";
+		failed_reason.append("\n").append("GeneratorCodes failed!");
 	}
 	TermLua(lua_state);
 	return result;
@@ -276,7 +282,7 @@ static void getJcBetItemSource(lua_State* L, const char* key, std::vector<JcBetI
 lua_State* OkoooEngine::InitLua(CStlString& failed_reason) {
 	lua_State* L = luaL_newstate();
 	if (L == NULL) {
-		failed_reason = _T("luaL_newstate failed!");
+		failed_reason.append("\n").append(_T("luaL_newstate failed!"));
 		return NULL;
 	}
 	luaL_openlibs(L);
@@ -289,10 +295,10 @@ lua_State* OkoooEngine::InitLua(CStlString& failed_reason) {
 	lua_setglobal(L, "dbgview_print");
 
 	if (luaL_dostring(L, m_strScript.c_str()) != 0) {
-		failed_reason = _T("luaL_dostring failed: ");
+		failed_reason.append("\n").append(_T("luaL_dostring failed: "));
 		if (lua_type(L, -1) == LUA_TSTRING) {
 			std::string err_text = dbgview_exception + lua_tostring(L, -1);
-			failed_reason += CA2T(err_text.c_str()).m_psz;
+			failed_reason.append(CA2T(err_text.c_str()).m_psz);
 			lua_pop(L, 1);
 		}
 		lua_close(L);
@@ -326,7 +332,7 @@ lua_State* OkoooEngine::InitLua(CStlString& failed_reason) {
 	std::vector<JcBetItemSource> sources;
 	getJcBetItemSource(L, "kMatchBets", sources);
 	if (sources.empty()) {
-		failed_reason = _T("no match scores 1 !!");
+		failed_reason.append("\n").append(_T("no match scores 1 !!"));
 		lua_close(L);
 		return NULL;
 	}

@@ -309,6 +309,7 @@ LRESULT OkoooDialog::OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	}
 	const CStlString& scriptData = m_Engine->getScriptFileData();
 	const CStlString& checkResult = m_Engine->getCheckResult();
+	const CStlString& scriptFile = m_Engine->getScriptFile();
 	CStringATL strSQL;
 	strSQL.Format(_T("SELECT ID FROM JCZQ_INVEST WHERE CHECK_RESULT='%s'"), checkResult.c_str());
 	if (TRUE) {
@@ -321,8 +322,7 @@ LRESULT OkoooDialog::OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	SYSTEMTIME tm = { 0 };
 	GetLocalTime(&tm);
 	CStringATL id, date;
-	id.Format("%04d%02d%02d%02d%02d%02d", 
-		(int)tm.wYear, (int)tm.wMonth, (int)tm.wDay, tm.wHour, tm.wMinute, tm.wSecond);
+	id = Global::GetFileName(scriptFile.c_str()); id.Replace(_T(".lua"), _T(""));
 	date = m_strQH;
 	strSQL = _T("INSERT INTO JCZQ_INVEST (ID, DATE, SCRIPT, CHECK_RESULT, INVEST, INCOME) VALUES(?,?,?,?,?,?)");
 	if (TRUE) {
@@ -550,7 +550,7 @@ void OkoooDialog::ReloadMatchListData() {
 	auto& iter = m_JCMatchItems.begin();// equal_range((LPCSTR)m_strQH);
 	int iIndex = 0;
 	for (; iter != m_JCMatchItems.end(); ++iter) {
-		if (iter->first.compare(m_strQH) < 0) {
+		if (iter->first.compare(m_strQH) != 0) {
 			continue;
 		}
 		int colIndex = 0;
@@ -740,6 +740,7 @@ CStringATL OkoooDialog::DoRefreshResultListResults(std::string& abuyLines, std::
 	if (m_Engine.get() == nullptr) {
 		return result;
 	}
+	char sz[64] = { '\0' };
 	std::map<CStringATL, std::tuple<int, double, CStringW, CStringATL>> rows;
 	for (const auto& r : m_Engine->getResult()) {
 		double bouns = 2.0;
@@ -752,7 +753,6 @@ CStringATL OkoooDialog::DoRefreshResultListResults(std::string& abuyLines, std::
 			sub.tid = item.bet.tid;
 			sub.betCode = item.bet.code;
 			sub.calcTip(item.bet.hand);
-			char sz[64] = { '\0' };
 			const std::string&& temp = sub.buyStr();
 			sprintf(sz, "[%s]%s(%.2f)", item.id.c_str(), temp.c_str(), item.bet.odds);
 			if (!strCodes.IsEmpty()) {
@@ -796,6 +796,8 @@ CStringATL OkoooDialog::DoRefreshResultListResults(std::string& abuyLines, std::
 				strCheckLine.Append(sz);
 			}
 		}
+		//sprintf(sz, "  %dX1..", r.size());
+		//strBuyLine += sz;
 		auto& iter = rows.find(strCodes);
 		if (iter != rows.end()) {
 			std::get<0>(iter->second) += 1;
@@ -833,11 +835,11 @@ CStringATL OkoooDialog::DoRefreshResultListResults(std::string& abuyLines, std::
 			cur_multiple = buy.first;
 		} else {
 			if (cur_multiple != buy.first) {
-				//abuyLines.append("\n");
+				abuyLines.append("\n");
 				cur_multiple = buy.first;
 			}
 			if ((line_count % 5) == 0) {
-				abuyLines.append("\n");
+				//abuyLines.append("\n");
 			}
 			abuyLines.append(CW2A(buy.second, CP_UTF8).m_psz);
 		}
