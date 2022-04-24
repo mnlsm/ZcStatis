@@ -130,6 +130,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="browser\WebBrowser.cpp" />
     <ClCompile Include="CRCUtility.cpp" />
     <ClCompile Include="DialogDB.cpp" />
     <ClCompile Include="DialogGambel.cpp" />
@@ -341,6 +342,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="atlctrlsext.h" />
+    <ClInclude Include="browser\WebBrowser.h" />
     <ClInclude Include="ButtonMenu.h" />
     <ClInclude Include="CRCUtility.h" />
     <ClInclude Include="DialogDB.h" />

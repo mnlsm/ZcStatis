@@ -4,12 +4,14 @@
 #include "OkoooEngine.h"
 #include "AsyncFuncDispatch.h"
 #include "http/HttpClientMgr.h"
+#include "browser/WebBrowser.h"
 
 class OkoooDialog :
 	public CAxDialogImpl<OkoooDialog>,
 	public CIdleHandler,
 	public CAsyncFuncDispatcher,
-	public CWinDataExchange<OkoooDialog> {
+	public CWinDataExchange<OkoooDialog>,
+	public IWebBrowserCallback {
 
 private:
 	OkoooDialog();
@@ -211,4 +213,14 @@ private:
 
 private:
 	std::shared_ptr<OkoooEngine> m_Engine;
+
+private:
+	std::map<std::string, std::shared_ptr<WebBrowser>> m_Browsers;
+	std::vector<std::shared_ptr<WebBrowser>> m_delayDeleteBrowsers;
+
+	void ShowMatchWebBrowser(const CStringATL& title);
+	void CloseMatchWebBrowsers();
+public:
+	virtual void onWebBrowserClose(const std::string& url);
+
 };

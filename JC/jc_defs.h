@@ -32,6 +32,7 @@ struct JCMatchItem {
 	int64 hand;
 	std::string result;
 	std::string orderid;
+	std::string match_url;
 	struct Subject {
 		int64 tid;
 		int64 betCode;

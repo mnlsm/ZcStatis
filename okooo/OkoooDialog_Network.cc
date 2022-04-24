@@ -10,6 +10,13 @@ BOOL OkoooDialog::OnIdle() {
 	if (async_count > 0) {
 		PostMessage(OkoooDialog::WM_ASYNC_DISPATCH, 0, 0);
 	}
+	if (!m_delayDeleteBrowsers.empty()) {
+		for (int i = (int)m_delayDeleteBrowsers.size() - 1; i >= 0; i--) {
+			if (m_delayDeleteBrowsers[i]->IsWindowDestroyed()) {
+				m_delayDeleteBrowsers.erase(m_delayDeleteBrowsers.begin() + i);
+			}
+		}
+	}
 	return FALSE;
 }
 
@@ -230,6 +237,13 @@ void OkoooDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 						if (son_child != nullptr) {
 							std::shared_ptr<JCMatchItem> ji(new JCMatchItem());
 							ji->id = date + (LPCSTR)GetElementText(FindElementByClassAttr(son_child, "xuhao"));
+							auto datalink = FindElementByClassAttr(son_child, "datalink");
+							if (datalink != nullptr) {
+								CStringA&& href = GetElementAttrValue(datalink, "href");
+								if (!href.IsEmpty()) {
+									ji->match_url = std::string("https://m.okooo.com") + (LPCSTR)href;
+								}
+							}
 							CMiscHelper::string_replace(ji->id, "-", "");
 							ji->match_category = GetElementText(FindElementByClassAttr(son_child, "liansai"));
 							ji->start_time = ji->last_buy_time = date + std::string(" ") + (LPCSTR)GetElementText(FindElementByClassAttr(son_child, "timetxt"));

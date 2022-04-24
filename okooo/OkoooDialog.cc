@@ -80,7 +80,7 @@ LRESULT OkoooDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 }
 
 LRESULT OkoooDialog::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
-	_Module.GetMessageLoop()->RemoveIdleHandler(this);
+	//_Module.GetMessageLoop()->RemoveIdleHandler(this);
 	LRESULT lRet = CAxDialogImpl<OkoooDialog>::OnDestroy(uMsg, wParam, lParam, bHandled);
 	//doLogOff();
 	return lRet;
@@ -137,6 +137,8 @@ LRESULT OkoooDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 			menu.AppendMenu(MF_STRING, 104, _T("µÍÅâÈ«°ü"));
 			menu.AppendMenu(MF_STRING, 105, _T("µÍÅâÉÏÅÌ"));
 			menu.AppendMenu(MF_STRING, 106, _T("µÍÅâÏÂÅÌ"));
+			menu.AppendMenu(MF_SEPARATOR);
+			menu.AppendMenu(MF_STRING, 107, _T("·ÖÎöÔ¤²â"));
 			m_lstMatch.ClientToScreen(&pt);
 			UINT cmd = menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RETURNCMD, pt.x, pt.y, m_hWnd);
 			DoMatchListMenuCommand(cmd, index);
@@ -148,8 +150,9 @@ LRESULT OkoooDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 
 void OkoooDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 	if (cmd >= 100) {
-		CStringATL strID;
+		CStringATL strID, strMatchText;
 		m_lstMatch.GetItemText(index, 0, strID);
+		m_lstMatch.GetItemText(index, 2, strMatchText);
 		auto& iter = m_JCMatchItems.begin();
 		for (; iter != m_JCMatchItems.end(); ++iter) {
 			if (iter->second->id.compare(strID) == 0) {
@@ -172,8 +175,7 @@ void OkoooDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 						}
 					}
 					DoRefreshMatchListResults();
-				}
-				else if (cmd == 104 || cmd == 105 || cmd == 106) {
+				} else if (cmd == 104 || cmd == 105 || cmd == 106) {
 					for (auto& sub : m_CurrentMatchItem->subjects) {
 						int pan = sub.getPan(hand);
 						if (cmd == 104 && pan < 0) {
@@ -187,18 +189,22 @@ void OkoooDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 						}
 					}
 					DoRefreshMatchListResults();
-				}
-				else if (cmd == 100) {
+				} else if (cmd == 100) {
 					m_lstMatch.SetItemText(index, 6, "");
 				}
 				m_stBetArea.Invalidate();
+				if (cmd == 107) {
+					ShowMatchWebBrowser(strMatchText);
+				}
 				break;
 			}
 		}
+		//https://m.okooo.com/match/form.php?MatchID=1158125&from=%2Flive%2F
 	}
 }
 
 LRESULT OkoooDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	CloseMatchWebBrowsers();
 	ShowWindow(SW_HIDE);
 	return 1L;
 }
@@ -633,6 +639,7 @@ BOOL OkoooDialog::GetItemFromDB(const JCMatchItem& new_item, JCMatchItem& item) 
 			item.subjects.push_back(sub);
 		}
 		item.subjects = new_item.subjects;
+		item.match_url = new_item.match_url;
 		data.clear();
 		for (auto& bet : item.subjects) {
 			CStringATL betInfo;
@@ -921,4 +928,60 @@ JCMatchItem::Subject* OkoooDialog::get_subjects(const std::string& id, int tid, 
 		}
 	}
 	return NULL;
+}
+
+void OkoooDialog::ShowMatchWebBrowser(const CStringATL& title) {
+	if (m_CurrentMatchItem.get() == nullptr) {
+		return;
+	}
+	if (m_CurrentMatchItem->match_url.empty()) {
+		return;
+	}
+	std::shared_ptr<WebBrowser> ptr;
+	const auto& iter = m_Browsers.find(m_CurrentMatchItem->match_url);
+	if (iter == m_Browsers.end()) {
+		ptr = WebBrowser::CreateWebBrowser(m_hWnd, (LPCSTR)title,
+			m_CurrentMatchItem->match_url, this);
+		m_Browsers[m_CurrentMatchItem->match_url] = ptr;
+	}
+	else {
+		if (iter->second->IsWindowDestroyed()
+			|| iter->second->IsWindowDestroying()) {
+			m_delayDeleteBrowsers.push_back(iter->second);
+			m_Browsers.erase(iter);
+			ptr = WebBrowser::CreateWebBrowser(m_hWnd, (LPCSTR)title,
+				m_CurrentMatchItem->match_url, this);
+			m_Browsers[m_CurrentMatchItem->match_url] = ptr;
+		} else {
+			ptr = iter->second;
+		}
+	}
+	if (ptr.get() != nullptr && ptr->IsWindow()) {
+		ptr->ShowWindow(SW_SHOW);
+		::SetForegroundWindow(ptr->m_hWnd);
+	}
+}
+
+void OkoooDialog::CloseMatchWebBrowsers() {
+	for (auto& iter : m_Browsers) {
+		if (iter.second->IsWindowDestroyed()
+			|| iter.second->IsWindowDestroying()) {
+			m_delayDeleteBrowsers.push_back(iter.second);
+		}
+		else {
+			m_delayDeleteBrowsers.push_back(iter.second);
+			iter.second->DestroyWindow();
+		}
+	}
+	m_Browsers.clear();
+}
+
+void OkoooDialog::onWebBrowserClose(const std::string& url) {
+	const auto& iter = m_Browsers.find(m_CurrentMatchItem->match_url);
+	if (iter != m_Browsers.end()) {
+		m_delayDeleteBrowsers.push_back(iter->second);
+		m_Browsers.erase(iter);
+	}
+	ShowWindow(SW_SHOW);
+	::SetForegroundWindow(m_hWnd);
 }

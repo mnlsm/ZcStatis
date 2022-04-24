@@ -46,6 +46,9 @@
     <Filter Include="JC">
       <UniqueIdentifier>{418d1870-6614-46e4-b362-61b3ad566f6b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="browser">
+      <UniqueIdentifier>{0d42c012-dbff-4765-90fd-24ac98dc79be}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lua\lbitlib.c">
@@ -267,6 +270,9 @@
     <ClCompile Include="JC\jc_defs.cc">
       <Filter>JC</Filter>
     </ClCompile>
+    <ClCompile Include="browser\WebBrowser.cpp">
+      <Filter>browser</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua\lctype.h">
@@ -469,6 +475,9 @@
     </ClInclude>
     <ClInclude Include="JC\jc_defs.h">
       <Filter>JC</Filter>
+    </ClInclude>
+    <ClInclude Include="browser\WebBrowser.h">
+      <Filter>browser</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
