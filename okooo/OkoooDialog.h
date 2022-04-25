@@ -72,7 +72,7 @@ public:
 		CHAIN_MSG_MAP(CAxDialogImpl<OkoooDialog>)
 		REFLECT_NOTIFICATIONS()
 		ALT_MSG_MAP(1)
-		//MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnListLButtonDbclk)
+		MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnListLButtonDbclk)
 		MESSAGE_HANDLER(WM_RBUTTONDOWN, OnListRButtonDown)
 		MESSAGE_HANDLER(WM_LBUTTONDOWN, OnListLButtonDown)
 		ALT_MSG_MAP(2) //result
@@ -93,7 +93,7 @@ public:
 
 	LRESULT OnListLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-	//LRESULT OnListLButtonDbclk(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT OnListLButtonDbclk(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 	LRESULT OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	//LRESULT OnAddRecord(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);

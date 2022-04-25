@@ -119,6 +119,21 @@ LRESULT OkoooDialog::OnListLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 	return lRet;
 }
 
+LRESULT OkoooDialog::OnListLButtonDbclk(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	LRESULT lRet = m_lstMatch.DefWindowProc(uMsg, wParam, lParam);
+	CPoint pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+	LVHITTESTINFO lvh = { 0 };
+	lvh.pt = pt;
+	UINT index = m_lstMatch.HitTest(&lvh);
+	if (index != -1) {
+		CStringATL strMatchText;
+		m_lstMatch.GetItemText(index, 2, strMatchText);
+		ShowMatchWebBrowser(strMatchText);
+	}
+	return lRet;
+}
+
+
 LRESULT OkoooDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	LRESULT lRet = m_lstMatch.DefWindowProc(uMsg, wParam, lParam);
 	CPoint pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
@@ -466,9 +481,11 @@ void OkoooDialog::InitControls() {
 	//m_stBetArea.SetFont(mBetAreaFont);
 
 
-	HICON hIconBig = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR | LR_SHARED, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON));
+	HICON hIconBig = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR | LR_SHARED, 
+			GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON));
 	SetIcon(hIconBig, TRUE);
-	HICON hIconSmall = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR | LR_SHARED, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CXSMICON));
+	HICON hIconSmall = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR | LR_SHARED, 
+			GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CXSMICON));
 	SetIcon(hIconSmall, FALSE);
 
 	DWORD dwStyleEx = LVS_EX_GRIDLINES | LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP
@@ -556,7 +573,7 @@ void OkoooDialog::ReloadMatchListData() {
 	auto& iter = m_JCMatchItems.begin();// equal_range((LPCSTR)m_strQH);
 	int iIndex = 0;
 	for (; iter != m_JCMatchItems.end(); ++iter) {
-		if (iter->first.compare(m_strQH) != 0) {
+		if (iter->first.compare(m_strQH) < 0) {
 			continue;
 		}
 		int colIndex = 0;
@@ -586,10 +603,11 @@ void OkoooDialog::ReloadMatchListData() {
 		b = sub->odds;
 		sub = ji->get_subject(1, 0);
 		c = sub->odds;
-		if (ji->hand < 0)
+		if (ji->hand < 0) {
 			temp.Format("%.2f(%d)  %.2f  %.2f", a, (int)ji->hand, b, c);
-		else
+		} else {
 			temp.Format("%.2f(+%d)  %.2f  %.2f", a, (int)ji->hand, b, c);
+		}
 		m_lstMatch.SetItemText(iIndex, ++colIndex, temp);
 	}
 	m_lstMatch.DoSortItems(0, false);
@@ -613,7 +631,7 @@ BOOL OkoooDialog::GetItemFromDB(const JCMatchItem& new_item, JCMatchItem& item) 
 	item.id = "";
 	item.subjects.clear();
 	CStringATL strSQL;
-	strSQL.Format(_T("SELECT ID, CATEGORY, DESCRIPTION, HAND, START_TIME, BUY_TIME, SUBJECTS, RESULT FROM JCZQ WHERE ID='%s'"), id.c_str());
+	strSQL.Format(_T("SELECT ID, CATEGORY, DESCRIPTION, HAND, START_TIME, BUY_TIME, SUBJECTS, RESULT, MATCH_URL FROM JCZQ WHERE ID='%s'"), id.c_str());
 	SQLite::Statement sm(*m_pDatabase, strSQL);
 	if (sm.executeStep()) {
 		item.id = sm.getColumn(0).getString().c_str();
@@ -624,6 +642,7 @@ BOOL OkoooDialog::GetItemFromDB(const JCMatchItem& new_item, JCMatchItem& item) 
 		item.last_buy_time = sm.getColumn(5).getString();
 		std::string data = sm.getColumn(6).getString();
 		item.result = sm.getColumn(7).getString();
+		item.match_url = sm.getColumn(8).getString();
 		CStlStrArray arrBetItems;
 		Global::DepartString(data, "|", arrBetItems);
 		for (auto& bet : arrBetItems) {
@@ -639,7 +658,9 @@ BOOL OkoooDialog::GetItemFromDB(const JCMatchItem& new_item, JCMatchItem& item) 
 			item.subjects.push_back(sub);
 		}
 		item.subjects = new_item.subjects;
-		item.match_url = new_item.match_url;
+		if (!new_item.match_url.empty()) {
+			item.match_url = new_item.match_url;
+		}
 		data.clear();
 		for (auto& bet : item.subjects) {
 			CStringATL betInfo;
@@ -650,11 +671,12 @@ BOOL OkoooDialog::GetItemFromDB(const JCMatchItem& new_item, JCMatchItem& item) 
 			}
 			data += betInfo;
 		}
-		strSQL = _T("UPDATE JCZQ SET SUBJECTS=? WHERE ID=?");
+		strSQL = _T("UPDATE JCZQ SET SUBJECTS=?, MATCH_URL=? WHERE ID=?");
 		if (TRUE) {
 			SQLite::Statement sm(*m_pDatabase, strSQL);
-			sm.bind(1, data);
-			sm.bind(2, id);
+			sm.bindNoCopy(1, data);
+			sm.bindNoCopy(2, new_item.match_url);
+			sm.bindNoCopy(3, id);
 			if (sm.exec()) {
 				return TRUE;
 			}
@@ -672,7 +694,7 @@ BOOL OkoooDialog::InsertItemToDB(const JCMatchItem& item) {
 		if (sm.exec() > 0) {
 		}
 	}
-	strSQL = _T("INSERT INTO JCZQ (ID, CATEGORY, DESCRIPTION, HAND, START_TIME, BUY_TIME, SUBJECTS) VALUES(?,?,?,?,?,?,?)");
+	strSQL = _T("INSERT INTO JCZQ (ID, CATEGORY, DESCRIPTION, HAND, START_TIME, BUY_TIME, SUBJECTS, MATCH_URL) VALUES(?,?,?,?,?,?,?,?)");
 	if (TRUE) {
 		SQLite::Statement sm(*m_pDatabase, strSQL);
 		sm.bindNoCopy(1, item.id);
@@ -686,13 +708,13 @@ BOOL OkoooDialog::InsertItemToDB(const JCMatchItem& item) {
 			CStringATL betInfo;
 			if (data.empty()) {
 				betInfo.Format("%d;%d;%.2f", (int)bet.tid, (int)bet.betCode, bet.odds);
-			}
-			else {
+			} else {
 				betInfo.Format("|%d;%d;%.2f", (int)bet.tid, (int)bet.betCode, bet.odds);
 			}
 			data += betInfo;
 		}
 		sm.bindNoCopy(7, data);
+		sm.bindNoCopy(8, item.match_url);
 		if (sm.exec() > 0) {
 		}
 	}
@@ -957,7 +979,7 @@ void OkoooDialog::ShowMatchWebBrowser(const CStringATL& title) {
 		}
 	}
 	if (ptr.get() != nullptr && ptr->IsWindow()) {
-		ptr->ShowWindow(SW_SHOW);
+		ShowWindow(ptr->IsIconic() ? SW_RESTORE : SW_SHOW);
 		::SetForegroundWindow(ptr->m_hWnd);
 	}
 }
@@ -982,6 +1004,6 @@ void OkoooDialog::onWebBrowserClose(const std::string& url) {
 		m_delayDeleteBrowsers.push_back(iter->second);
 		m_Browsers.erase(iter);
 	}
-	ShowWindow(SW_SHOW);
+	ShowWindow(IsIconic()? SW_RESTORE:SW_SHOW);
 	::SetForegroundWindow(m_hWnd);
 }

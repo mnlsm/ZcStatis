@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "resource.h"
 #include "WebBrowser.h"
 
 static const char* const PAD_KEY_1 = "VIEN5418814524NA.AT";
@@ -29,7 +30,7 @@ CComPtr<IHTMLElement> FindHTMLElement(CComPtr<IHTMLDocument2> doc, const std::ws
 		CComPtr<IHTMLElement> element;
 		pDisp->QueryInterface(IID_IHTMLElement, (LPVOID*)&element);
 		if (NULL != element.p) {
-			bool tagOK = false, attrsOK = false;;
+			bool tagOK = false, attrsOK = false;
 			CComBSTR tagText;
 			if (SUCCEEDED(element->get_tagName(&tagText))) {
 				if (_wcsicmp(tagText.m_str, tagName.c_str()) == 0) {
@@ -131,16 +132,19 @@ std::shared_ptr<WebBrowser> WebBrowser::CreateWebBrowser(
 	CPoint cp = rcWnd.CenterPoint();
 	rcWnd.left = cp.x - width / 2;
 	rcWnd.right = cp.x + width / 2;
-	CWindow wnd = result->Create(parent, rcWnd);
+	CWindow wnd = result->Create(::GetDesktopWindow(), rcWnd);
 	if (!wnd.IsWindow()) {
 		result.reset();
 	} else {
 		CStringA t = title.c_str();
 		t.Trim();
 		wnd.SetWindowText(t);
+		wnd.ModifyStyle(WS_MAXIMIZEBOX, 0, 0);
 		result->Navigate2(url);
 		result->m_cb = cb;
 		result->m_url = url;
+		wnd.ShowWindow(SW_SHOW);
+		wnd.UpdateWindow();
 	}
 	return result;
 }
@@ -149,6 +153,11 @@ LRESULT WebBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	CMessageLoop* pLoop = _Module.GetMessageLoop();
 	ATLASSERT(pLoop != NULL);
 	pLoop->AddMessageFilter(this);
+
+	HICON hIconBig = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR | LR_SHARED, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON));
+	SetIcon(hIconBig, TRUE);
+	HICON hIconSmall = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR | LR_SHARED, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CXSMICON));
+	SetIcon(hIconSmall, FALSE);
 
 	CRect rc;
 	GetClientRect(&rc);
@@ -168,6 +177,7 @@ LRESULT WebBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	m_ax.AttachControl(spUnkWebBrowser, &spUnkContainer);
 	AtlAdviseSinkMap(this, true);
 	hr = m_ax.QueryControl(&m_spIWebBrowser);
+//	m_helper.SetHandler(m_spIWebBrowser);
 	CenterWindow();
 	m_wndCreated = TRUE;
 	return 0;
@@ -193,6 +203,8 @@ LRESULT WebBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	bHandled = FALSE;
 	m_wndDestroying = TRUE;
 	AtlAdviseSinkMap(this, false);
+	m_spIWebBrowser->Quit();
+	m_spIWebBrowser.Release();
 	CMessageLoop* pLoop = _Module.GetMessageLoop();
 	ATLASSERT(pLoop != NULL);
 	pLoop->RemoveMessageFilter(this);

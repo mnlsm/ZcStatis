@@ -18,6 +18,7 @@ class WebBrowserEvent;
 class CNoScriptErrorHelper
     : public IDocHostUIHandler
     , public IOleCommandTarget
+    , public IDocHostShowUI
 {
 
 public:
@@ -42,6 +43,7 @@ public:
                     {
                         m_spDefaultDocHostUIHandler = spClientSite;
                         m_spDefaultOleCommandTarget = spClientSite;
+                        m_spDefaultDocHostShowUI = spClientSite;
                     }
                 }
 
@@ -60,7 +62,6 @@ public:
     HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject)
     {
         HRESULT result = S_OK;
-
         if (IsBadWritePtr(ppvObject, sizeof(LPVOID)))
             result = E_INVALIDARG;
 
@@ -74,6 +75,8 @@ public:
                 *ppvObject = (IDispatch*)this;
             else if (IsEqualIID(riid, IID_IDocHostUIHandler))
                 *ppvObject = (IDocHostUIHandler*)this;
+            else if (IsEqualIID(riid, IID_IDocHostShowUI))
+                *ppvObject = (IDocHostShowUI*)this;
             else if (IsEqualIID(riid, IID_IOleCommandTarget))
                 *ppvObject = (IOleCommandTarget*)this;
             else
@@ -93,9 +96,8 @@ public:
 
     ULONG STDMETHODCALLTYPE Release() {
         ULONG ulRefCount = InterlockedDecrement(&m_cRef);
-        if (m_cRef == 0)
-        {
-            delete this;
+        if (m_cRef == 0) {
+            //delete this;
         }
         return ulRefCount;
     }
@@ -237,10 +239,51 @@ public:
         }
         return m_spDefaultOleCommandTarget->Exec(pguidCmdGroup, nCmdID, nCmdExecOpt, pvaIn, pvaOut);
     }
+
+
+    STDMETHOD(ShowMessage)(
+        /* [in] */ HWND hwnd,
+        /* [annotation][in] */
+        __in __nullterminated  LPOLESTR lpstrText,
+        /* [annotation][in] */
+        __in __nullterminated  LPOLESTR lpstrCaption,
+        /* [in] */ DWORD dwType,
+        /* [annotation][in] */
+        __in __nullterminated  LPOLESTR lpstrHelpFile,
+        /* [in] */ DWORD dwHelpContext,
+        /* [out] */ LRESULT* plResult) {
+        HRESULT hr = S_OK;
+        if (m_spDefaultDocHostShowUI) {
+            hr = m_spDefaultDocHostShowUI->ShowMessage(hwnd, lpstrText,
+                lpstrCaption, dwType, lpstrHelpFile, dwHelpContext, plResult);
+        } else {
+            if (plResult != nullptr) {
+                *plResult = IDOK;
+            }
+        }
+        return hr;
+    }
+
+    STDMETHOD(ShowHelp)(
+        /* [in] */ HWND hwnd,
+        /* [annotation][in] */
+        __in __nullterminated  LPOLESTR pszHelpFile,
+        /* [in] */ UINT uCommand,
+        /* [in] */ DWORD dwData,
+        /* [in] */ POINT ptMouse,
+        /* [out] */ IDispatch* pDispatchObjectHit) {
+        HRESULT hr = S_OK;
+        if (m_spDefaultDocHostShowUI) {
+            hr = m_spDefaultDocHostShowUI->ShowHelp(hwnd, pszHelpFile, uCommand, dwData, ptMouse, pDispatchObjectHit);
+        }
+        return hr;
+    }
+
 private:
     // Default interface pointers
     CComQIPtr<IDocHostUIHandler, &IID_IDocHostUIHandler> m_spDefaultDocHostUIHandler;
     CComQIPtr<IOleCommandTarget, &IID_IOleCommandTarget> m_spDefaultOleCommandTarget;
+    CComQIPtr<IDocHostShowUI, &IID_IDocHostShowUI> m_spDefaultDocHostShowUI;
     LONG m_cRef;
 };
 
@@ -305,8 +348,9 @@ public:
 
     //WebBrowser control event message handler
     BEGIN_SINK_MAP(WebBrowser)
-		SINK_ENTRY(ID_WebBrowser, DISPID_DOCUMENTCOMPLETE, OnDocumentComplete)
-		SINK_ENTRY(ID_WebBrowser, DISPID_BEFORENAVIGATE2, OnBeforeNavigate2)
+        SINK_ENTRY(ID_WebBrowser, DISPID_DOCUMENTCOMPLETE, OnDocumentComplete)
+        SINK_ENTRY(ID_WebBrowser, DISPID_BEFORENAVIGATE2, OnBeforeNavigate2)
+        SINK_ENTRY(ID_WebBrowser, DISPID_NAVIGATECOMPLETE2, NavigateComplete2)
     END_SINK_MAP()
 
 
@@ -317,9 +361,12 @@ public:
 	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnNcDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
+    virtual void __stdcall NavigateComplete2(IDispatch* pDisp, VARIANT* pvtURL) {
+       m_helper.SetHandler(m_spIWebBrowser);
+    }
 
 	virtual void __stdcall OnDocumentComplete(IDispatch *pDisp, VARIANT* url) {
-        m_helper.SetHandler(m_spIWebBrowser);
+        //m_helper.SetHandler(m_spIWebBrowser);
     }
 	virtual void __stdcall OnBeforeNavigate2(
 		IDispatch* pDisp, VARIANT* URL, VARIANT* Flags, VARIANT* TargetFrameName,
