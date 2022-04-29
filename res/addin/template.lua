@@ -1,9 +1,10 @@
 --1
-kMinBonus = -5000000.0;
 kMatchTitle = "竞彩足球 合买";
 kMatchDesc = "过滤";
 kMatchBetsLose = 0;
+kBetsRankRatio = 1.0;
 kAvgMultiple = 0;
+kMinBonus = -5000000.0;
 
 kMatchBets = {
     "20220422002;-1;2,1,5.65;2,2,3.90;2,3,3.35;2,4,4.60",    --         卡尔斯  VS  因戈尔         
@@ -74,7 +75,7 @@ end
 
 function IsFilterLua(params)
 	local errorCount = 0;
-	local ret = {code=1, info="failed", bonus=params.betbouns};
+	local ret = {code=0, info="ok", bonus=params.betbouns};
 	local codes = params.betcodes;
 	local bonus = params.betbouns;
 	local trace_prefix = "jc_dbg[";

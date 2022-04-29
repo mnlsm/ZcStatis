@@ -67,6 +67,7 @@ OkoooEngine::OkoooEngine(const CStlString& script, const char* logf) {
 	m_dMinBonus = 0.0;
 	m_nMatchBetsLose = 0;
 	m_nAvgMultiple = 0;
+	m_dBetsRankRatio = 1.0;
 	if (logf != NULL) {
 		m_strLogPath = logf;
 		m_strLogPath += "\\debug.log";
@@ -161,7 +162,7 @@ BOOL OkoooEngine::CalculateAllResultImpl(CStlString& failed_reason) {
 		return FALSE;
 	}
 	double bonus = 0.0;
-	TBetResult allResult, tempAll, discardAll, validAll;
+	TBetResult allResult, tempAll, discardAll, validAll, filterAll;
 	if (GeneratorBets(m_vecSources, allResult)) {
 		for (const auto& record : allResult) {
 			CStlString error_text;
@@ -174,7 +175,8 @@ BOOL OkoooEngine::CalculateAllResultImpl(CStlString& failed_reason) {
 				failed_reason.append("\n").append(error_text);
 			}
 		}
-		doAvgMultipleResult(validAll, tempAll);
+		doFilterByBetsRankRatio(validAll, filterAll);
+		doAvgMultipleResult(filterAll, tempAll);
 		m_vecResults.swap(tempAll);
 		m_vecDiscardResults.swap(discardAll);
 		result = TRUE;
@@ -184,6 +186,37 @@ BOOL OkoooEngine::CalculateAllResultImpl(CStlString& failed_reason) {
 	TermLua(lua_state);
 	return result;
 }
+
+void OkoooEngine::doFilterByBetsRankRatio(const TBetResult& validResult, TBetResult& result) {
+	result.clear();
+	if (m_dBetsRankRatio >= 1.0) {
+		result = validResult;
+		return;
+	}
+	
+	std::vector<double> bets;
+	for (const auto& record : validResult) {
+		double temp = 1.0;
+		for (const auto& item : record) {
+			temp = temp * item.bet.odds;
+		}
+		bets.emplace_back(temp);
+	}
+	std::sort(bets.begin(), bets.end(), std::less<double>());
+	int index = (int)((double)bets.size() * m_dBetsRankRatio + 1);
+	if (index >= bets.size()) index = bets.size() - 1;
+	double bet = bets[index];
+	for (const auto& record : validResult) {
+		double temp = 1.0;
+		for (const auto& item : record) {
+			temp = temp * item.bet.odds;
+		}
+		if (temp <= bet) {
+			result.emplace_back(record);
+		}
+	}
+}
+
 
 void OkoooEngine::doAvgMultipleResult(const TBetResult& validResult, TBetResult& result) {
 	result.clear();
@@ -317,6 +350,11 @@ lua_State* OkoooEngine::InitLua(CStlString& failed_reason) {
 
 	if (lua_getglobal(L, "kMinBonus") == LUA_TNUMBER) {
 		m_dMinBonus = lua_tonumber(L, -1);
+		lua_pop(L, 1);
+	}
+
+	if (lua_getglobal(L, "kBetsRankRatio") == LUA_TNUMBER) {
+		m_dBetsRankRatio = lua_tonumber(L, -1);
 		lua_pop(L, 1);
 	}
 

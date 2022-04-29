@@ -39,6 +39,7 @@ protected:
 	void gatherMatchBets(const std::vector<JcBetItemSource>& split_scores,
 		int index, std::vector<JcBetItem>& record, TBetResult& result);
 	void doAvgMultipleResult(const TBetResult& validResult, TBetResult& result);
+	void doFilterByBetsRankRatio(const TBetResult& validResult, TBetResult& result);
 
 protected:
 	CStlString m_strScript;
@@ -53,6 +54,7 @@ protected:
 	int m_nMatchBetsLose;
 	double m_dMinBonus;
 	int m_nAvgMultiple;
+	double m_dBetsRankRatio;
 
 	CStlString m_strCheckResult;
 	std::vector<std::shared_ptr<JCMatchItem>> m_vecMatchItems;
