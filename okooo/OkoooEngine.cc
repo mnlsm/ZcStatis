@@ -67,7 +67,8 @@ OkoooEngine::OkoooEngine(const CStlString& script, const char* logf) {
 	m_dMinBonus = 0.0;
 	m_nMatchBetsLose = 0;
 	m_nAvgMultiple = 0;
-	m_dBetsRankRatio = 1.0;
+	m_dBetsRankRatioMin = 1.0;
+	m_dBetsRankRatioMax = 1.0;
 	if (logf != NULL) {
 		m_strLogPath = logf;
 		m_strLogPath += "\\debug.log";
@@ -175,7 +176,7 @@ BOOL OkoooEngine::CalculateAllResultImpl(CStlString& failed_reason) {
 				failed_reason.append("\n").append(error_text);
 			}
 		}
-		doFilterByBetsRankRatio(validAll, filterAll);
+		doFilterByBetsRankRatio(allResult, validAll, filterAll);
 		doAvgMultipleResult(filterAll, tempAll);
 		m_vecResults.swap(tempAll);
 		m_vecDiscardResults.swap(discardAll);
@@ -187,15 +188,15 @@ BOOL OkoooEngine::CalculateAllResultImpl(CStlString& failed_reason) {
 	return result;
 }
 
-void OkoooEngine::doFilterByBetsRankRatio(const TBetResult& validResult, TBetResult& result) {
+void OkoooEngine::doFilterByBetsRankRatio(const TBetResult& allResult, const TBetResult& validResult, TBetResult& result) {
 	result.clear();
-	if (m_dBetsRankRatio >= 1.0) {
+	if (m_dBetsRankRatioMax >= 1.0) {
 		result = validResult;
 		return;
 	}
 	
 	std::vector<double> bets;
-	for (const auto& record : validResult) {
+	for (const auto& record : allResult) {
 		double temp = 1.0;
 		for (const auto& item : record) {
 			temp = temp * item.bet.odds;
@@ -203,15 +204,17 @@ void OkoooEngine::doFilterByBetsRankRatio(const TBetResult& validResult, TBetRes
 		bets.emplace_back(temp);
 	}
 	std::sort(bets.begin(), bets.end(), std::less<double>());
-	int index = (int)((double)bets.size() * m_dBetsRankRatio + 1);
+	int index = (int)((double)bets.size() * m_dBetsRankRatioMax + 1);
 	if (index >= bets.size()) index = bets.size() - 1;
-	double bet = bets[index];
+	double betMax = bets[index];
+	index = (int)((double)bets.size() * m_dBetsRankRatioMin);
+	double betMin = bets[index];
 	for (const auto& record : validResult) {
 		double temp = 1.0;
 		for (const auto& item : record) {
 			temp = temp * item.bet.odds;
 		}
-		if (temp <= bet) {
+		if (temp >= betMin && temp <= betMax) {
 			result.emplace_back(record);
 		}
 	}
@@ -353,9 +356,20 @@ lua_State* OkoooEngine::InitLua(CStlString& failed_reason) {
 		lua_pop(L, 1);
 	}
 
-	if (lua_getglobal(L, "kBetsRankRatio") == LUA_TNUMBER) {
-		m_dBetsRankRatio = lua_tonumber(L, -1);
+	if (lua_getglobal(L, "kBetsRankRatioRange") == LUA_TSTRING) {
+		//m_dBetsRankRatio = lua_tonumber(L, -1);
+		CStlString ratioRange = lua_tostring(L, -1);
 		lua_pop(L, 1);
+		std::vector<CStlString> arrParts;
+		Global::DepartString(ratioRange, "-", arrParts);
+		if (arrParts.size() == 2) {
+			double lower = std::atof(arrParts[0].c_str());
+			double upper = std::atof(arrParts[1].c_str());
+			if (lower >= 0.0 && upper <= 1.0 && lower <= upper) {
+				m_dBetsRankRatioMin = lower;
+				m_dBetsRankRatioMax = upper;
+			}
+		}
 	}
 
 	if (lua_getglobal(L, "kMatchTitle") == LUA_TSTRING) {
