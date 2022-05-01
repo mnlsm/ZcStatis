@@ -45,6 +45,7 @@
 *.suo
 *.vcxproj.user
 *.opensdf
+*.pdb
 
 # Project Temp Files
 /debug/*
@@ -52,5 +53,8 @@
 /ipch/*
 /bin/gambel/*
 /bin/ZcStatisd.exe
-/bin/JC/danlue_login.dat
+/bin/JC/*
 /.vs/*
+/bin/*.manifest
+/bin/*.zip
+
