@@ -573,7 +573,7 @@ void OkoooDialog::ReloadMatchListData() {
 	auto& iter = m_JCMatchItems.begin();// equal_range((LPCSTR)m_strQH);
 	int iIndex = 0;
 	for (; iter != m_JCMatchItems.end(); ++iter) {
-		if (iter->first.compare(m_strQH) < 0) {
+		if (iter->first.compare(m_strQH) != 0) {
 			continue;
 		}
 		int colIndex = 0;
