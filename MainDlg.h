@@ -42,6 +42,7 @@ public:
 		COMMAND_ID_HANDLER(IDM_JQC, OnMenuJQC)
 		COMMAND_ID_HANDLER(IDM_REFRESH, OnRefresh)
 		COMMAND_ID_HANDLER(IDM_OKOOO, OnOkooo)
+		COMMAND_ID_HANDLER(IDM_BEIDAN, OnBeiDan)
 
 
 
@@ -64,6 +65,7 @@ public:
 	LRESULT OnRefresh(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnMenuJQC(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnOkooo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnBeiDan(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	
 private:

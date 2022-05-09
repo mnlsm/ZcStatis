@@ -11,6 +11,8 @@
 #include "DialogGambel.h"
 #include "JQC/JQCDialog.h"
 #include "okooo/OkoooDialog.h"
+#include "beidan/BeiDanDialog.h"
+
 #include <SQLiteCpp/SQLiteCpp.h>
 extern CMainDlg dlgMain;
 
@@ -124,6 +126,10 @@ LRESULT CMainDlg::OnOkooo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL
 	return 1L;
 }
 
+LRESULT CMainDlg::OnBeiDan(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	BeiDanDialog::PopUp(this->m_pDatabase);
+	return 1L;
+}
 
 void CMainDlg::InitControls() {
 	DoDataExchange(FALSE);
@@ -311,10 +317,6 @@ void CMainDlg::ReloadStatisData() {
 	m_lstStatis.DoSortItems(0, false);
 	return;
 }
-
-
-
-
 
 BOOL CMainDlg::GetPL(const CStringATL &strCode, const CStringATL &strPL1, DataRow &dataRow) {
     //CStlStrArray arrOther;

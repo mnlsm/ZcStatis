@@ -146,13 +146,15 @@
 #define ID_32777                        32777
 #define ID_OKOOO                        32778
 #define IDM_OKOOO                       32779
+#define ID_32780                        32780
+#define IDM_BEIDAN                      32781
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        212
-#define _APS_NEXT_COMMAND_VALUE         32780
+#define _APS_NEXT_COMMAND_VALUE         32782
 #define _APS_NEXT_CONTROL_VALUE         1043
 #define _APS_NEXT_SYMED_VALUE           102
 #endif

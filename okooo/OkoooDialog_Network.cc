@@ -78,50 +78,17 @@ CHttpRequestPtr OkoooDialog::CreateGetRequest(const std::string& url, const std:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*
-static const std::string LOGIN_REQ_PREFIX = "login_req_prefix";
-static const std::string LOGOFF_REQ_PREFIX = "logoff_req_prefix";
-static const std::string INFO_REQ_PREFIX = "info_req_prefix";
-static const std::string RCTOKEN_REQ_PREFIX = "rctoken_req_prefix";
-static const std::string FRIENDLIST_REQ_PREFIX = "friendlist_req_prefix";
-static const std::string LOTTERYCATEGORIES_REQ_PREFIX = "lotterycategories_req_prefix";
-static const std::string JCMATCHLIST_REQ_PREFIX = "jcmatchlist_req_prefix";
-*/
+static const char* LOGIN_REQ_PREFIX = "login_req_prefix";
+static const char* LOGOFF_REQ_PREFIX = "logoff_req_prefix";
+static const char* INFO_REQ_PREFIX = "info_req_prefix";
+static const char* RCTOKEN_REQ_PREFIX = "rctoken_req_prefix";
+static const char* FRIENDLIST_REQ_PREFIX = "friendlist_req_prefix";
+static const char* LOTTERYCATEGORIES_REQ_PREFIX = "lotterycategories_req_prefix";
+static const char* JCMATCHLIST_REQ_PREFIX = "jcmatchlist_req_prefix";
+static const char* HEMAI_REQ_PREFIX = "hemai_req_prefix";
+static const char* HEMAI_REQ_PREFIX_FINISH = "hemai_req_prefix_finish";
+static const char* BIFEN_REQ_PREFIX = "bifen_req_prefix";
 
-#define LOGIN_REQ_PREFIX  "login_req_prefix"
-#define  LOGOFF_REQ_PREFIX  "logoff_req_prefix"
-#define  INFO_REQ_PREFIX  "info_req_prefix"
-#define  RCTOKEN_REQ_PREFIX  "rctoken_req_prefix"
-#define  FRIENDLIST_REQ_PREFIX  "friendlist_req_prefix"
-#define  LOTTERYCATEGORIES_REQ_PREFIX  "lotterycategories_req_prefix"
-#define  JCMATCHLIST_REQ_PREFIX "jcmatchlist_req_prefix"
-#define  HEMAI_REQ_PREFIX "hemai_req_prefix"
-#define  HEMAI_REQ_PREFIX_FINISH "hemai_req_prefix_finish"
-#define  BIFEN_REQ_PREFIX "bifen_req_prefix"
-
-struct ResHeader {
-	ResHeader() {
-		status = -1;
-		timestamp = 0;
-		message = "unknown";
-	}
-	void parse(const Json::Value& rootValue) {
-		std::string str_error;
-		GetStringFromJsonObject(rootValue, "error", &str_error);
-		if (!str_error.empty()) {
-			str_error = Global::fromUTF8(str_error);
-		}
-		GetIntFromJsonObject(rootValue, "status", &status);
-		GetStringFromJsonObject(rootValue, "message", &message);
-		if (!message.empty()) {
-			message = Global::fromUTF8(message);
-		}
-		GetInt64FromJsonObject(rootValue, "timestamp", &timestamp);
-	}
-	int status;
-	std::string message;
-	__int64 timestamp;
-};
 
 void OkoooDialog::OnHttpReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
 	if (request->request_id.find(LOGIN_REQ_PREFIX) == 0) {

@@ -361,6 +361,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "进球彩",                         IDM_JQC
         MENUITEM "澳客",                          IDM_OKOOO
+        MENUITEM "北单",                          IDM_BEIDAN
     END
 END
 
