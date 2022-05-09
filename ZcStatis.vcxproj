@@ -130,6 +130,11 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BEIDAN\BeiDanDialog.cc" />
+    <ClCompile Include="BEIDAN\BeiDanDialog_BetArea.cc" />
+    <ClCompile Include="BEIDAN\BeiDanDialog_Network.cc" />
+    <ClCompile Include="BEIDAN\BeiDanEngine.cc" />
+    <ClCompile Include="BEIDAN\BeiDanStat.cc" />
     <ClCompile Include="browser\WebBrowser.cpp" />
     <ClCompile Include="CRCUtility.cpp" />
     <ClCompile Include="DialogDB.cpp" />
@@ -342,6 +347,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="atlctrlsext.h" />
+    <ClInclude Include="BEIDAN\BeiDanDialog.h" />
+    <ClInclude Include="BEIDAN\BeiDanEngine.h" />
+    <ClInclude Include="BEIDAN\BeiDanStat.h" />
     <ClInclude Include="browser\WebBrowser.h" />
     <ClInclude Include="ButtonMenu.h" />
     <ClInclude Include="CRCUtility.h" />

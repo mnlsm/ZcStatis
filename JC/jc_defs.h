@@ -49,3 +49,5 @@ struct JCMatchItem {
 	Subject* get_subject(int tid, int betCode);
 	Subject* get_subject(int tid, const char* tip);
 };
+
+CStringA CreateMatchDescription(const CStringA& ahost, const CStringA& aaway);

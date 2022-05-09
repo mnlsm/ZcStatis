@@ -256,3 +256,14 @@ JCMatchItem::Subject* JCMatchItem::get_subject(int tid, const char* tip) {
 	}
 	return result;
 }
+
+CStringA CreateMatchDescription(const CStringA& ahost, const CStringA& aaway) {
+	const char* vs("  VS  ");
+	const char* buf = "               ";
+	CStringA result;
+	CStringA host(buf), away(buf);
+	memcpy((char*)(LPCSTR)host + host.GetLength() - ahost.GetLength(), (LPCSTR)ahost, ahost.GetLength());
+	memcpy((char*)(LPCSTR)away, (LPCSTR)aaway, aaway.GetLength());
+	result = host + vs + away;
+	return result;
+}

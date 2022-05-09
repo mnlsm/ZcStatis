@@ -49,6 +49,9 @@
     <Filter Include="browser">
       <UniqueIdentifier>{0d42c012-dbff-4765-90fd-24ac98dc79be}</UniqueIdentifier>
     </Filter>
+    <Filter Include="beidan">
+      <UniqueIdentifier>{feb7331b-0205-46f5-8389-0647dc497440}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lua\lbitlib.c">
@@ -273,6 +276,21 @@
     <ClCompile Include="browser\WebBrowser.cpp">
       <Filter>browser</Filter>
     </ClCompile>
+    <ClCompile Include="BEIDAN\BeiDanDialog.cc">
+      <Filter>beidan</Filter>
+    </ClCompile>
+    <ClCompile Include="BEIDAN\BeiDanDialog_BetArea.cc">
+      <Filter>beidan</Filter>
+    </ClCompile>
+    <ClCompile Include="BEIDAN\BeiDanDialog_Network.cc">
+      <Filter>beidan</Filter>
+    </ClCompile>
+    <ClCompile Include="BEIDAN\BeiDanEngine.cc">
+      <Filter>beidan</Filter>
+    </ClCompile>
+    <ClCompile Include="BEIDAN\BeiDanStat.cc">
+      <Filter>beidan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua\lctype.h">
@@ -478,6 +496,15 @@
     </ClInclude>
     <ClInclude Include="browser\WebBrowser.h">
       <Filter>browser</Filter>
+    </ClInclude>
+    <ClInclude Include="BEIDAN\BeiDanDialog.h">
+      <Filter>beidan</Filter>
+    </ClInclude>
+    <ClInclude Include="BEIDAN\BeiDanEngine.h">
+      <Filter>beidan</Filter>
+    </ClInclude>
+    <ClInclude Include="BEIDAN\BeiDanStat.h">
+      <Filter>beidan</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

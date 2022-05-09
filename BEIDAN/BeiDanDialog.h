@@ -1,21 +1,21 @@
 #pragma once
 
 #include "resource.h"
-#include "OkoooEngine.h"
+#include "BeiDanEngine.h"
 #include "AsyncFuncDispatch.h"
 #include "http/HttpClientMgr.h"
 #include "browser/WebBrowser.h"
 
-class OkoooDialog :
-	public CAxDialogImpl<OkoooDialog>,
+class BeiDanDialog :
+	public CAxDialogImpl<BeiDanDialog>,
 	public CIdleHandler,
 	public CAsyncFuncDispatcher,
-	public CWinDataExchange<OkoooDialog>,
+	public CWinDataExchange<BeiDanDialog>,
 	public IWebBrowserCallback {
 
 private:
-	OkoooDialog();
-	static OkoooDialog sInst;
+	BeiDanDialog();
+	static BeiDanDialog sInst;
 public:
 	static void PopUp(const std::shared_ptr<SQLite::Database>& db);
 	static void Destroy();
@@ -27,7 +27,7 @@ public:
 public:
 	enum { IDD = IDD_OKOOO_JC, WM_ASYNC_DISPATCH = WM_APP + 0x360 };
 
-	BEGIN_DDX_MAP(OkoooDialog)
+	BEGIN_DDX_MAP(BeiDanDialog)
 		DDX_CONTROL(IDC_MATCH_LIST, m_lstMatch)
 		DDX_CONTROL(IDC_RESULT_LIST, m_lstResult)
 
@@ -51,7 +51,7 @@ public:
 
 	END_DDX_MAP()
 
-	BEGIN_MSG_MAP(OkoooDialog)
+	BEGIN_MSG_MAP(BeiDanDialog)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
@@ -69,7 +69,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_BUBIFEN, OnRefreshBiFen)
 		COMMAND_ID_HANDLER(IDC_EXTRACT_LUA, OnExtractLua)
 
-		CHAIN_MSG_MAP(CAxDialogImpl<OkoooDialog>)
+		CHAIN_MSG_MAP(CAxDialogImpl<BeiDanDialog>)
 		REFLECT_NOTIFICATIONS()
 		ALT_MSG_MAP(1)
 		MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnListLButtonDbclk)
@@ -129,8 +129,8 @@ private:
 	void DoReloadBackupResult();
 
 private:
-	CSortListViewCtrlEx<OkoooDialog> m_lstMatch;
-	CSortListViewCtrlEx<OkoooDialog> m_lstResult;
+	CSortListViewCtrlEx<BeiDanDialog> m_lstMatch;
+	CSortListViewCtrlEx<BeiDanDialog> m_lstResult;
 	CContainedWindowT<CStatic> m_stYZM;
 	CContainedWindowT<CStatic> m_stBetArea;
 	CContainedWindowT<CStatic> m_stBetAreaTitle;
@@ -211,7 +211,7 @@ private:
 	std::shared_ptr<SQLite::Database> m_pDatabase;
 
 private:
-	std::shared_ptr<OkoooEngine> m_Engine;
+	std::shared_ptr<BeiDanEngine> m_Engine;
 
 private:
 	std::map<std::string, std::shared_ptr<WebBrowser>> m_Browsers;

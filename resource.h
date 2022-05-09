@@ -16,6 +16,10 @@
 #define IDD_JQC                         206
 #define IDD_DANLUE_LOGIN                207
 #define IDD_DANLUE_STAT                 208
+#define IDD_DANLUE_LOGIN2               208
+#define IDD_OKOOO_JC                    209
+#define IDD_OKOOO_JC1                   210
+#define IDD_OKOOO_BD                    210
 #define IDR_ADDIN2                      211
 #define IDR_MENU1                       214
 #define IDC_STATIS_LIST                 1001

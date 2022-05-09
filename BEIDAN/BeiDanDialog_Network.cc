@@ -1,14 +1,14 @@
 #include "stdafx.h"
-#include "OkoooDialog.h"
+#include "BeiDanDialog.h"
 #include "Global.h"
 #include "ZlibStream.h"
 #include "MiscHelper.h"
 
 
-BOOL OkoooDialog::OnIdle() {
+BOOL BeiDanDialog::OnIdle() {
 	int async_count = GetAsyncFuncCount();
 	if (async_count > 0) {
-		PostMessage(OkoooDialog::WM_ASYNC_DISPATCH, 0, 0);
+		PostMessage(BeiDanDialog::WM_ASYNC_DISPATCH, 0, 0);
 	}
 	if (!m_delayDeleteBrowsers.empty()) {
 		for (int i = (int)m_delayDeleteBrowsers.size() - 1; i >= 0; i--) {
@@ -20,25 +20,25 @@ BOOL OkoooDialog::OnIdle() {
 	return FALSE;
 }
 
-LRESULT OkoooDialog::OnAsyncDispatch(UINT msg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT BeiDanDialog::OnAsyncDispatch(UINT msg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	DispathOneAsyncFunc();
 	return 1L;
 }
 
-bool OkoooDialog::AddOneAsyncFunc(talk_base::IAsyncFuncCall* pAsyncFunc) {
+bool BeiDanDialog::AddOneAsyncFunc(talk_base::IAsyncFuncCall* pAsyncFunc) {
 	BOOL bRet = CAsyncFuncDispatcher::AddOneAsyncFunc(pAsyncFunc);
 	if (bRet) {
-		bRet = PostMessage(OkoooDialog::WM_ASYNC_DISPATCH, 0, 0);
+		bRet = PostMessage(BeiDanDialog::WM_ASYNC_DISPATCH, 0, 0);
 	}
 	return (bRet == TRUE);
 }
 
-void OkoooDialog::OnHttpReturnGlobal(const CHttpRequestPtr& request,
+void BeiDanDialog::OnHttpReturnGlobal(const CHttpRequestPtr& request,
 	const CHttpResponseDataPtr& response) {
-	sInst.AddOneAsyncFunc(talk_base::BindAsyncFunc(&OkoooDialog::OnHttpReturn, &sInst, request, response));
+	sInst.AddOneAsyncFunc(talk_base::BindAsyncFunc(&BeiDanDialog::OnHttpReturn, &sInst, request, response));
 }
 
-CHttpRequestPtr OkoooDialog::CreatePostRequest(const std::string& url, const std::string& idprefix,
+CHttpRequestPtr BeiDanDialog::CreatePostRequest(const std::string& url, const std::string& idprefix,
 	const std::string& data) {
 	std::string request_id = CHttpClientMgr::generateRequestId();
 	request_id = idprefix + "_" + request_id;
@@ -53,12 +53,12 @@ CHttpRequestPtr OkoooDialog::CreatePostRequest(const std::string& url, const std
 	ptr->request_post_data = data;
 	ptr->response_type = RESPONSEMEMORY;
 	ptr->request_time = 1000 * 60;
-	ptr->callback = &OkoooDialog::OnHttpReturnGlobal;
+	ptr->callback = &BeiDanDialog::OnHttpReturnGlobal;
 	//httpMgr_->DoHttpCommandRequest(ptr);
 	return ptr;
 }
 
-CHttpRequestPtr OkoooDialog::CreateGetRequest(const std::string& url, const std::string& idprefix) {
+CHttpRequestPtr BeiDanDialog::CreateGetRequest(const std::string& url, const std::string& idprefix) {
 	std::string request_id = CHttpClientMgr::generateRequestId();
 	request_id = idprefix + "_" + request_id;
 	CHttpRequestPtr ptr(new (std::nothrow) THttpRequestData());
@@ -71,7 +71,7 @@ CHttpRequestPtr OkoooDialog::CreateGetRequest(const std::string& url, const std:
 	//ptr->request_post_data = query->GetCloudPathsRequestData();
 	ptr->response_type = RESPONSEMEMORY;
 	ptr->request_time = 1000 * 60;
-	ptr->callback = &OkoooDialog::OnHttpReturnGlobal;
+	ptr->callback = &BeiDanDialog::OnHttpReturnGlobal;
 	return ptr;
 	//httpMgr_->DoHttpCommandRequest(ptr);
 }
@@ -123,7 +123,7 @@ struct ResHeader {
 	__int64 timestamp;
 };
 
-void OkoooDialog::OnHttpReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
+void BeiDanDialog::OnHttpReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
 	if (request->request_id.find(LOGIN_REQ_PREFIX) == 0) {
 		OnLoginReturn(request, response);
 	}
@@ -138,7 +138,7 @@ void OkoooDialog::OnHttpReturn(const CHttpRequestPtr& request, const CHttpRespon
 
 }
 
-int OkoooDialog::doLogin() {
+int BeiDanDialog::doLogin() {
 	if (TRUE) {
 		std::string url = "https://m.okooo.com/weixin/jing/d.php";
 		CHttpRequestPtr request = CreateGetRequest(url, LOGIN_REQ_PREFIX);
@@ -150,7 +150,7 @@ int OkoooDialog::doLogin() {
 }
 
 
-void OkoooDialog::OnLoginReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
+void BeiDanDialog::OnLoginReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
 	if (response->httperror == talk_base::HE_NONE && response->response_content.size() > 0) {
 		doJcMatchList();
 	} else {
@@ -160,21 +160,22 @@ void OkoooDialog::OnLoginReturn(const CHttpRequestPtr& request, const CHttpRespo
 	}
 }
 
-int OkoooDialog::doLogOff() {
+int BeiDanDialog::doLogOff() {
 	m_buLogin.EnableWindow(TRUE);
 	m_buLogoff.EnableWindow(FALSE);
 	return 0l;
 }
 
 
-int OkoooDialog::doJcMatchList() {
+int BeiDanDialog::doJcMatchList() {
 	std::string url = "https://m.okooo.com/weixin/jing/d.php";
 	CHttpRequestPtr request = CreateGetRequest(url, JCMATCHLIST_REQ_PREFIX);
 	httpMgr_->DoHttpCommandRequest(request);
 	return 0l;
 }
 
-void OkoooDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
+
+void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 	const CHttpResponseDataPtr& response) {
 	std::multimap<std::string, std::shared_ptr<JCMatchItem>> items;
 	std::map<std::string, std::shared_ptr<JCMatchItem>> order_items;
@@ -372,7 +373,8 @@ void OkoooDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 	m_buLogoff.EnableWindow(TRUE);
 }
 
-int OkoooDialog::doBiFen() {
+int BeiDanDialog::doBiFen() {
+	/*
 	CStringATL beginDay, endDay, beginWeekDay;
 	Global::getBiFenDateInfo(beginDay, endDay, beginWeekDay);
 	CStringATL url;
@@ -381,10 +383,11 @@ int OkoooDialog::doBiFen() {
 	std::string request_id = BIFEN_REQ_PREFIX;
 	CHttpRequestPtr request = CreateGetRequest((LPCSTR)url, request_id);
 	httpMgr_->DoHttpCommandRequest(request);
+	*/
 	return 0;
 }
 
-void OkoooDialog::OnBiFenReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
+void BeiDanDialog::OnBiFenReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
 	const CStringATL strRowBegin = "<tr align=\"center\" class=\"WhiteBg BlackWords trClass\">\r\n";
 	const CStringATL strRowBegin1 = "<tr align=\"center\" class=\"ContentLight BlackWords trClass\">\r\n";
 
