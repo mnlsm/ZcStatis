@@ -173,8 +173,9 @@ private:
 
 	int doJcMatchList();
 	void OnJcMatchListReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+	void OnJcMatchListReturn1(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
-
+	void OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
 	int doBiFen();
 	void OnBiFenReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
@@ -183,7 +184,9 @@ public:
 
 
 private:
-
+	CWaitCursor m_waitCursor;
+	int m_pending_request;
+	std::map<std::string, std::shared_ptr<JCMatchItem>> m_order_items;
 	std::multimap<std::string, std::shared_ptr<JCMatchItem>> m_JCMatchItems;
 	std::shared_ptr<JCMatchItem> m_CurrentMatchItem;
 	JCMatchItem::Subject* get_subjects(const std::string& id, int tid, int code);

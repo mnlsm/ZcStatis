@@ -43,7 +43,8 @@ BeiDanDialog::BeiDanDialog() :
 	m_buCopy(this, 100),
 	m_stResult(this, 100),
 	m_buExtractLua(this, 100),
-	m_buUpload(this, 100) {
+	m_buUpload(this, 100),
+	m_waitCursor(false) {
 	m_FirstDrawBetArea = true;
 	SYSTEMTIME tm = { 0 };
 	GetLocalTime(&tm);
@@ -535,13 +536,13 @@ void BeiDanDialog::InitControls() {
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
 	m_lstMatch.InsertColumn(colIndex, "对阵", LVCFMT_CENTER, 250);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-	m_lstMatch.InsertColumn(colIndex, "过期时间", LVCFMT_CENTER, 130);    //70
+	m_lstMatch.InsertColumn(colIndex, "过期时间", LVCFMT_CENTER, 150);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
 	m_lstMatch.InsertColumn(colIndex, "胜平负", LVCFMT_CENTER, 200);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
 	m_lstMatch.InsertColumn(colIndex, "让胜平负", LVCFMT_CENTER, 200);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-	m_lstMatch.InsertColumn(colIndex, "选择结果", LVCFMT_CENTER, 400);    //70
+	m_lstMatch.InsertColumn(colIndex, "选择结果", LVCFMT_CENTER, 380);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
 
 	m_lstMatch.SetSortColumn(0);
@@ -573,9 +574,9 @@ void BeiDanDialog::ReloadMatchListData() {
 	auto& iter = m_JCMatchItems.begin();// equal_range((LPCSTR)m_strQH);
 	int iIndex = 0;
 	for (; iter != m_JCMatchItems.end(); ++iter) {
-		if (iter->first.compare(m_strQH) != 0) {
-			continue;
-		}
+		//if (iter->first.compare(m_strQH) != 0) {
+		//	continue;
+		//}
 		int colIndex = 0;
 		std::shared_ptr<JCMatchItem> ji = iter->second;
 		iIndex = m_lstMatch.InsertItem(iIndex, ji->id.c_str());

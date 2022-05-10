@@ -78,15 +78,7 @@ CHttpRequestPtr BeiDanDialog::CreateGetRequest(const std::string& url, const std
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*
-static const std::string LOGIN_REQ_PREFIX = "login_req_prefix";
-static const std::string LOGOFF_REQ_PREFIX = "logoff_req_prefix";
-static const std::string INFO_REQ_PREFIX = "info_req_prefix";
-static const std::string RCTOKEN_REQ_PREFIX = "rctoken_req_prefix";
-static const std::string FRIENDLIST_REQ_PREFIX = "friendlist_req_prefix";
-static const std::string LOTTERYCATEGORIES_REQ_PREFIX = "lotterycategories_req_prefix";
-static const std::string JCMATCHLIST_REQ_PREFIX = "jcmatchlist_req_prefix";
-*/
+
 
 static const char* LOGIN_REQ_PREFIX = "login_req_prefix";
 static const char* LOGOFF_REQ_PREFIX = "logoff_req_prefix";
@@ -100,18 +92,23 @@ static const char* HEMAI_REQ_PREFIX_FINISH = "hemai_req_prefix_finish";
 static const char* BIFEN_REQ_PREFIX = "bifen_req_prefix";
 
 
+static const char* BEIDANWDL_REQ_PREFIX = "beidanwdl_req_prefix";
+
+
 void BeiDanDialog::OnHttpReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
 	if (request->request_id.find(LOGIN_REQ_PREFIX) == 0) {
 		OnLoginReturn(request, response);
 	}
-
 	else if (request->request_id.find(JCMATCHLIST_REQ_PREFIX) == 0) {
 		OnJcMatchListReturn(request, response);
 	}
-
 	else if (request->request_id.find(BIFEN_REQ_PREFIX) == 0) {
 		OnBiFenReturn(request, response);
 	}
+	else if (request->request_id.find(BEIDANWDL_REQ_PREFIX) == 0) {
+		OnBeiDanWDLReturn(request, response);
+	}
+	
 
 }
 
@@ -145,14 +142,235 @@ int BeiDanDialog::doLogOff() {
 
 
 int BeiDanDialog::doJcMatchList() {
-	std::string url = "https://m.okooo.com/weixin/jing/d.php";
+	std::string url = "https://www.okooo.com/danchang/";
 	CHttpRequestPtr request = CreateGetRequest(url, JCMATCHLIST_REQ_PREFIX);
 	httpMgr_->DoHttpCommandRequest(request);
 	return 0l;
 }
 
+static void adjustXmlText(CStringA& temp) {
+	int nFindBegin = -1, nFindEnd = -1;
+	CStringA s = "<input class=";
+	CStringA e = ">";
+	nFindBegin = temp.Find(s, 0);
+	if (nFindBegin >= 0) {
+		nFindEnd = temp.Find(e, nFindBegin);
+		if (nFindEnd >= 0) {
+			CStringA text = temp.Mid(nFindBegin, nFindEnd - nFindBegin + e.GetLength());
+			temp.Replace(text, "");
+		}
+	}
+}
+
+static CStringA adjustXuHaoText(const CStringA& temp) {
+	int len = temp.GetLength();
+	if (len == 0) {
+		return "000";
+	} else if (len == 1) {
+		return CStringA("00") + temp;
+	} else if (len == 2) {
+		return CStringA("0") + temp;
+	}
+	return temp;
+}
 
 void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
+		const CHttpResponseDataPtr& response) {
+	m_pending_request = 0;
+	m_order_items.clear();
+
+	if (response->httperror == talk_base::HE_NONE && response->response_content.size() > 0) {
+		CZlibStream zlib;
+		std::string raw_response;
+		zlib.DecompressGZip(response->response_content, raw_response);
+		CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_UTF8).m_psz).m_psz;
+
+		int nFindBegin = -1, nFindEnd = -1;
+		CStringA section_begin = "<tr class=\"alltrObj";
+		CStringA section_end = "</tr>";
+		nFindBegin = 0;
+		while ((nFindBegin = temp.Find(section_begin, nFindBegin)) >= 0) {
+			nFindEnd = temp.Find(section_end, nFindBegin);
+			if (nFindEnd == -1) {
+				break;
+			}
+			CStringA xmlText = temp.Mid(nFindBegin, nFindEnd - nFindBegin + section_end.GetLength());
+			adjustXmlText(xmlText);
+			nFindBegin = nFindEnd + section_end.GetLength();
+			tinyxml2::XMLDocument doc;
+			tinyxml2::XMLElement* tempElement = nullptr;
+			if (doc.Parse(xmlText) != tinyxml2::XML_SUCCESS) {
+				break;
+			}
+			tinyxml2::XMLElement* child = doc.FirstChildElement();
+			if (child == nullptr) {
+				break;
+			}
+			auto node = FindElementByClassAttr(child, "xh");
+			if (node == nullptr) {
+				break;
+			}
+			CStringA xuhao = GetElementText(node->FirstChildElement());
+			CStringA match_category = GetElementText(FindElementByClassAttr(child, "ls"));
+			CStringA start_time = GetElementAttrValue(FindElementByClassAttr(
+				child, "switchtime timetd td2"), "title");
+			start_time.Replace("比赛时间：", ""); start_time.Trim();
+
+			CStringA home = GetElementAttrValue(FindElementByClassAttr(
+				child, "homenameobj homename"), "title");
+			CStringA away = GetElementAttrValue(FindElementByClassAttr(
+				child, "awaynameobj awayname"), "title");
+			CStringA href = GetElementAttrValue(FindElementByClassAttr(
+				child, "dc-link"), "href");
+			href.Replace("odds", "history");
+			href.Replace("node", "history");
+			CStringA orderid = href;
+			orderid.Replace("/soccer/match/", "");
+			orderid.Replace("/history/", "");
+
+			std::shared_ptr<JCMatchItem> ji(new JCMatchItem());
+			ji->id = adjustXuHaoText(xuhao);
+			ji->start_time = start_time;
+			ji->match_category = match_category;
+			ji->start_time = ji->last_buy_time = start_time;
+			ji->descrition = CreateMatchDescription(home, away);
+			ji->match_url = std::string("https://m.okooo.com/match/game.php?MatchID=") + (LPCSTR)orderid + "&from=";
+			ji->orderid = orderid;
+			auto homeNode = FindElementByClassAttr(child, "sbg");
+			if (homeNode != nullptr) {
+				CStringA hand = GetElementText(FindElementByClassAttr(homeNode, "handicapobj font_red"));
+				hand.Replace(")", "");hand.Replace("(", "");hand.Replace("+", "");
+				ji->hand = atoi(hand);
+				CStringA pl = GetElementText(FindElementByClassAttr(homeNode, "pltxt"));
+				JCMatchItem::Subject sub;
+				sub.tid = 1;
+				sub.odds = atof(pl);
+				sub.betCode = 3;
+				sub.checked = false;
+				sub.calcTip(ji->hand);
+				ji->subjects.push_back(sub);
+			}
+			auto midNode = FindElementByClassAttr(child, "pbg");
+			if (midNode != nullptr) {
+				CStringA pl = GetElementText(midNode->FirstChildElement("em"));
+				JCMatchItem::Subject sub;
+				sub.tid = 1;
+				sub.odds = atof(pl);
+				sub.betCode = 1;
+				sub.checked = false;
+				sub.calcTip(ji->hand);
+				ji->subjects.push_back(sub);
+			}
+			auto awayNode = FindElementByClassAttr(child, "fbg");
+			if (awayNode != nullptr) {
+				CStringA pl = GetElementText(FindElementByClassAttr(awayNode, "pltxt"));
+				JCMatchItem::Subject sub;
+				sub.tid = 1;
+				sub.odds = atof(pl);
+				sub.betCode = 0;
+				sub.checked = false;
+				sub.calcTip(ji->hand);
+				ji->subjects.push_back(sub);
+			}
+			m_order_items.insert(std::make_pair(ji->orderid, ji));
+		}
+		
+		m_waitCursor.Set();
+		for (const auto& item : m_order_items) {
+			CStringA url;
+			url.Format("https://m.okooo.com/match/change.php?mid=%s&pid=24&Type=Odds&c=1" ,item.second->orderid.c_str());
+			auto req = CreateGetRequest(std::string((LPCSTR)url), BEIDANWDL_REQ_PREFIX);
+			req->cmd = item.second->orderid;
+			m_pending_request++;
+			httpMgr_->DoHttpCommandRequest(req);
+		}
+		
+	}
+
+}
+
+void BeiDanDialog::OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
+	m_pending_request--;
+	if (response->httperror == talk_base::HE_NONE && response->response_content.size() > 0) {
+		do {
+			CZlibStream zlib;
+			std::string raw_response;
+			zlib.DecompressGZip(response->response_content, raw_response);
+			CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_UTF8).m_psz).m_psz;
+			CStringA section_begin = "<table width=";
+			CStringA section_end = "</table>";
+
+			int nFindBegin = temp.Find(section_begin);
+			if (nFindBegin == -1) {
+				return;
+			}
+			int nFindEnd = temp.Find(section_end, nFindBegin);
+			CStringA xmlText = temp.Mid(nFindBegin, nFindEnd - nFindBegin + section_end.GetLength());
+			std::string date;
+			tinyxml2::XMLDocument doc;
+			tinyxml2::XMLElement* tempElement = nullptr;
+			if (doc.Parse(xmlText) != tinyxml2::XML_SUCCESS) {
+				return;
+			}
+			tinyxml2::XMLElement* child = doc.FirstChildElement();
+			if (child == nullptr) {
+				break;
+			}
+			child = child->FirstChildElement("tr");
+			if (child == nullptr) {
+				break;
+			}
+			child = child->FirstChildElement("td");
+			if (child == nullptr) {
+				break;
+			}
+			auto& item = m_order_items.find(request->cmd);
+			if (item == m_order_items.end()) {
+				break;
+			}
+			child = child->FirstChildElement("span");
+			int index = 0;
+			while (child != nullptr) {
+				CStringA pl = GetElementText(child);
+				JCMatchItem::Subject sub;
+				sub.tid = 6;
+				sub.odds = atof(pl);
+				sub.betCode = 3;
+				if(index == 1) sub.betCode = 1;
+				else if(index == 2) sub.betCode = 0;
+				sub.checked = false;
+				sub.calcTip(item->second->hand);
+				item->second->subjects.push_back(sub);
+				index++;
+				child = child->NextSiblingElement("span");
+			}
+
+		} while (false);
+	}
+
+	if (m_pending_request <= 0) {
+		m_waitCursor.Restore();
+		std::multimap<std::string, std::shared_ptr<JCMatchItem>> items;
+		if (!m_order_items.empty()) {
+			for (auto& iter : m_order_items) {
+				JCMatchItem item;
+				if (GetItemFromDB(*iter.second, item)) {
+					*iter.second = item;
+				}
+				else {
+					InsertItemToDB(*iter.second);
+				}
+				items.insert(std::make_pair(iter.second->start_time, iter.second));
+			}
+			m_JCMatchItems.swap(items);
+		}
+		ReloadMatchListData();
+		m_buLogin.EnableWindow(FALSE);
+		m_buLogoff.EnableWindow(TRUE);
+	}
+}
+
+void BeiDanDialog::OnJcMatchListReturn1(const CHttpRequestPtr& request,
 	const CHttpResponseDataPtr& response) {
 	std::multimap<std::string, std::shared_ptr<JCMatchItem>> items;
 	std::map<std::string, std::shared_ptr<JCMatchItem>> order_items;
