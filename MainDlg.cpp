@@ -97,6 +97,7 @@ LRESULT CMainDlg::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 LRESULT CMainDlg::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
     DestroyWindow();
 	OkoooDialog::Destroy();
+	BeiDanDialog::Destroy();
     ::PostQuitMessage(wID);
     return 1L;
 }

@@ -526,5 +526,6 @@
     <None Include="res\ADDIN\template.lua">
       <Filter>res</Filter>
     </None>
+    <None Include="res\ADDIN\template_bd.lua" />
   </ItemGroup>
 </Project>

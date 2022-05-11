@@ -40,10 +40,12 @@ BeiDanDialog::BeiDanDialog() :
 	m_buCalc(this, 100),
 	m_stSep1(this, 100),
 	m_stSep2(this, 100),
+	m_stProgress(this, 100),
 	m_buCopy(this, 100),
 	m_stResult(this, 100),
 	m_buExtractLua(this, 100),
 	m_buUpload(this, 100),
+	m_ckRQ(this, 100),
 	m_waitCursor(false) {
 	m_FirstDrawBetArea = true;
 	SYSTEMTIME tm = { 0 };
@@ -64,6 +66,7 @@ LRESULT BeiDanDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	pLoop->AddIdleHandler(this);
 
 	DoDataExchange(FALSE);
+	m_ckRQ.SetCheck(1);
 
 	CRect rcDesktop;
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &rcDesktop, sizeof(RECT));
@@ -310,7 +313,7 @@ LRESULT BeiDanDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 		tm.wYear, tm.wMonth,tm.wDay, tm.wHour, tm.wMinute, tm.wSecond);
 	DeleteFile(file_path);
 	CResource res;
-	if (res.Load(_T("ADDIN"), MAKEINTRESOURCE(IDR_ADDIN2))) {
+	if (res.Load(_T("ADDIN"), MAKEINTRESOURCE(IDR_ADDIN3))) {
 		Global::SaveFileData((LPCSTR)file_path, (uint8_t*)res.Lock(),
 			res.GetSize(), FALSE);
 		std::vector<const char*> select_files;
@@ -319,6 +322,14 @@ LRESULT BeiDanDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 	}
 	return 1L;
 }
+
+LRESULT BeiDanDialog::OnToggleRQ(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	if (!m_JCMatchItems.empty()) {
+		ReloadMatchListData();
+	}
+	return 1L;
+}
+
 
 LRESULT BeiDanDialog::OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	if (m_Engine.get() == nullptr) {
@@ -530,19 +541,19 @@ void BeiDanDialog::InitControls() {
 
 	//insert header;
 	int colIndex = 0;
-	m_lstMatch.InsertColumn(colIndex, "期号", LVCFMT_CENTER, 100);    //70
+	m_lstMatch.InsertColumn(colIndex, "期号", LVCFMT_CENTER, 50);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
 	m_lstMatch.InsertColumn(colIndex, "赛事", LVCFMT_CENTER, 100);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
-	m_lstMatch.InsertColumn(colIndex, "对阵", LVCFMT_CENTER, 250);    //70
+	m_lstMatch.InsertColumn(colIndex, "对阵", LVCFMT_CENTER, 280);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-	m_lstMatch.InsertColumn(colIndex, "过期时间", LVCFMT_CENTER, 150);    //70
+	m_lstMatch.InsertColumn(colIndex, "过期时间", LVCFMT_CENTER, 160);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
-	m_lstMatch.InsertColumn(colIndex, "胜平负", LVCFMT_CENTER, 200);    //70
+	m_lstMatch.InsertColumn(colIndex, "胜平负", LVCFMT_CENTER, 160);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-	m_lstMatch.InsertColumn(colIndex, "让胜平负", LVCFMT_CENTER, 200);    //70
+	m_lstMatch.InsertColumn(colIndex, "让胜平负", LVCFMT_CENTER, 160);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-	m_lstMatch.InsertColumn(colIndex, "选择结果", LVCFMT_CENTER, 380);    //70
+	m_lstMatch.InsertColumn(colIndex, "选择结果", LVCFMT_CENTER, 470);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
 
 	m_lstMatch.SetSortColumn(0);
@@ -569,8 +580,10 @@ void BeiDanDialog::InitControls() {
 }
 
 void BeiDanDialog::ReloadMatchListData() {
+	BOOL isSkipRQ = (m_ckRQ.GetCheck() != 1);
 	m_lstMatch.DeleteAllItems();
-
+	CStringATL curTime = Global::GetTimeString();
+	CStringATL expireTime = Global::GetNextDayString() + " 10:00:00";
 	auto& iter = m_JCMatchItems.begin();// equal_range((LPCSTR)m_strQH);
 	int iIndex = 0;
 	for (; iter != m_JCMatchItems.end(); ++iter) {
@@ -579,6 +592,16 @@ void BeiDanDialog::ReloadMatchListData() {
 		//}
 		int colIndex = 0;
 		std::shared_ptr<JCMatchItem> ji = iter->second;
+		int cmp = strcmp(ji->start_time.c_str(), curTime);
+		if (cmp <= 0) continue;
+		cmp = strcmp(ji->start_time.c_str(), expireTime);
+		if (cmp > 0) continue;
+		if (isSkipRQ) {
+			if (ji->hand != 0) {
+				continue;
+			}
+		}
+
 		iIndex = m_lstMatch.InsertItem(iIndex, ji->id.c_str());
 		m_lstMatch.SetItemText(iIndex, ++colIndex, ji->match_category.c_str());
 		m_lstMatch.SetItemText(iIndex, ++colIndex, ji->descrition.c_str());
@@ -618,7 +641,7 @@ void BeiDanDialog::ReloadMatchListData() {
 
 void BeiDanDialog::CreateWorkDir() {
 	CStringATL strPath(Global::GetAppPath().c_str());
-	m_strRootDir = strPath + _T("JC");
+	m_strRootDir = strPath + _T("BD");
 	CStringATL strInitFileName;
 	CreateDirectory(m_strRootDir, NULL);
 	strPath = m_strRootDir + _T("\\") + m_strQH;

@@ -21,6 +21,7 @@
 #define IDD_OKOOO_JC1                   210
 #define IDD_OKOOO_BD                    210
 #define IDR_ADDIN2                      211
+#define IDR_ADDIN3                      212
 #define IDR_MENU1                       214
 #define IDC_STATIS_LIST                 1001
 #define IDC_LIST_QH                     1002
@@ -74,6 +75,8 @@
 #define IDC_CHECK_CAT3                  1043
 #define IDC_EDIT_CAT3                   1044
 #define IDC_EDIT_TEAM                   1044
+#define IDC_CHECK1                      1044
+#define IDC_CHECK_RQ                    1044
 #define IDC_CHECK_CAT4                  1045
 #define IDC_CORESULT1                   1078
 #define IDC_CORESULT2                   1079
@@ -124,6 +127,7 @@
 #define IDC_OPEN_SCRIPT                 1124
 #define IDC_BUBIFEN                     1125
 #define IDC_EXTRACT_LUA                 1126
+#define IDC_BD_PROGRESS                 1243
 #define IDC_STMATCHONE1                 8001
 #define IDC_STMATCHONE2                 8002
 #define IDC_STMATCHONE3                 8003
@@ -155,7 +159,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        212
 #define _APS_NEXT_COMMAND_VALUE         32782
-#define _APS_NEXT_CONTROL_VALUE         1043
+#define _APS_NEXT_CONTROL_VALUE         1045
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

@@ -142,6 +142,7 @@ int BeiDanDialog::doLogOff() {
 
 
 int BeiDanDialog::doJcMatchList() {
+	m_stProgress.SetWindowText("");
 	std::string url = "https://www.okooo.com/danchang/";
 	CHttpRequestPtr request = CreateGetRequest(url, JCMATCHLIST_REQ_PREFIX);
 	httpMgr_->DoHttpCommandRequest(request);
@@ -150,7 +151,7 @@ int BeiDanDialog::doJcMatchList() {
 
 static void adjustXmlText(CStringA& temp) {
 	int nFindBegin = -1, nFindEnd = -1;
-	CStringA s = "<input class=";
+	CStringA s = "<input ";
 	CStringA e = ">";
 	nFindBegin = temp.Find(s, 0);
 	if (nFindBegin >= 0) {
@@ -180,10 +181,14 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 	m_order_items.clear();
 
 	if (response->httperror == talk_base::HE_NONE && response->response_content.size() > 0) {
-		CZlibStream zlib;
 		std::string raw_response;
-		zlib.DecompressGZip(response->response_content, raw_response);
-		CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_UTF8).m_psz).m_psz;
+		if (response->response_headers.Find("Content-Encoding: gzip") != -1) {
+			CZlibStream zlib;
+			zlib.DecompressGZip(response->response_content, raw_response);
+		} else {
+			raw_response = response->response_content;
+		}
+		CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_ACP).m_psz).m_psz;
 
 		int nFindBegin = -1, nFindEnd = -1;
 		CStringA section_begin = "<tr class=\"alltrObj";
@@ -196,18 +201,25 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 			}
 			CStringA xmlText = temp.Mid(nFindBegin, nFindEnd - nFindBegin + section_end.GetLength());
 			adjustXmlText(xmlText);
+			if (xmlText.IsEmpty()) {
+				MessageBox("获取对阵列表失败 1！", "错误", MB_ICONERROR | MB_OK);
+				return;
+			}
 			nFindBegin = nFindEnd + section_end.GetLength();
 			tinyxml2::XMLDocument doc;
 			tinyxml2::XMLElement* tempElement = nullptr;
 			if (doc.Parse(xmlText) != tinyxml2::XML_SUCCESS) {
+				MessageBox("获取对阵列表失败 2！", "错误", MB_ICONERROR | MB_OK);
 				break;
 			}
 			tinyxml2::XMLElement* child = doc.FirstChildElement();
 			if (child == nullptr) {
+				MessageBox("获取对阵列表失败 3！", "错误", MB_ICONERROR | MB_OK);
 				break;
 			}
 			auto node = FindElementByClassAttr(child, "xh");
 			if (node == nullptr) {
+				MessageBox("获取对阵列表失败 4！", "错误", MB_ICONERROR | MB_OK);
 				break;
 			}
 			CStringA xuhao = GetElementText(node->FirstChildElement());
@@ -239,6 +251,9 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 			auto homeNode = FindElementByClassAttr(child, "sbg");
 			if (homeNode != nullptr) {
 				CStringA hand = GetElementText(FindElementByClassAttr(homeNode, "handicapobj font_red"));
+				if (hand.IsEmpty()) {
+					hand = GetElementText(FindElementByClassAttr(homeNode, "handicapobj font_green"));
+				}
 				hand.Replace(")", "");hand.Replace("(", "");hand.Replace("+", "");
 				ji->hand = atoi(hand);
 				CStringA pl = GetElementText(FindElementByClassAttr(homeNode, "pltxt"));
@@ -275,7 +290,6 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 			m_order_items.insert(std::make_pair(ji->orderid, ji));
 		}
 		
-		m_waitCursor.Set();
 		for (const auto& item : m_order_items) {
 			CStringA url;
 			url.Format("https://m.okooo.com/match/change.php?mid=%s&pid=24&Type=Odds&c=1" ,item.second->orderid.c_str());
@@ -286,17 +300,26 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 		}
 		
 	}
-
+	if (m_order_items.empty()) {
+		MessageBox("获取对阵列表失败 5, 没有比赛场次！", "错误", MB_ICONERROR | MB_OK);
+	}
 }
 
 void BeiDanDialog::OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
 	m_pending_request--;
+	CStringATL progress;
+	progress.Format("%d/%d", m_order_items.size() - m_pending_request, m_order_items.size());
+	m_stProgress.SetWindowText(progress);
 	if (response->httperror == talk_base::HE_NONE && response->response_content.size() > 0) {
 		do {
-			CZlibStream zlib;
 			std::string raw_response;
-			zlib.DecompressGZip(response->response_content, raw_response);
-			CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_UTF8).m_psz).m_psz;
+			if (response->response_headers.Find("Content-Encoding: gzip") != -1) {
+				CZlibStream zlib;
+				zlib.DecompressGZip(response->response_content, raw_response);
+			} else {
+				raw_response = response->response_content;
+			}
+			CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_ACP).m_psz).m_psz;
 			CStringA section_begin = "<table width=";
 			CStringA section_end = "</table>";
 
@@ -349,7 +372,6 @@ void BeiDanDialog::OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttp
 	}
 
 	if (m_pending_request <= 0) {
-		m_waitCursor.Restore();
 		std::multimap<std::string, std::shared_ptr<JCMatchItem>> items;
 		if (!m_order_items.empty()) {
 			for (auto& iter : m_order_items) {
@@ -367,206 +389,10 @@ void BeiDanDialog::OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttp
 		ReloadMatchListData();
 		m_buLogin.EnableWindow(FALSE);
 		m_buLogoff.EnableWindow(TRUE);
+		m_stProgress.SetWindowText("");
 	}
 }
 
-void BeiDanDialog::OnJcMatchListReturn1(const CHttpRequestPtr& request,
-	const CHttpResponseDataPtr& response) {
-	std::multimap<std::string, std::shared_ptr<JCMatchItem>> items;
-	std::map<std::string, std::shared_ptr<JCMatchItem>> order_items;
-	if (response->httperror == talk_base::HE_NONE && response->response_content.size() > 0) {
-		CZlibStream zlib;
-		std::string raw_response;
-		zlib.DecompressGZip(response->response_content, raw_response);
-		CStringA section_begin = "<section id=\"match_list\" class=\"listbox listbox_jingcai\"";
-		CStringA section_end = "</section>";
-		CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_UTF8).m_psz).m_psz;
-		int nFindBegin = temp.Find(section_begin);
-		if (nFindBegin == -1) {
-			return;
-		}
-		int nFindEnd = temp.Find(section_end, nFindBegin);
-		CStringA xmlText = temp.Mid(nFindBegin, nFindEnd - nFindBegin  + section_end.GetLength());
-		std::string date;
-		tinyxml2::XMLDocument doc;
-		tinyxml2::XMLElement* tempElement = nullptr;
-		if (doc.Parse(xmlText) != tinyxml2::XML_SUCCESS) {
-			return;
-		}
-		tinyxml2::XMLElement* child = doc.FirstChildElement();
-		if (child == nullptr) {
-			return;
-		}
-		child = child->FirstChildElement();
-		while (child != nullptr) {
-			//child->FindAttribute
-			CStringA class_value = GetElementClassAttrValue(child);
-			if (class_value == "clearfix listtop ctrl_daybar") {
-				tempElement = FindElementByClassAttr(child, "listtoptxt fl font12");
-				std::vector<CStringA> temp_vec;
-				CMiscHelper::SplitCStringA(GetElementText(tempElement), "&nbsp;&nbsp;", temp_vec);
-				if (temp_vec.size() == 3) {
-					date = temp_vec[1];
-				}
-				if (date.empty()) {
-					return;
-				}
-			}
-			else if (class_value == "listItemjczq") {
-				tinyxml2::XMLElement* son = child->FirstChildElement();
-				while (son != nullptr) {
-					//""<div class = "width320">
-					CStringA son_class_value = GetElementClassAttrValue(son);
-					if (son_class_value == "clearfix center listItem ctrl_eachmatch") {
-						tinyxml2::XMLElement* son_child = son->FirstChildElement();
-						if (son_child != nullptr) {
-							std::shared_ptr<JCMatchItem> ji(new JCMatchItem());
-							ji->id = date + (LPCSTR)GetElementText(FindElementByClassAttr(son_child, "xuhao"));
-							auto datalink = FindElementByClassAttr(son_child, "datalink");
-							if (datalink != nullptr) {
-								CStringA&& href = GetElementAttrValue(datalink, "href");
-								if (!href.IsEmpty()) {
-									ji->match_url = std::string("https://m.okooo.com") + (LPCSTR)href;
-								}
-							}
-							CMiscHelper::string_replace(ji->id, "-", "");
-							ji->match_category = GetElementText(FindElementByClassAttr(son_child, "liansai"));
-							ji->start_time = ji->last_buy_time = date + std::string(" ") + (LPCSTR)GetElementText(FindElementByClassAttr(son_child, "timetxt"));
-							tempElement = FindElementByClassAttr(son_child, "fr listmore ctrl_addmore");
-							ji->descrition = CreateMatchDescription(GetElementAttrValue(tempElement, "hn"), GetElementAttrValue(tempElement, "an"));
-							ji->orderid = GetElementAttrValue(tempElement, "orderid");
-							items.insert(std::make_pair(date, ji));
-							order_items.insert(std::make_pair(ji->orderid, ji));
-						}
-					}
-					son = son->NextSiblingElement();
-				}
-			}
-			child = child->NextSiblingElement();
-		}
-		section_begin = "var oddsData = ";
-		section_end = "};";
-		nFindBegin = temp.Find(section_begin);
-		if (nFindBegin == -1) {
-			return;
-		}
-		nFindEnd = temp.Find(section_end, nFindBegin);
-		CStringA jsText = temp.Mid(nFindBegin + section_begin.GetLength(), 
-			nFindEnd - nFindBegin + section_end.GetLength() - section_begin.GetLength());
-		Json::Value rootValue, itemValue, dataValue, tempValue;
-		//std::map<std::string, std::map<int, double>> odds;
-		if (ParseJsonString((LPCSTR)jsText, rootValue) && rootValue.isObject()) {
-			bool first = false;
-#ifdef _DEBUG
-			first = true;
-#endif
-			for (auto& item : order_items) {
-				GetValueFromJsonObject(rootValue, item.first, &itemValue);
-				if (itemValue.isObject()) {
-					//std::map<int, double> odd;
-					double dTemp = 0.0;
-					GetValueFromJsonObject(itemValue, "Boundary", &tempValue);
-					if (tempValue.isObject()) {
-						if (GetDoubleFromJsonObject(tempValue, "SportteryWDL", &dTemp)) {
-							item.second->hand = (int)dTemp;
-						}
-					}
-					GetValueFromJsonObject(itemValue, "OddsList", &tempValue);
-					if (tempValue.isObject()) {
-						GetValueFromJsonObject(tempValue, "SportteryWDL", &dataValue);
-						for (auto& iter = dataValue.begin(); iter != dataValue.end(); ++iter) {
-							GetDoubleFromJsonObject(dataValue, iter.memberName(), &dTemp);
-							int k = atoi(iter.memberName());
-							JCMatchItem::Subject sub;
-							sub.tid = 1;
-							sub.odds = dTemp;
-							sub.betCode = k - 10;
-							sub.checked = false;
-							sub.calcTip(item.second->hand);
-							item.second->subjects.push_back(sub);
-						}
-						GetValueFromJsonObject(tempValue, "SportteryNWDL", &dataValue);
-						for (auto& iter = dataValue.begin(); iter != dataValue.end(); ++iter) {
-							GetDoubleFromJsonObject(dataValue, iter.memberName(), &dTemp);
-							int k = atoi(iter.memberName());
-							JCMatchItem::Subject sub;
-							sub.tid = 6;
-							sub.odds = dTemp;
-							sub.betCode = 3;
-							if (k == 15) sub.betCode = 1;
-							else if (k == 14) sub.betCode = 0;
-							sub.checked = false;
-							sub.calcTip(item.second->hand);
-							item.second->subjects.push_back(sub);
-						}
-
-						GetValueFromJsonObject(tempValue, "SportteryHalfFull", &dataValue);
-						for (auto& iter = dataValue.begin(); iter != dataValue.end(); ++iter) {
-							GetDoubleFromJsonObject(dataValue, iter.memberName(), &dTemp);
-							int k = atoi(iter.memberName());
-							JCMatchItem::Subject sub;
-							sub.tid = 4;
-							sub.odds = dTemp;
-							sub.betCode = k - 20;
-							sub.checked = false;
-							sub.calcTip(item.second->hand);
-							item.second->subjects.push_back(sub);
-						}
-
-						GetValueFromJsonObject(tempValue, "SportteryScore", &dataValue);
-						for (auto& iter = dataValue.begin(); iter != dataValue.end(); ++iter) {
-							GetDoubleFromJsonObject(dataValue, iter.memberName(), &dTemp);
-							int k = atoi(iter.memberName());
-							JCMatchItem::Subject sub;
-							sub.tid = 3;
-							sub.odds = dTemp;
-							sub.betCode = k - 30;
-							sub.checked = false;
-							sub.calcTip(item.second->hand);
-							item.second->subjects.push_back(sub);
-						}
-						GetValueFromJsonObject(tempValue, "SportteryTotalGoals", &dataValue);
-						for (auto& iter = dataValue.begin(); iter != dataValue.end(); ++iter) {
-							GetDoubleFromJsonObject(dataValue, iter.memberName(), &dTemp);
-							int k = atoi(iter.memberName());
-							JCMatchItem::Subject sub;
-							sub.tid = 2;
-							sub.odds = dTemp;
-							sub.betCode = k - 0;
-							sub.checked = false;
-							sub.calcTip(item.second->hand);
-							item.second->subjects.push_back(sub);
-						}
-					}
-				}
-				if (first) {
-					first = false;
-					std::string lines;
-					for (const auto& sub : item.second->subjects) {
-						lines += sub.lineStr();
-					}
-					Global::SaveFileData("e:\\zcjc.txt", lines, FALSE);
-				}
-			}
-		}
-
-	}
-	if (!items.empty()) {
-		for (auto& iter : items) {
-			JCMatchItem item;
-			if (GetItemFromDB(*iter.second, item)) {
-				*iter.second = item;
-			} else {
-				InsertItemToDB(*iter.second);
-			}
-		}
-		m_JCMatchItems.swap(items);
-	}
-	doBiFen();
-	ReloadMatchListData();
-	m_buLogin.EnableWindow(FALSE);
-	m_buLogoff.EnableWindow(TRUE);
-}
 
 int BeiDanDialog::doBiFen() {
 	/*

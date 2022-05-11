@@ -33,6 +33,10 @@ public:
 	static CStringATL GetFileNameExt(LPCTSTR fileName);
 	static CStringATL GetFilePath(LPCTSTR fullName);
 
+	static CStringATL GetTimeString();
+	static CStringATL GetNextDayString();
+
+
 private:
 	static std::string  SysWideToUTF8(const wchar_t* wide);
 	static std::string  SysWideToUTF8(const std::wstring& wide);

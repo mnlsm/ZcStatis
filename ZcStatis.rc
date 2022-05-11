@@ -241,7 +241,7 @@ BEGIN
     PUSHBUTTON      "脚本模板",IDC_EXTRACT_LUA,238,14,45,15,NOT WS_TABSTOP
 END
 
-IDD_OKOOO_BD DIALOGEX 0, 0, 867, 538
+IDD_OKOOO_BD DIALOGEX 0, 0, 856, 538
 STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "澳客登录"
 FONT 9, "宋体", 400, 0, 0x0
@@ -264,6 +264,8 @@ BEGIN
     PUSHBUTTON      "复制选择",IDC_COPY_CHOICES,285,14,45,15,NOT WS_TABSTOP
     PUSHBUTTON      "查看统计",IDC_BUBIFEN,554,14,45,15,NOT WS_TABSTOP
     PUSHBUTTON      "脚本模板",IDC_EXTRACT_LUA,238,14,45,15,NOT WS_TABSTOP
+    CTEXT           "",IDC_BD_PROGRESS,719,15,51,8
+    CONTROL         "包含让球",IDC_CHECK_RQ,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,45,48,10
 END
 
 
@@ -402,6 +404,8 @@ END
 //
 
 IDR_ADDIN2              ADDIN                   "res\\ADDIN\\template.lua"
+
+IDR_ADDIN3              ADDIN                   "res\\ADDIN\\template_bd.lua"
 
 #endif    // 中文(简体，中国) resources
 /////////////////////////////////////////////////////////////////////////////

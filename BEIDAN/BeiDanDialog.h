@@ -25,7 +25,7 @@ public:
 	virtual BOOL OnIdle();
 
 public:
-	enum { IDD = IDD_OKOOO_JC, WM_ASYNC_DISPATCH = WM_APP + 0x360 };
+	enum { IDD = IDD_OKOOO_BD, WM_ASYNC_DISPATCH = WM_APP + 0x360 };
 
 	BEGIN_DDX_MAP(BeiDanDialog)
 		DDX_CONTROL(IDC_MATCH_LIST, m_lstMatch)
@@ -38,6 +38,7 @@ public:
 		DDX_CONTROL(IDC_SEP1, m_stSep1)
 		DDX_CONTROL(IDC_SEP2, m_stSep2)
 		DDX_CONTROL(IDC_STATIC_RESULT, m_stResult)
+		DDX_CONTROL(IDC_BD_PROGRESS, m_stProgress)
 
 		DDX_CONTROL(IDC_BULOGIN, m_buLogin)
 		DDX_CONTROL(IDC_BULOGOFF, m_buLogoff)
@@ -47,7 +48,9 @@ public:
 		DDX_CONTROL(IDC_BUREFRESH, m_buRefresh)
 		DDX_CONTROL(IDC_COPY_CHOICES, m_buCopy)
 		DDX_CONTROL(IDC_EXTRACT_LUA, m_buExtractLua)
+		DDX_CONTROL(IDC_CHECK_RQ, m_ckRQ)
 
+		
 
 	END_DDX_MAP()
 
@@ -68,6 +71,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_COPY_CHOICES, OnCopyChoices)
 		COMMAND_ID_HANDLER(IDC_BUBIFEN, OnRefreshBiFen)
 		COMMAND_ID_HANDLER(IDC_EXTRACT_LUA, OnExtractLua)
+		COMMAND_HANDLER(IDC_CHECK_RQ, BN_CLICKED, OnToggleRQ)
 
 		CHAIN_MSG_MAP(CAxDialogImpl<BeiDanDialog>)
 		REFLECT_NOTIFICATIONS()
@@ -106,6 +110,8 @@ public:
 	LRESULT OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnRefreshBiFen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnToggleRQ(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	
 
 	
 	LRESULT OnBetAreaLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -138,6 +144,7 @@ private:
 	CContainedWindowT<CStatic> m_stSep1;
 	CContainedWindowT<CStatic> m_stSep2;
 	CContainedWindowT<CStatic> m_stResult;
+	CContainedWindowT<CStatic> m_stProgress;
 
 	CContainedWindowT<CButton> m_buLogin;
 	CContainedWindowT<CButton> m_buLogoff;
@@ -147,6 +154,7 @@ private:
 	CContainedWindowT<CButton> m_buCalc;
 	CContainedWindowT<CButton> m_buUpload;
 	CContainedWindowT<CButton> m_buExtractLua;
+	CContainedWindowT<CButton> m_ckRQ;
 	CFont mMatchListFont;
 	CFont mBetAreaFont;
 
@@ -173,7 +181,6 @@ private:
 
 	int doJcMatchList();
 	void OnJcMatchListReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
-	void OnJcMatchListReturn1(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
 	void OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 

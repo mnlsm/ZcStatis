@@ -429,6 +429,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="res\ADDIN\template.lua" />
+    <None Include="res\ADDIN\template_bd.lua" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

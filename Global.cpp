@@ -269,7 +269,6 @@ std::string  Global::SysWideToNativeMB(const std::wstring& wide)
 	return SysWideToNativeMB(wide.c_str());
 }
 
-
 std::wstring Global::SysNativeMBToWide(const char* native_mb)
 {
 	return SysMultiByteToWide(native_mb, CP_ACP);
@@ -347,6 +346,31 @@ void Global::getBiFenDateInfo(CStringATL& beginDay, CStringATL& endDay, CStringA
 	else if (time_prev.wDayOfWeek == 6) {
 		beginWeekDay = "÷‹¡˘";
 	}
+}
+
+CStringATL Global::GetTimeString() {
+	SYSTEMTIME tm = { 0 };
+	GetLocalTime(&tm);
+	CStringATL time;
+	time.Format("%04d-%02d-%02d %02d:%02d:%02d", 
+		(int)tm.wYear, (int)tm.wMonth, (int)tm.wDay, 
+		(int)tm.wHour, (int)tm.wMinute, (int)tm.wSecond);
+	return time;
+}
+
+CStringATL Global::GetNextDayString() {
+	SYSTEMTIME tm = { 0 };
+	GetLocalTime(&tm);
+	FILETIME ftm = { 0 };
+	SystemTimeToFileTime(&tm, &ftm);
+	__int64* time64 = (__int64*)&ftm;
+	*time64 = *time64 + 3600ll * 24ll * (1ll * 10ll * 1000ll * 1000ll);
+	//ftm.dwLowDateTime += 3600 * 24 * 1000;
+	FileTimeToSystemTime(&ftm, &tm);
+	CStringATL time;
+	time.Format("%04d-%02d-%02d",
+		(int)tm.wYear, (int)tm.wMonth, (int)tm.wDay);
+	return time;
 }
 
 CStringA GetElementAttrValue(tinyxml2::XMLElement* root, const CStringA& name) {
