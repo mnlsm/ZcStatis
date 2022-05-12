@@ -9,11 +9,13 @@ struct BetStruct {
 	double odds;
 	int getPan() const;
 	std::string betCode() const;
+	std::string codeStr() const;
 };
 
 struct JcBetItemSource {
 	std::string id;
 	std::vector<BetStruct> bets;
+	bool multi_selected;
 };
 
 struct JcBetItem {
@@ -24,6 +26,7 @@ struct JcBetItem {
 typedef std::vector<std::vector<JcBetItem>> TBetResult;
 
 struct JCMatchItem {
+	JCMatchItem() { multi_selected = false; hand = 0; }
 	std::string id;
 	std::string match_category;
 	std::string descrition;
@@ -33,6 +36,7 @@ struct JCMatchItem {
 	std::string result;
 	std::string orderid;
 	std::string match_url;
+	bool multi_selected;
 	struct Subject {
 		int64 tid;
 		int64 betCode;
@@ -41,6 +45,7 @@ struct JCMatchItem {
 		bool checked;
 		void calcTip(int hand);
 		std::string betStr() const;
+		std::string betCodeStr() const;
 		std::string lineStr() const;
 		std::string buyStr() const;
 		int getPan(int hand) const;

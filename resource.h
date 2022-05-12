@@ -21,7 +21,10 @@
 #define IDD_OKOOO_JC1                   210
 #define IDD_OKOOO_BD                    210
 #define IDR_ADDIN2                      211
+#define IDD_OKOOO_JC2                   211
+#define IDD_OKOOO_ZC                    211
 #define IDR_ADDIN3                      212
+#define IDR_ADDIN1                      213
 #define IDR_MENU1                       214
 #define IDC_STATIS_LIST                 1001
 #define IDC_LIST_QH                     1002
@@ -152,13 +155,15 @@
 #define IDM_OKOOO                       32779
 #define ID_32780                        32780
 #define IDM_BEIDAN                      32781
+#define ID_32782                        32782
+#define IDM_ZUCAI                       32783
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        212
-#define _APS_NEXT_COMMAND_VALUE         32782
+#define _APS_NEXT_COMMAND_VALUE         32784
 #define _APS_NEXT_CONTROL_VALUE         1045
 #define _APS_NEXT_SYMED_VALUE           102
 #endif

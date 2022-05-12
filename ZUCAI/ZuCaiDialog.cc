@@ -1,6 +1,5 @@
 #include "stdafx.h"
-#include "OkoooDialog.h"
-#include "OkoooStat.h"
+#include "ZuCaiDialog.h"
 #include "Global.h"
 #include "MiscHelper.h"
 
@@ -8,8 +7,8 @@
 static const CStlString LUA_FILTER_NAME = _T("脚本文件(*.lua)");
 static const CStlString LUA_FILTER = _T("*.lua");
 
-OkoooDialog OkoooDialog::sInst;
-void OkoooDialog::PopUp(const std::shared_ptr<SQLite::Database>& db) {
+ZuCaiDialog ZuCaiDialog::sInst;
+void ZuCaiDialog::PopUp(const std::shared_ptr<SQLite::Database>& db) {
 	if (!sInst.IsWindow()) {
 		sInst.m_pDatabase = db;
 		sInst.Create(::GetDesktopWindow());
@@ -20,14 +19,14 @@ void OkoooDialog::PopUp(const std::shared_ptr<SQLite::Database>& db) {
 	}
 }
 
-void OkoooDialog::Destroy() {
+void ZuCaiDialog::Destroy() {
 	if (sInst.IsWindow()) {
 		sInst.DestroyWindow();
 	}
 }
 
-OkoooDialog::OkoooDialog() :
-	m_Engine((OkoooEngine*)NULL),
+ZuCaiDialog::ZuCaiDialog() :
+	m_Engine((ZuCaiEngine*)NULL),
 	m_lstMatch(this, 1),
 	m_lstResult(this, 2),
 	m_stYZM(this, 3),
@@ -56,7 +55,7 @@ OkoooDialog::OkoooDialog() :
 	m_Engine.reset();
 }
 
-LRESULT OkoooDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT ZuCaiDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 
 	CMessageLoop* pLoop = _Module.GetMessageLoop();
 	ATLASSERT(pLoop != NULL);
@@ -75,18 +74,18 @@ LRESULT OkoooDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	InitControls();
 
 	//ReloadStatisData();
-	SetWindowText("澳客竞彩");
+	SetWindowText("澳客足彩");
 	return TRUE;
 }
 
-LRESULT OkoooDialog::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT ZuCaiDialog::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	//_Module.GetMessageLoop()->RemoveIdleHandler(this);
-	LRESULT lRet = CAxDialogImpl<OkoooDialog>::OnDestroy(uMsg, wParam, lParam, bHandled);
+	LRESULT lRet = CAxDialogImpl<ZuCaiDialog>::OnDestroy(uMsg, wParam, lParam, bHandled);
 	//doLogOff();
 	return lRet;
 }
 
-LRESULT OkoooDialog::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT ZuCaiDialog::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	CRect rcDesktop;
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &rcDesktop, sizeof(RECT));
 	LPMINMAXINFO pMinMaxInfo = reinterpret_cast<LPMINMAXINFO>(lParam);
@@ -95,7 +94,7 @@ LRESULT OkoooDialog::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 	return 1L;
 }
 
-LRESULT OkoooDialog::OnListLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT ZuCaiDialog::OnListLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	LRESULT lRet = m_lstMatch.DefWindowProc(uMsg, wParam, lParam);
 	CPoint pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 	LVHITTESTINFO lvh = { 0 };
@@ -119,7 +118,7 @@ LRESULT OkoooDialog::OnListLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 	return lRet;
 }
 
-LRESULT OkoooDialog::OnListLButtonDbclk(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT ZuCaiDialog::OnListLButtonDbclk(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	LRESULT lRet = m_lstMatch.DefWindowProc(uMsg, wParam, lParam);
 	CPoint pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 	LVHITTESTINFO lvh = { 0 };
@@ -134,7 +133,7 @@ LRESULT OkoooDialog::OnListLButtonDbclk(UINT uMsg, WPARAM wParam, LPARAM lParam,
 }
 
 
-LRESULT OkoooDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT ZuCaiDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	LRESULT lRet = m_lstMatch.DefWindowProc(uMsg, wParam, lParam);
 	CPoint pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 	LVHITTESTINFO lvh = { 0 };
@@ -144,16 +143,22 @@ LRESULT OkoooDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 		CMenu menu;
 		if (menu.CreatePopupMenu()) {
 			menu.AppendMenu(MF_STRING, 100, _T("清空选择"));
+			menu.AppendMenu(MF_STRING, 101, _T("单式全包"));
+			menu.AppendMenu(MF_STRING, 102, _T("复式全包"));
 			menu.AppendMenu(MF_SEPARATOR);
-			menu.AppendMenu(MF_STRING, 101, _T("高赔全包"));
-			menu.AppendMenu(MF_STRING, 102, _T("高赔上盘"));
-			menu.AppendMenu(MF_STRING, 103, _T("高赔下盘"));
+			menu.AppendMenu(MF_STRING, 103, _T("单式胜"));
+			menu.AppendMenu(MF_STRING, 104, _T("单式平"));
+			menu.AppendMenu(MF_STRING, 105, _T("单式负"));
 			menu.AppendMenu(MF_SEPARATOR);
-			menu.AppendMenu(MF_STRING, 104, _T("低赔全包"));
-			menu.AppendMenu(MF_STRING, 105, _T("低赔上盘"));
-			menu.AppendMenu(MF_STRING, 106, _T("低赔下盘"));
+			menu.AppendMenu(MF_STRING, 106, _T("单式胜平"));
+			menu.AppendMenu(MF_STRING, 107, _T("单式负平"));
+			menu.AppendMenu(MF_STRING, 108, _T("单式胜负"));
 			menu.AppendMenu(MF_SEPARATOR);
-			menu.AppendMenu(MF_STRING, 107, _T("分析预测"));
+			menu.AppendMenu(MF_STRING, 109, _T("复式胜平"));
+			menu.AppendMenu(MF_STRING, 110, _T("复式负平"));
+			menu.AppendMenu(MF_STRING, 111, _T("复式胜负"));
+			menu.AppendMenu(MF_SEPARATOR);
+			menu.AppendMenu(MF_STRING, 112, _T("分析预测"));
 			m_lstMatch.ClientToScreen(&pt);
 			UINT cmd = menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RETURNCMD, pt.x, pt.y, m_hWnd);
 			DoMatchListMenuCommand(cmd, index);
@@ -163,7 +168,7 @@ LRESULT OkoooDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 	return lRet;
 }
 
-void OkoooDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
+void ZuCaiDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 	if (cmd >= 100) {
 		CStringATL strID, strMatchText;
 		m_lstMatch.GetItemText(index, 0, strID);
@@ -172,65 +177,92 @@ void OkoooDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 		for (; iter != m_JCMatchItems.end(); ++iter) {
 			if (iter->second->id.compare(strID) == 0) {
 				m_CurrentMatchItem = iter->second;
+				m_CurrentMatchItem->multi_selected = false;
 				for (auto& sub : m_CurrentMatchItem->subjects) {
 					sub.checked = false;
 				}
 				int hand = iter->second->hand;
-				if (cmd == 101 || cmd == 102 || cmd == 103) {
+				if (cmd == 103 || cmd == 104 || cmd == 105) {
 					for (auto& sub : m_CurrentMatchItem->subjects) {
-						int pan = sub.getPan(hand);
-						if (cmd == 101 && pan > 0) {
+						if (cmd == 103 && sub.betCode == 3) {
 							sub.checked = true;
 						}
-						else if (cmd == 102 && (pan == 1 || pan == 2)) {
+						else if (cmd == 104 && sub.betCode == 1) {
 							sub.checked = true;
 						}
-						else if (cmd == 103 && (pan == 3 || pan == 4)) {
+						else if (cmd == 105 && sub.betCode == 0) {
 							sub.checked = true;
 						}
 					}
 					DoRefreshMatchListResults();
-				} else if (cmd == 104 || cmd == 105 || cmd == 106) {
+				} else if (cmd == 106 || cmd == 107 || cmd == 108) {
 					for (auto& sub : m_CurrentMatchItem->subjects) {
-						int pan = sub.getPan(hand);
-						if (cmd == 104 && pan < 0) {
+						if (cmd == 106 && (sub.betCode == 3 || sub.betCode == 1)) {
 							sub.checked = true;
 						}
-						else if (cmd == 105 && (pan == -1)) {
+						else if (cmd == 107 && (sub.betCode == 0 || sub.betCode == 1)) {
 							sub.checked = true;
 						}
-						else if (cmd == 106 && (pan == -2)) {
+						else if (cmd == 108 && (sub.betCode == 3 || sub.betCode == 0)) {
 							sub.checked = true;
 						}
 					}
 					DoRefreshMatchListResults();
-				} else if (cmd == 100) {
-					m_lstMatch.SetItemText(index, 6, "");
+				} else if (cmd == 109 || cmd == 110 || cmd == 111) {
+					m_CurrentMatchItem->multi_selected = true;
+					for (auto& sub : m_CurrentMatchItem->subjects) {
+						if (cmd == 109 && (sub.betCode == 3 || sub.betCode == 1)) {
+							sub.checked = true;
+						}
+						else if (cmd == 110 && (sub.betCode == 0 || sub.betCode == 1)) {
+							sub.checked = true;
+						}
+						else if (cmd == 111 && (sub.betCode == 3 || sub.betCode == 0)) {
+							sub.checked = true;
+						}
+					}
+					DoRefreshMatchListResults();
+				}
+				else if (cmd == 100) {
+					m_lstMatch.SetItemText(index, 5, "");
+				}
+				else if (cmd == 101) {
+					for (auto& sub : m_CurrentMatchItem->subjects) {
+						sub.checked = true;
+					}
+					DoRefreshMatchListResults();
+				}
+				else if (cmd == 102) {
+					m_CurrentMatchItem->multi_selected = true;
+					for (auto& sub : m_CurrentMatchItem->subjects) {
+						sub.checked = true;
+					}
+					DoRefreshMatchListResults();
 				}
 				m_stBetArea.Invalidate();
-				if (cmd == 107) {
+				if (cmd == 112) {
 					ShowMatchWebBrowser(strMatchText);
 				}
 				break;
 			}
 		}
-		//https://m.okooo.com/match/form.php?MatchID=1158125&from=%2Flive%2F
+		//https://m.ZuCai.com/match/form.php?MatchID=1158125&from=%2Flive%2F
 	}
 }
 
-LRESULT OkoooDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+LRESULT ZuCaiDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	CloseMatchWebBrowsers();
 	ShowWindow(SW_HIDE);
 	return 1L;
 }
 
-LRESULT OkoooDialog::OnLoginIn(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+LRESULT ZuCaiDialog::OnLoginIn(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	doLogin();
 	DoReloadBackupResult();
 	return 1L;
 }
 
-LRESULT OkoooDialog::OnLoginOff(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+LRESULT ZuCaiDialog::OnLoginOff(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	m_Engine.reset();
 	m_JCMatchItems.clear();
 	m_CurrentMatchItem.reset();
@@ -242,7 +274,7 @@ LRESULT OkoooDialog::OnLoginOff(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 	return 1L;
 }
 
-LRESULT OkoooDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+LRESULT ZuCaiDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	std::string filedata;
 	TCHAR szFilterName[30] = { _T('\0') };
 	_tcscpy(szFilterName, LUA_FILTER_NAME.c_str());
@@ -269,7 +301,7 @@ LRESULT OkoooDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 	for (auto& iter : m_JCMatchItems) {
 		match_items.push_back(iter.second);
 	}
-	std::shared_ptr<OkoooEngine> engine(new (std::nothrow) OkoooEngine(filedata, m_strWorkDir));
+	std::shared_ptr<ZuCaiEngine> engine(new (std::nothrow) ZuCaiEngine(filedata, m_strWorkDir));
 	if (engine.get() != NULL) {
 		engine->setMatchItems(match_items);
 		engine->setScriptFile(strLoadPath.c_str());
@@ -300,73 +332,7 @@ LRESULT OkoooDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 //https://www.hipdf.cn/txt-to-pdf
 }
 
-void OkoooDialog::GetBuyLinesData(std::string& abuyLines) {
-	abuyLines.clear();
-	if (m_Engine.get() == nullptr) {
-		return;
-	}
-	std::map<std::string, std::set<int>> pos_tids;
-	std::map<std::string, std::string> fixed_items;
-	for (const auto& r : m_Engine->GetFixedSources()) {
-		std::string codes;
-		for (const auto& item : r.bets) {
-			codes += item.codeStr();
-			pos_tids[r.id].insert(item.tid);
-		}
-		fixed_items[r.id] = codes;
-	}
-	std::vector<std::map<std::string, std::string>> items, backup_item;
-	for (const auto& r : m_Engine->getResult()) {
-		std::map<std::string, std::string> line_items;
-		for (const auto& item : r) {
-			line_items[item.id] = item.bet.codeStr();
-			pos_tids[item.id].insert(item.bet.tid);
-		}
-		for (const auto& r : fixed_items) {
-			line_items[r.first] = r.second;
-		}
-		items.push_back(line_items);
-	}
-	bool pos_unique_tid = true;
-	for (const auto& pair : pos_tids) {
-		if (pair.second.size() > 1) {
-			pos_unique_tid = false;
-			break;
-		}
-	}
-	if (m_Engine->getScriptAvgMultiple() > 0 || m_Engine->getScriptMinBonus() > 0.0) {
-		pos_unique_tid = false;
-	}
-	if (pos_unique_tid) {
-		backup_item = items;
-		if (Global::ComposeMultiSelected(backup_item, true)) {
-			items.swap(backup_item);
-		}
-		else {
-			MessageBox("合并复式结果失败了！", "错误", MB_ICONERROR | MB_OK);
-		}
-	}
-	CStringATL qh = m_strQH;
-	qh.Replace("-", "");
-	for (const auto& item : items) {
-		CStringATL temp;
-		std::string line;
-		for (const auto& m : item) {
-			temp = m.first.c_str();
-			temp.Replace(qh, "");
-			std::string ms;
-			ms.append("[").append(temp).append("]").append(m.second).append(" ");
-			line.append(ms);
-		}
-		temp = line.c_str();
-		if (temp.Right(1) == ",") temp = temp.Left(temp.GetLength() - 1);
-		line.assign(temp).append("\r\n").append("\r\n");
-		abuyLines.append(line);
-	}
-}
-
-
-LRESULT OkoooDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+LRESULT ZuCaiDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	CWaitCursor wait;
 	Sleep(1000);
 	SYSTEMTIME tm = { 0 };
@@ -376,7 +342,7 @@ LRESULT OkoooDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 		tm.wYear, tm.wMonth,tm.wDay, tm.wHour, tm.wMinute, tm.wSecond);
 	DeleteFile(file_path);
 	CResource res;
-	if (res.Load(_T("ADDIN"), MAKEINTRESOURCE(IDR_ADDIN2))) {
+	if (res.Load(_T("ADDIN"), MAKEINTRESOURCE(IDR_ADDIN1))) {
 		Global::SaveFileData((LPCSTR)file_path, (uint8_t*)res.Lock(),
 			res.GetSize(), FALSE);
 		std::vector<const char*> select_files;
@@ -386,7 +352,7 @@ LRESULT OkoooDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 	return 1L;
 }
 
-LRESULT OkoooDialog::OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+LRESULT ZuCaiDialog::OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	if (m_Engine.get() == nullptr) {
 		MessageBox("读取投注结果失败 0！", "错误", MB_ICONERROR | MB_OK);
 		return 1L;
@@ -399,7 +365,7 @@ LRESULT OkoooDialog::OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	const CStlString& checkResult = m_Engine->getCheckResult();
 	const CStlString& scriptFile = m_Engine->getScriptFile();
 	CStringATL strSQL;
-	strSQL.Format(_T("SELECT ID FROM JCZQ_INVEST WHERE CHECK_RESULT='%s'"), checkResult.c_str());
+	strSQL.Format(_T("SELECT ID FROM ZCZQ_INVEST WHERE CHECK_RESULT='%s'"), checkResult.c_str());
 	if (TRUE) {
 		SQLite::Statement sm(*m_pDatabase, strSQL);
 		if (sm.executeStep()) {
@@ -412,7 +378,7 @@ LRESULT OkoooDialog::OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	CStringATL id, date;
 	id = Global::GetFileName(scriptFile.c_str()); id.Replace(_T(".lua"), _T(""));
 	date = m_strQH;
-	strSQL = _T("INSERT INTO JCZQ_INVEST (ID, DATE, SCRIPT, CHECK_RESULT, INVEST, INCOME) VALUES(?,?,?,?,?,?)");
+	strSQL = _T("INSERT INTO ZCZQ_INVEST (ID, DATE, SCRIPT, CHECK_RESULT, INVEST, INCOME) VALUES(?,?,?,?,?,?)");
 	if (TRUE) {
 		try {
 			SQLite::Statement sm(*m_pDatabase, strSQL);
@@ -433,12 +399,13 @@ LRESULT OkoooDialog::OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	return 1L;
 }
 
-LRESULT OkoooDialog::OnClearAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+LRESULT ZuCaiDialog::OnClearAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	CWaitCursor wait;
 	for (auto& item : m_JCMatchItems) {
 		for (auto& sub : item.second->subjects) {
 			sub.checked = false;
 		}
+		item.second->multi_selected = false;
 	}
 	m_Engine.reset();
 	DoRefreshMatchListResults();
@@ -448,18 +415,23 @@ LRESULT OkoooDialog::OnClearAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 	return 1L;
 }
 
-LRESULT OkoooDialog::OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+LRESULT ZuCaiDialog::OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	CWaitCursor wait;
 	doJcMatchList();
 	return 1L;
 }
 
-LRESULT OkoooDialog::OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-	CWaitCursor wait;
-	CStringATL strMatchBets = "kMatchBets = {\r\n";
+CStringATL ZuCaiDialog::GetLuaGlobalChoiceMember(bool multi_selected) {
+	CStringATL strMatchBets = "\r\nkMatchBets = {\r\n";
+	if (multi_selected) {
+		strMatchBets = "\r\nkMatchBetsFixed = {\r\n";
+	}
 	std::vector<CStringATL> prefixs, subfixs;
 	int max_prefixs_length = 0;
 	for (auto& item : m_JCMatchItems) {
+		if (item.second->multi_selected != multi_selected) {
+			continue;
+		}
 		CStringATL strBets;
 		for (auto& sub : item.second->subjects) {
 			if (sub.checked) {
@@ -489,9 +461,15 @@ LRESULT OkoooDialog::OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 		CStringATL strItem;
 		strItem.Format("%s--%s\r\n", prefixs[i], subfixs[i]);
 		strMatchBets += strItem;
-
 	}
 	strMatchBets += "};\r\n";
+	return strMatchBets;
+}
+
+LRESULT ZuCaiDialog::OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	CWaitCursor wait;
+	CStringATL strMatchBets = GetLuaGlobalChoiceMember(false);
+	strMatchBets += GetLuaGlobalChoiceMember(true);
 	if (OpenClipboard()) {
 		EmptyClipboard();
 		if (!strMatchBets.IsEmpty()) {
@@ -508,14 +486,14 @@ LRESULT OkoooDialog::OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 	return 1L;
 }
 
-LRESULT OkoooDialog::OnRefreshBiFen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-	doBiFen();
-	OkoooStat dlg(m_pDatabase);
-	dlg.DoModal();
+LRESULT ZuCaiDialog::OnRefreshBiFen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	//doBiFen();
+	//ZuCaiStat dlg(m_pDatabase);
+	//dlg.DoModal();
 	return 1L;
 }
 
-void OkoooDialog::InitControls() {
+void ZuCaiDialog::InitControls() {
 	mMatchListFont.CreateFont(/*32*/-14, // nHeight 
 		0, // nWidth 
 		0, // nEscapement 
@@ -596,19 +574,17 @@ void OkoooDialog::InitControls() {
 
 	//insert header;
 	int colIndex = 0;
-	m_lstMatch.InsertColumn(colIndex, "期号", LVCFMT_CENTER, 100);    //70
+	m_lstMatch.InsertColumn(colIndex, "期号", LVCFMT_CENTER, 70);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
 	m_lstMatch.InsertColumn(colIndex, "赛事", LVCFMT_CENTER, 100);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
 	m_lstMatch.InsertColumn(colIndex, "对阵", LVCFMT_CENTER, 250);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-	m_lstMatch.InsertColumn(colIndex, "过期时间", LVCFMT_CENTER, 130);    //70
+	m_lstMatch.InsertColumn(colIndex, "过期时间", LVCFMT_CENTER, 160);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
 	m_lstMatch.InsertColumn(colIndex, "胜平负", LVCFMT_CENTER, 200);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-	m_lstMatch.InsertColumn(colIndex, "让胜平负", LVCFMT_CENTER, 200);    //70
-	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-	m_lstMatch.InsertColumn(colIndex, "选择结果", LVCFMT_CENTER, 400);    //70
+	m_lstMatch.InsertColumn(colIndex, "选择结果", LVCFMT_CENTER, 600);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
 
 	m_lstMatch.SetSortColumn(0);
@@ -634,15 +610,11 @@ void OkoooDialog::InitControls() {
 	//set sort type
 }
 
-void OkoooDialog::ReloadMatchListData() {
+void ZuCaiDialog::ReloadMatchListData() {
 	m_lstMatch.DeleteAllItems();
-
 	auto& iter = m_JCMatchItems.begin();// equal_range((LPCSTR)m_strQH);
 	int iIndex = 0;
 	for (; iter != m_JCMatchItems.end(); ++iter) {
-		if (iter->first.compare(m_strQH) != 0) {
-			continue;
-		}
 		int colIndex = 0;
 		std::shared_ptr<JCMatchItem> ji = iter->second;
 		iIndex = m_lstMatch.InsertItem(iIndex, ji->id.c_str());
@@ -663,28 +635,15 @@ void OkoooDialog::ReloadMatchListData() {
 			temp.Format("%.2f  %.2f  %.2f", a, b, c);
 		}
 		m_lstMatch.SetItemText(iIndex, ++colIndex, temp);
-
-		sub = ji->get_subject(1, 3);
-		a = sub->odds;
-		sub = ji->get_subject(1, 1);
-		b = sub->odds;
-		sub = ji->get_subject(1, 0);
-		c = sub->odds;
-		if (ji->hand < 0) {
-			temp.Format("%.2f(%d)  %.2f  %.2f", a, (int)ji->hand, b, c);
-		} else {
-			temp.Format("%.2f(+%d)  %.2f  %.2f", a, (int)ji->hand, b, c);
-		}
-		m_lstMatch.SetItemText(iIndex, ++colIndex, temp);
 	}
 	m_lstMatch.DoSortItems(0, false);
 	m_CurrentMatchItem.reset();
 	m_stBetArea.Invalidate();
 }
 
-void OkoooDialog::CreateWorkDir() {
+void ZuCaiDialog::CreateWorkDir() {
 	CStringATL strPath(Global::GetAppPath().c_str());
-	m_strRootDir = strPath + _T("JC");
+	m_strRootDir = strPath + _T("ZC");
 	CStringATL strInitFileName;
 	CreateDirectory(m_strRootDir, NULL);
 	strPath = m_strRootDir + _T("\\") + m_strQH;
@@ -693,12 +652,12 @@ void OkoooDialog::CreateWorkDir() {
 	m_strWorkDir.Replace(".\\", "");
 }
 
-BOOL OkoooDialog::GetItemFromDB(const JCMatchItem& new_item, JCMatchItem& item) {
+BOOL ZuCaiDialog::GetItemFromDB(const JCMatchItem& new_item, JCMatchItem& item) {
 	const std::string& id = new_item.id;
 	item.id = "";
 	item.subjects.clear();
 	CStringATL strSQL;
-	strSQL.Format(_T("SELECT ID, CATEGORY, DESCRIPTION, HAND, START_TIME, BUY_TIME, SUBJECTS, RESULT, MATCH_URL FROM JCZQ WHERE ID='%s'"), id.c_str());
+	strSQL.Format(_T("SELECT ID, CATEGORY, DESCRIPTION, HAND, START_TIME, BUY_TIME, SUBJECTS, RESULT, MATCH_URL FROM ZCZQ WHERE ID='%s'"), id.c_str());
 	SQLite::Statement sm(*m_pDatabase, strSQL);
 	if (sm.executeStep()) {
 		item.id = sm.getColumn(0).getString().c_str();
@@ -738,7 +697,7 @@ BOOL OkoooDialog::GetItemFromDB(const JCMatchItem& new_item, JCMatchItem& item) 
 			}
 			data += betInfo;
 		}
-		strSQL = _T("UPDATE JCZQ SET SUBJECTS=?, MATCH_URL=? WHERE ID=?");
+		strSQL = _T("UPDATE ZCZQ SET SUBJECTS=?, MATCH_URL=? WHERE ID=?");
 		if (TRUE) {
 			SQLite::Statement sm(*m_pDatabase, strSQL);
 			sm.bindNoCopy(1, data);
@@ -753,15 +712,15 @@ BOOL OkoooDialog::GetItemFromDB(const JCMatchItem& new_item, JCMatchItem& item) 
 	return FALSE;
 }
 
-BOOL OkoooDialog::InsertItemToDB(const JCMatchItem& item) {
-	CStringATL strSQL = _T("DELETE FROM JCZQ WHERE ID=?");
+BOOL ZuCaiDialog::InsertItemToDB(const JCMatchItem& item) {
+	CStringATL strSQL = _T("DELETE FROM ZCZQ WHERE ID=?");
 	if (TRUE) {
 		SQLite::Statement sm(*m_pDatabase, strSQL);
 		sm.bind(1, item.id);
 		if (sm.exec() > 0) {
 		}
 	}
-	strSQL = _T("INSERT INTO JCZQ (ID, CATEGORY, DESCRIPTION, HAND, START_TIME, BUY_TIME, SUBJECTS, MATCH_URL) VALUES(?,?,?,?,?,?,?,?)");
+	strSQL = _T("INSERT INTO ZCZQ (ID, CATEGORY, DESCRIPTION, HAND, START_TIME, BUY_TIME, SUBJECTS, MATCH_URL) VALUES(?,?,?,?,?,?,?,?)");
 	if (TRUE) {
 		SQLite::Statement sm(*m_pDatabase, strSQL);
 		sm.bindNoCopy(1, item.id);
@@ -788,16 +747,16 @@ BOOL OkoooDialog::InsertItemToDB(const JCMatchItem& item) {
 	return TRUE;
 }
 
-BOOL OkoooDialog::UpdateItemResultToDB(const std::string& id, const std::string& result) {
+BOOL ZuCaiDialog::UpdateItemResultToDB(const std::string& id, const std::string& result) {
 	CStringATL strSQL;
-	strSQL.Format(_T("SELECT ID FROM JCZQ WHERE ID='%s'"), id.c_str());
+	strSQL.Format(_T("SELECT ID FROM ZCZQ WHERE ID='%s'"), id.c_str());
 	if (TRUE) {
 		SQLite::Statement sm(*m_pDatabase, strSQL);
 		if (!sm.executeStep()) {
 			return FALSE;
 		}
 	}
-	strSQL = _T("UPDATE JCZQ SET RESULT=? WHERE ID=?");
+	strSQL = _T("UPDATE ZCZQ SET RESULT=? WHERE ID=?");
 	if (TRUE) {
 		SQLite::Statement sm(*m_pDatabase, strSQL);
 		sm.bind(1, result);
@@ -809,8 +768,9 @@ BOOL OkoooDialog::UpdateItemResultToDB(const std::string& id, const std::string&
 	return FALSE;
 }
 
-void OkoooDialog::DoRefreshBetArea() {
+void ZuCaiDialog::DoRefreshBetArea() {
 	for (auto& item : m_JCMatchItems) {
+		item.second->multi_selected = false;
 		for (auto& sub : item.second->subjects) {
 			sub.checked = false;
 		}
@@ -818,7 +778,15 @@ void OkoooDialog::DoRefreshBetArea() {
 	if (m_Engine.get() != nullptr) {
 		for (const auto& r : m_Engine->getSource()) {
 			for (const auto& item : r.bets) {
-				JCMatchItem::Subject* sub = get_subjects(r.id, item.tid, item.code);
+				JCMatchItem::Subject* sub = get_subjects(r.id, false, item.tid, item.code);
+				if (sub != NULL) {
+					sub->checked = true;
+				}
+			}
+		}
+		for (const auto& r : m_Engine->GetFixedSources()) {
+			for (const auto& item : r.bets) {
+				JCMatchItem::Subject* sub = get_subjects(r.id, true, item.tid, item.code);
 				if (sub != NULL) {
 					sub->checked = true;
 				}
@@ -828,7 +796,67 @@ void OkoooDialog::DoRefreshBetArea() {
 	m_stBetArea.Invalidate();
 }
 
-CStringATL OkoooDialog::DoRefreshResultListResults(std::string& abuyLines, std::string& acheckLines) {
+void ZuCaiDialog::GetBuyLinesData(std::string& abuyLines) {
+	abuyLines.clear();
+	if (m_Engine.get() == nullptr) {
+		return;
+	}
+	std::map<std::string, std::set<int>> pos_tids;
+	std::map<std::string, std::string> fixed_items;
+	for (const auto& r : m_Engine->GetFixedSources()) {
+		std::string codes;
+		for (const auto& item : r.bets) {
+			codes += item.codeStr();
+			pos_tids[r.id].insert(item.tid);
+		}
+		fixed_items[r.id] = codes;
+	}
+	std::vector<std::map<std::string, std::string>> items, backup_item;
+	for (const auto& r : m_Engine->getResult()) {
+		std::map<std::string, std::string> line_items;
+		for (const auto& item : r) {
+			line_items[item.id] = item.bet.codeStr();
+			pos_tids[item.id].insert(item.bet.tid);
+		}
+		for (const auto& r : fixed_items) {
+			line_items[r.first] = r.second;
+		}
+		items.push_back(line_items);
+	}
+	bool pos_unique_tid = true;
+	for (const auto& pair : pos_tids) {
+		if (pair.second.size() > 1) {
+			pos_unique_tid = false;
+			break;
+		}
+	}
+	if (m_Engine->getScriptAvgMultiple() > 0 || m_Engine->getScriptMinBonus() > 0.0) {
+		pos_unique_tid = false;
+	}
+	if (pos_unique_tid) {
+		backup_item = items;
+		if (Global::ComposeMultiSelected(backup_item, true)) {
+			items.swap(backup_item);
+		}
+		else {
+			MessageBox("合并复式结果失败了！", "错误", MB_ICONERROR | MB_OK);
+		}
+	}
+	for (const auto& item : items) {
+		std::string line;
+		for (const auto& m : item) {
+			std::string ms;
+			ms.append("[").append(m.first).append("]").append(m.second).append(" ");
+			line.append(ms);
+		}
+		CStringATL temp = line.c_str();
+		if (temp.Right(1) == ",") temp = temp.Left(temp.GetLength() - 1);
+		line.assign(temp).append("\r\n").append("\r\n");
+		abuyLines.append(line);
+	}
+}
+
+CStringATL ZuCaiDialog::DoRefreshResultListResults(std::string& abuyLines, std::string& acheckLines) {
 	abuyLines.clear();
 	acheckLines.clear();
 	CStringATL result = "结果列表:";
@@ -975,7 +1003,7 @@ CStringATL OkoooDialog::DoRefreshResultListResults(std::string& abuyLines, std::
 	return result;
 }
 
-void OkoooDialog::DoRefreshMatchListResults() {
+void ZuCaiDialog::DoRefreshMatchListResults() {
 	for (int i = 0; i < m_lstMatch.GetItemCount(); i++) {
 		CStringATL strID;
 		m_lstMatch.GetItemText(i, 0, strID);
@@ -984,19 +1012,21 @@ void OkoooDialog::DoRefreshMatchListResults() {
 			if (item.second->id.compare(strID) == 0) {
 				for (auto& sub : item.second->subjects) {
 					if (sub.checked) {
-						result += sub.betStr().c_str();
-						result += ";";
+						result += sub.betCodeStr().c_str();
 					}
+				}
+				if (!result.IsEmpty()) {
+					result = item.second->multi_selected ? "复式: " + result : "单式: " + result;
 				}
 			}
 		}
-		m_lstMatch.SetItemText(i, 6, result);
+		m_lstMatch.SetItemText(i, 5, result);
 	}
 }
 
-void OkoooDialog::DoReloadBackupResult() {
+void ZuCaiDialog::DoReloadBackupResult() {
 	CStringATL strSQL;
-	strSQL.Format(_T("SELECT ID, SCRIPT FROM JCZQ_INVEST WHERE DATE='%s'"), m_strQH);
+	strSQL.Format(_T("SELECT ID, SCRIPT FROM ZCZQ_INVEST WHERE DATE='%s'"), m_strQH);
 	if (TRUE) {
 		SQLite::Statement sm(*m_pDatabase, strSQL);
 		while (sm.executeStep()) {
@@ -1010,16 +1040,17 @@ void OkoooDialog::DoReloadBackupResult() {
 	}
 }
 
-JCMatchItem::Subject* OkoooDialog::get_subjects(const std::string& id, int tid, int code) {
+JCMatchItem::Subject* ZuCaiDialog::get_subjects(const std::string& id, bool multi_select, int tid, int code) {
 	for (const auto& item : m_JCMatchItems) {
 		if (item.second->id == id) {
+			item.second->multi_selected = multi_select;
 			return item.second->get_subject(tid, code);
 		}
 	}
 	return NULL;
 }
 
-void OkoooDialog::ShowMatchWebBrowser(const CStringATL& title) {
+void ZuCaiDialog::ShowMatchWebBrowser(const CStringATL& title) {
 	if (m_CurrentMatchItem.get() == nullptr) {
 		return;
 	}
@@ -1051,7 +1082,7 @@ void OkoooDialog::ShowMatchWebBrowser(const CStringATL& title) {
 	}
 }
 
-void OkoooDialog::CloseMatchWebBrowsers() {
+void ZuCaiDialog::CloseMatchWebBrowsers() {
 	for (auto& iter : m_Browsers) {
 		if (iter.second->IsWindowDestroyed()
 			|| iter.second->IsWindowDestroying()) {
@@ -1065,7 +1096,7 @@ void OkoooDialog::CloseMatchWebBrowsers() {
 	m_Browsers.clear();
 }
 
-void OkoooDialog::onWebBrowserClose(const std::string& url) {
+void ZuCaiDialog::onWebBrowserClose(const std::string& url) {
 	const auto& iter = m_Browsers.find(m_CurrentMatchItem->match_url);
 	if (iter != m_Browsers.end()) {
 		m_delayDeleteBrowsers.push_back(iter->second);

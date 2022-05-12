@@ -24,6 +24,8 @@ public:
 	const CStlString& getScriptFileData() { return m_strScript; }
 
 	void setMatchItems(const std::vector<std::shared_ptr<JCMatchItem>>& items) { m_vecMatchItems = items; }
+	int getScriptAvgMultiple() { return m_nAvgMultiple; }
+	double getScriptMinBonus() { return m_dMinBonus; }
 
 protected:
 	void SetSources(const std::vector<JcBetItemSource>& items);

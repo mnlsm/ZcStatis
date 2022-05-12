@@ -2,10 +2,10 @@
 
 #include "../JC/jc_defs.h"
 
-class OkoooEngine {
+class ZuCaiEngine {
 
 public:
-	OkoooEngine(const CStlString& script, const char* logf);
+	ZuCaiEngine(const CStlString& script, const char* logf);
 
 public:
 	BOOL CalculateAllResult(CStlString& failed_reason);

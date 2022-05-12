@@ -1,14 +1,14 @@
 #include "stdafx.h"
-#include "BeiDanDialog.h"
+#include "ZuCaiDialog.h"
 #include "Global.h"
 #include "ZlibStream.h"
 #include "MiscHelper.h"
 
 
-BOOL BeiDanDialog::OnIdle() {
+BOOL ZuCaiDialog::OnIdle() {
 	int async_count = GetAsyncFuncCount();
 	if (async_count > 0) {
-		PostMessage(BeiDanDialog::WM_ASYNC_DISPATCH, 0, 0);
+		PostMessage(ZuCaiDialog::WM_ASYNC_DISPATCH, 0, 0);
 	}
 	if (!m_delayDeleteBrowsers.empty()) {
 		for (int i = (int)m_delayDeleteBrowsers.size() - 1; i >= 0; i--) {
@@ -20,31 +20,32 @@ BOOL BeiDanDialog::OnIdle() {
 	return FALSE;
 }
 
-LRESULT BeiDanDialog::OnAsyncDispatch(UINT msg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT ZuCaiDialog::OnAsyncDispatch(UINT msg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	DispathOneAsyncFunc();
 	return 1L;
 }
 
-bool BeiDanDialog::AddOneAsyncFunc(talk_base::IAsyncFuncCall* pAsyncFunc) {
+bool ZuCaiDialog::AddOneAsyncFunc(talk_base::IAsyncFuncCall* pAsyncFunc) {
 	BOOL bRet = CAsyncFuncDispatcher::AddOneAsyncFunc(pAsyncFunc);
 	if (bRet) {
-		bRet = PostMessage(BeiDanDialog::WM_ASYNC_DISPATCH, 0, 0);
+		bRet = PostMessage(ZuCaiDialog::WM_ASYNC_DISPATCH, 0, 0);
 	}
 	return (bRet == TRUE);
 }
 
-void BeiDanDialog::OnHttpReturnGlobal(const CHttpRequestPtr& request,
+void ZuCaiDialog::OnHttpReturnGlobal(const CHttpRequestPtr& request,
 	const CHttpResponseDataPtr& response) {
-	sInst.AddOneAsyncFunc(talk_base::BindAsyncFunc(&BeiDanDialog::OnHttpReturn, &sInst, request, response));
+	sInst.AddOneAsyncFunc(talk_base::BindAsyncFunc(&ZuCaiDialog::OnHttpReturn, &sInst, request, response));
 }
 
-CHttpRequestPtr BeiDanDialog::CreatePostRequest(const std::string& url, const std::string& idprefix,
+CHttpRequestPtr ZuCaiDialog::CreatePostRequest(const std::string& url, const std::string& idprefix,
 	const std::string& data) {
 	std::string request_id = CHttpClientMgr::generateRequestId();
 	request_id = idprefix + "_" + request_id;
 	CHttpRequestPtr ptr(new (std::nothrow) THttpRequestData());
+	//ptr->agent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36";
 	ptr->agent = "Dalvik/2.1.0 (Linux; U; Android 6.0; M5s Build/MRA58K)";
-	ptr->request_headers.insert(std::make_pair("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"));
+	//ptr->request_headers.insert(std::make_pair("Content-Type", "application/x-www-form-urlencoded"));
 	ptr->request_headers.insert(std::make_pair("Connection", "Keep-Alive"));
 	ptr->request_headers.insert(std::make_pair("Accept-Encoding", "gzip"));
 	ptr->request_url = url;
@@ -53,17 +54,17 @@ CHttpRequestPtr BeiDanDialog::CreatePostRequest(const std::string& url, const st
 	ptr->request_post_data = data;
 	ptr->response_type = RESPONSEMEMORY;
 	ptr->request_time = 1000 * 60;
-	ptr->callback = &BeiDanDialog::OnHttpReturnGlobal;
+	ptr->callback = &ZuCaiDialog::OnHttpReturnGlobal;
 	//httpMgr_->DoHttpCommandRequest(ptr);
 	return ptr;
 }
 
-CHttpRequestPtr BeiDanDialog::CreateGetRequest(const std::string& url, const std::string& idprefix) {
+CHttpRequestPtr ZuCaiDialog::CreateGetRequest(const std::string& url, const std::string& idprefix) {
 	std::string request_id = CHttpClientMgr::generateRequestId();
 	request_id = idprefix + "_" + request_id;
 	CHttpRequestPtr ptr(new (std::nothrow) THttpRequestData());
+	//ptr->agent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36";
 	ptr->agent = "Dalvik/2.1.0 (Linux; U; Android 6.0; M5s Build/MRA58K)";
-	ptr->request_headers.insert(std::make_pair("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"));
 	ptr->request_headers.insert(std::make_pair("Connection", "Keep-Alive"));
 	ptr->request_headers.insert(std::make_pair("Accept-Encoding", "gzip"));
 	ptr->request_url = url;
@@ -72,48 +73,29 @@ CHttpRequestPtr BeiDanDialog::CreateGetRequest(const std::string& url, const std
 	//ptr->request_post_data = query->GetCloudPathsRequestData();
 	ptr->response_type = RESPONSEMEMORY;
 	ptr->request_time = 1000 * 60;
-	ptr->callback = &BeiDanDialog::OnHttpReturnGlobal;
+	ptr->callback = &ZuCaiDialog::OnHttpReturnGlobal;
 	return ptr;
 	//httpMgr_->DoHttpCommandRequest(ptr);
 }
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 static const char* LOGIN_REQ_PREFIX = "login_req_prefix";
-static const char* LOGOFF_REQ_PREFIX = "logoff_req_prefix";
-static const char* INFO_REQ_PREFIX = "info_req_prefix";
-static const char* RCTOKEN_REQ_PREFIX = "rctoken_req_prefix";
-static const char* FRIENDLIST_REQ_PREFIX = "friendlist_req_prefix";
-static const char* LOTTERYCATEGORIES_REQ_PREFIX = "lotterycategories_req_prefix";
 static const char* JCMATCHLIST_REQ_PREFIX = "jcmatchlist_req_prefix";
-static const char* HEMAI_REQ_PREFIX = "hemai_req_prefix";
-static const char* HEMAI_REQ_PREFIX_FINISH = "hemai_req_prefix_finish";
-static const char* BIFEN_REQ_PREFIX = "bifen_req_prefix";
+static const char* ZCPL_REQ_PREFIX = "zcpl_req_prefix";
 
 
-static const char* BEIDANWDL_REQ_PREFIX = "beidanwdl_req_prefix";
-
-
-void BeiDanDialog::OnHttpReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
+void ZuCaiDialog::OnHttpReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
 	if (request->request_id.find(LOGIN_REQ_PREFIX) == 0) {
 		OnLoginReturn(request, response);
-	}
-	else if (request->request_id.find(JCMATCHLIST_REQ_PREFIX) == 0) {
+	} else if (request->request_id.find(JCMATCHLIST_REQ_PREFIX) == 0) {
 		OnJcMatchListReturn(request, response);
+	} else if (request->request_id.find(ZCPL_REQ_PREFIX) == 0) {
+		OnZcPlReturn(request, response);
 	}
-	else if (request->request_id.find(BIFEN_REQ_PREFIX) == 0) {
-		OnBiFenReturn(request, response);
-	}
-	else if (request->request_id.find(BEIDANWDL_REQ_PREFIX) == 0) {
-		OnBeiDanWDLReturn(request, response);
-	}
-	
-
 }
 
-int BeiDanDialog::doLogin() {
+int ZuCaiDialog::doLogin() {
 	if (TRUE) {
 		std::string url = "https://m.okooo.com/weixin/jing/d.php";
 		CHttpRequestPtr request = CreateGetRequest(url, LOGIN_REQ_PREFIX);
@@ -125,7 +107,7 @@ int BeiDanDialog::doLogin() {
 }
 
 
-void BeiDanDialog::OnLoginReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
+void ZuCaiDialog::OnLoginReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
 	if (response->httperror == talk_base::HE_NONE && response->response_content.size() > 0) {
 		doJcMatchList();
 	} else {
@@ -135,17 +117,17 @@ void BeiDanDialog::OnLoginReturn(const CHttpRequestPtr& request, const CHttpResp
 	}
 }
 
-int BeiDanDialog::doLogOff() {
+int ZuCaiDialog::doLogOff() {
 	m_buLogin.EnableWindow(TRUE);
 	m_buLogoff.EnableWindow(FALSE);
 	return 0l;
 }
 
 
-int BeiDanDialog::doJcMatchList() {
-	m_stProgress.SetWindowText("");
-	std::string url = "https://www.okooo.com/danchang/";
+int ZuCaiDialog::doJcMatchList() {
+	std::string url = "https://www.okooo.com/zucai/ren9/";
 	CHttpRequestPtr request = CreateGetRequest(url, JCMATCHLIST_REQ_PREFIX);
+	request->request_headers.insert(std::make_pair("cookie", "LastUrl=; __utmz=56961525.1650162259.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); FirstURL=kj.okooo.com / ; FirstOKURL=https % 3A//www.okooo.com/danchang/kaijiang/; First_Source=kj.okooo.com; _ga=GA1.2.1953148046.1650162259; PHPSESSID=f10e97ef44b47fd188dce251c03e1d4816228600; __utma=56961525.1953148046.1650162259.1651827501.1652296390.3; __utmc=56961525; pm=; LStatus=N; LoginStr=%7B%22welcome%22%3A%22%u60A8%u597D%uFF0C%u6B22%u8FCE%u60A8%22%2C%22login%22%3A%22%u767B%u5F55%22%2C%22register%22%3A%22%u6CE8%u518C%22%2C%22TrustLoginArr%22%3A%7B%22alipay%22%3A%7B%22LoginCn%22%3A%22%u652F%u4ED8%u5B9D%22%7D%2C%22tenpay%22%3A%7B%22LoginCn%22%3A%22%u8D22%u4ED8%u901A%22%7D%2C%22weibo%22%3A%7B%22LoginCn%22%3A%22%u65B0%u6D6A%u5FAE%u535A%22%7D%2C%22renren%22%3A%7B%22LoginCn%22%3A%22%u4EBA%u4EBA%u7F51%22%7D%2C%22baidu%22%3A%7B%22LoginCn%22%3A%22%u767E%u5EA6%22%7D%2C%22snda%22%3A%7B%22LoginCn%22%3A%22%u76DB%u5927%u767B%u5F55%22%7D%7D%2C%22userlevel%22%3A%22%22%2C%22flog%22%3A%22hidden%22%2C%22UserInfo%22%3A%22%22%2C%22loginSession%22%3A%22___GlobalSession%22%7D; acw_tc=2f624a7c16522984571547396e7b12d938bc88db7e47bf16f3047017ed7a19; acw_sc__v3=627c15baccdabfeed9a6a907689e5c1f59c6a40c; Hm_lvt_213d524a1d07274f17dfa17b79db318f=1650162260,1651827501,1652299222; Hm_lpvt_213d524a1d07274f17dfa17b79db318f=1652299222; __utmb=56961525.18.8.1652299221829"));
 	httpMgr_->DoHttpCommandRequest(request);
 	return 0l;
 }
@@ -167,17 +149,16 @@ static void adjustXmlText(CStringA& temp) {
 static CStringA adjustXuHaoText(const CStringA& temp) {
 	int len = temp.GetLength();
 	if (len == 0) {
-		return "000";
-	} else if (len == 1) {
-		return CStringA("00") + temp;
-	} else if (len == 2) {
+		return "00";
+	}
+	else if (len == 1) {
 		return CStringA("0") + temp;
 	}
 	return temp;
 }
 
-void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
-		const CHttpResponseDataPtr& response) {
+void ZuCaiDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
+	const CHttpResponseDataPtr& response) {
 	m_pending_request = 0;
 	m_order_items.clear();
 
@@ -186,13 +167,14 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 		if (response->response_headers.Find("Content-Encoding: gzip") != -1) {
 			CZlibStream zlib;
 			zlib.DecompressGZip(response->response_content, raw_response);
-		} else {
+		}
+		else {
 			raw_response = response->response_content;
 		}
-		CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_ACP).m_psz).m_psz;
+		CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_UTF8).m_psz).m_psz;
 
 		int nFindBegin = -1, nFindEnd = -1;
-		CStringA section_begin = "<tr class=\"alltrObj";
+		CStringA section_begin = "<tr id=\"tr";
 		CStringA section_end = "</tr>";
 		nFindBegin = 0;
 		while ((nFindBegin = temp.Find(section_begin, nFindBegin)) >= 0) {
@@ -218,23 +200,23 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 				MessageBox("获取对阵列表失败 3！", "错误", MB_ICONERROR | MB_OK);
 				break;
 			}
-			auto node = FindElementByClassAttr(child, "xh");
+			auto node = FindElementByClassAttr(child, "xh td1");
 			if (node == nullptr) {
 				MessageBox("获取对阵列表失败 4！", "错误", MB_ICONERROR | MB_OK);
 				break;
 			}
-			CStringA xuhao = GetElementText(node->FirstChildElement());
-			CStringA match_category = GetElementText(FindElementByClassAttr(child, "ls"));
+			CStringA xuhao = GetElementText(node);
+			CStringA match_category = GetElementText(FindElementByClassAttr(child, "ls  jsLeagueName"));
 			CStringA start_time = GetElementAttrValue(FindElementByClassAttr(
-				child, "switchtime timetd td2"), "title");
-			start_time.Replace("比赛时间：", ""); start_time.Trim();
+				child, "switchtime timetd feedbackObj td3"), "title");
+			start_time.Replace("比赛时间:", ""); start_time.Trim();
 
-			CStringA home = GetElementAttrValue(FindElementByClassAttr(
-				child, "homenameobj homename"), "title");
-			CStringA away = GetElementAttrValue(FindElementByClassAttr(
-				child, "awaynameobj awayname"), "title");
+			CStringA home = GetElementText(FindElementByClassAttr(
+				child, "homenameobj homename"));
+			CStringA away = GetElementText(FindElementByClassAttr(
+				child, "awaynameobj awayname"));
 			CStringA href = GetElementAttrValue(FindElementByClassAttr(
-				child, "dc-link"), "href");
+				child, "zc-link"), "href");
 			href.Replace("odds", "history");
 			href.Replace("node", "history");
 			CStringA orderid = href;
@@ -259,7 +241,7 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 				ji->hand = atoi(hand);
 				CStringA pl = GetElementText(FindElementByClassAttr(homeNode, "pltxt"));
 				JCMatchItem::Subject sub;
-				sub.tid = 1;
+				sub.tid = 6;
 				sub.odds = atof(pl);
 				sub.betCode = 3;
 				sub.checked = false;
@@ -270,7 +252,7 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 			if (midNode != nullptr) {
 				CStringA pl = GetElementText(midNode->FirstChildElement("em"));
 				JCMatchItem::Subject sub;
-				sub.tid = 1;
+				sub.tid = 6;
 				sub.odds = atof(pl);
 				sub.betCode = 1;
 				sub.checked = false;
@@ -281,7 +263,7 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 			if (awayNode != nullptr) {
 				CStringA pl = GetElementText(FindElementByClassAttr(awayNode, "pltxt"));
 				JCMatchItem::Subject sub;
-				sub.tid = 1;
+				sub.tid = 6;
 				sub.odds = atof(pl);
 				sub.betCode = 0;
 				sub.checked = false;
@@ -290,83 +272,88 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 			}
 			m_order_items.insert(std::make_pair(ji->orderid, ji));
 		}
-		
-		for (const auto& item : m_order_items) {
-			CStringA url;
-			url.Format("https://m.okooo.com/match/change.php?mid=%s&pid=24&Type=Odds&c=1" ,item.second->orderid.c_str());
-			auto req = CreateGetRequest(std::string((LPCSTR)url), BEIDANWDL_REQ_PREFIX);
-			req->cmd = item.second->orderid;
-			m_pending_request++;
-			httpMgr_->DoHttpCommandRequest(req);
-		}
-		
 	}
 	if (m_order_items.empty()) {
 		MessageBox("获取对阵列表失败 5, 没有比赛场次！", "错误", MB_ICONERROR | MB_OK);
+		m_buLogin.EnableWindow(FALSE);
+		m_buLogoff.EnableWindow(TRUE);
+	} else {
+		for (const auto& item : m_order_items) {
+			CStringA url;
+			url.Format("https://www.okooo.com/soccer/match/%s/odds/stat/14/?type=start&range=all", item.second->orderid.c_str());
+			auto req = CreateGetRequest(std::string((LPCSTR)url), ZCPL_REQ_PREFIX);
+			req->cmd = item.second->orderid;
+			req->request_headers.insert(std::make_pair("cookie", "LastUrl=; __utmz=56961525.1650162259.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); FirstURL=kj.okooo.com / ; FirstOKURL=https % 3A//www.okooo.com/danchang/kaijiang/; First_Source=kj.okooo.com; _ga=GA1.2.1953148046.1650162259; PHPSESSID=f10e97ef44b47fd188dce251c03e1d4816228600; __utma=56961525.1953148046.1650162259.1651827501.1652296390.3; __utmc=56961525; pm=; LStatus=N; LoginStr=%7B%22welcome%22%3A%22%u60A8%u597D%uFF0C%u6B22%u8FCE%u60A8%22%2C%22login%22%3A%22%u767B%u5F55%22%2C%22register%22%3A%22%u6CE8%u518C%22%2C%22TrustLoginArr%22%3A%7B%22alipay%22%3A%7B%22LoginCn%22%3A%22%u652F%u4ED8%u5B9D%22%7D%2C%22tenpay%22%3A%7B%22LoginCn%22%3A%22%u8D22%u4ED8%u901A%22%7D%2C%22weibo%22%3A%7B%22LoginCn%22%3A%22%u65B0%u6D6A%u5FAE%u535A%22%7D%2C%22renren%22%3A%7B%22LoginCn%22%3A%22%u4EBA%u4EBA%u7F51%22%7D%2C%22baidu%22%3A%7B%22LoginCn%22%3A%22%u767E%u5EA6%22%7D%2C%22snda%22%3A%7B%22LoginCn%22%3A%22%u76DB%u5927%u767B%u5F55%22%7D%7D%2C%22userlevel%22%3A%22%22%2C%22flog%22%3A%22hidden%22%2C%22UserInfo%22%3A%22%22%2C%22loginSession%22%3A%22___GlobalSession%22%7D; acw_tc=2f624a7c16522984571547396e7b12d938bc88db7e47bf16f3047017ed7a19; acw_sc__v3=627c15baccdabfeed9a6a907689e5c1f59c6a40c; Hm_lvt_213d524a1d07274f17dfa17b79db318f=1650162260,1651827501,1652299222; Hm_lpvt_213d524a1d07274f17dfa17b79db318f=1652299222; __utmb=56961525.18.8.1652299221829"));
+			m_pending_request++;
+			httpMgr_->DoHttpCommandRequest(req);
+		}
 	}
 }
 
-void BeiDanDialog::OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
+void ZuCaiDialog::OnZcPlReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
 	m_pending_request--;
-	CStringATL progress;
-	progress.Format("%d/%d", m_order_items.size() - m_pending_request, m_order_items.size());
-	m_stProgress.SetWindowText(progress);
 	if (response->httperror == talk_base::HE_NONE && response->response_content.size() > 0) {
 		do {
+			auto& item = m_order_items.find(request->cmd);
+			if (item == m_order_items.end()) {
+				break;
+			}
 			std::string raw_response;
 			if (response->response_headers.Find("Content-Encoding: gzip") != -1) {
 				CZlibStream zlib;
 				zlib.DecompressGZip(response->response_content, raw_response);
-			} else {
+			}
+			else {
 				raw_response = response->response_content;
 			}
 			CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_ACP).m_psz).m_psz;
-			CStringA section_begin = "<table width=";
-			CStringA section_end = "</table>";
-
-			int nFindBegin = temp.Find(section_begin);
+			int nFirstFind = temp.Find("初指");
+			if (nFirstFind == -1) {
+				break;
+			}
+			nFirstFind = nFirstFind - 100;
+			CStringA section_begin = "<tr";
+			CStringA section_end = "</tr>";
+			int nFindBegin = temp.Find(section_begin, nFirstFind);
 			if (nFindBegin == -1) {
-				return;
+				break;
 			}
 			int nFindEnd = temp.Find(section_end, nFindBegin);
 			CStringA xmlText = temp.Mid(nFindBegin, nFindEnd - nFindBegin + section_end.GetLength());
+			xmlText.Replace("</td></td>", "</td>");
 			std::string date;
 			tinyxml2::XMLDocument doc;
 			tinyxml2::XMLElement* tempElement = nullptr;
 			if (doc.Parse(xmlText) != tinyxml2::XML_SUCCESS) {
-				return;
+				break;
 			}
 			tinyxml2::XMLElement* child = doc.FirstChildElement();
 			if (child == nullptr) {
 				break;
 			}
-			child = child->FirstChildElement("tr");
-			if (child == nullptr) {
-				break;
-			}
 			child = child->FirstChildElement("td");
-			if (child == nullptr) {
-				break;
-			}
-			auto& item = m_order_items.find(request->cmd);
-			if (item == m_order_items.end()) {
-				break;
-			}
-			child = child->FirstChildElement("span");
-			int index = 0;
+			int index = -1;
 			while (child != nullptr) {
-				CStringA pl = GetElementText(child);
-				JCMatchItem::Subject sub;
-				sub.tid = 6;
-				sub.odds = atof(pl);
-				sub.betCode = 3;
-				if(index == 1) sub.betCode = 1;
-				else if(index == 2) sub.betCode = 0;
-				sub.checked = false;
-				sub.calcTip(item->second->hand);
-				item->second->subjects.push_back(sub);
+				if (index == 0) {
+					auto sub = item->second->get_subject(6, 3);
+					if (sub != nullptr) {
+						sub->odds = atof(GetElementText(child));
+					}
+				} else if (index == 1) {
+					auto sub = item->second->get_subject(6, 1);
+					if (sub != nullptr) {
+						sub->odds = atof(GetElementText(child));
+					}
+				} else if (index == 2) {
+					auto sub = item->second->get_subject(6, 0);
+					if (sub != nullptr) {
+						sub->odds = atof(GetElementText(child));
+					}
+				} else if (index > 2) {
+					break;
+				}
+				child = child->NextSiblingElement("td");
 				index++;
-				child = child->NextSiblingElement("span");
 			}
 
 		} while (false);
@@ -390,123 +377,7 @@ void BeiDanDialog::OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttp
 		ReloadMatchListData();
 		m_buLogin.EnableWindow(FALSE);
 		m_buLogoff.EnableWindow(TRUE);
-		m_stProgress.SetWindowText("");
 	}
 }
-
-
-int BeiDanDialog::doBiFen() {
-	/*
-	CStringATL beginDay, endDay, beginWeekDay;
-	Global::getBiFenDateInfo(beginDay, endDay, beginWeekDay);
-	CStringATL url;
-	url.Format("http://www.okooo.com/jingcai/kaijiang/?LotteryType=SportteryWDL&StartDate=%s&EndDate=%s",
-		beginDay, endDay);
-	std::string request_id = BIFEN_REQ_PREFIX;
-	CHttpRequestPtr request = CreateGetRequest((LPCSTR)url, request_id);
-	httpMgr_->DoHttpCommandRequest(request);
-	*/
-	return 0;
-}
-
-void BeiDanDialog::OnBiFenReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
-	const CStringATL strRowBegin = "<tr align=\"center\" class=\"WhiteBg BlackWords trClass\">\r\n";
-	const CStringATL strRowBegin1 = "<tr align=\"center\" class=\"ContentLight BlackWords trClass\">\r\n";
-
-	const CStringATL strRowEnd = "</tr>";
-	const CStringATL strColBegin = "<td>";
-	const CStringATL strColBegin1 = "<td class=\"border2\">";
-	const CStringATL strColBegin2 = "<td class=\"noborder\">";
-	const CStringATL strColEnd = "</td>";
-	if (response->httperror == talk_base::HE_NONE) {
-		std::map<CStringATL, CStringATL> mapBiFen;
-		CStringATL beginDay, endDay, beginWeekDay;
-		Global::getBiFenDateInfo(beginDay, endDay, beginWeekDay);
-		CZlibStream zlib;
-		std::string raw_response;
-		zlib.DecompressGZip(response->response_content, raw_response);
-		CStringATL html = raw_response.c_str();
-		int nFindRow = html.Find(strRowBegin);
-		int nFindRow1 = html.Find(strRowBegin1);
-		if (nFindRow1 >= 0 && nFindRow > nFindRow1) {
-			nFindRow = nFindRow1;
-		}
-		while (nFindRow >= 0) {
-			int nFindRowEnd = html.Find(strRowEnd, nFindRow + 1);
-			if (nFindRowEnd == -1) {
-				break;
-			}
-			int nRowStart = nFindRow + strRowBegin.GetLength();
-			if (nFindRow == nFindRow1) {
-				nRowStart = nFindRow + strRowBegin1.GetLength();
-			}
-			CStringATL strRow = html.Mid(nRowStart, nFindRowEnd - nRowStart);
-			CStlStrArray arrCols;
-			Global::DepartString((LPCSTR)strRow, "\r\n", arrCols);
-			CStringATL id, data;
-			for (int i = 0; i < arrCols.size(); i++) {
-				auto& col = arrCols[i];
-				Global::TrimBlank(col);
-				if (i == 0) {
-					id = col.c_str();
-					id.Replace(strColBegin, "");
-					id.Replace(strColBegin2, "");
-					id.Replace(strColEnd, "");
-					if (id.Find(beginWeekDay) != 0) {
-						id.Empty();
-						break;
-					}
-					id.Replace(beginWeekDay, beginDay);
-					id.Replace("-", "");
-
-				}
-				else if (i == 6 || i == 7) {
-					CStringATL temp;
-					temp = col.c_str();
-					temp.Replace(strColBegin, "");
-					temp.Replace(strColBegin1, "");
-					temp.Replace(strColEnd, "");
-					temp.Replace("-", ":");
-					if (temp.GetLength() <= 1) {
-						data.Empty();
-						break;
-					}
-					if (data.IsEmpty()) {
-						data = temp;
-					}
-					else {
-						data = data + "|" + temp;
-					}
-				}
-			}
-			if (!id.IsEmpty() && !data.IsEmpty()) {
-				mapBiFen[id] = data;
-			}
-			nFindRow = html.Find(strRowBegin, nFindRowEnd + 1);
-			nFindRow1 = html.Find(strRowBegin1, nFindRowEnd + 1);
-			if (nFindRow1 >= 0 && nFindRow > nFindRow1) {
-				nFindRow = nFindRow1;
-			}
-		}
-		for (const auto& bf : mapBiFen) {
-			UpdateItemResultToDB((LPCSTR)bf.first, (LPCSTR)bf.second);
-		}
-	}
-	return;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-//http://www.okooo.com/jingcai/kaijiang/?LotteryType=SportteryWDL&StartDate=2018-03-05&EndDate=2018-03-06
-
 
 

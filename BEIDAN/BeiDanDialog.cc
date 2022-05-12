@@ -298,10 +298,72 @@ LRESULT BeiDanDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHa
 	CStlString strBuyFilePath = strLoadPath;
 	CMiscHelper::string_replace(strBuyFilePath, ".lua", ".txt");
 	DeleteFileA(strBuyFilePath.c_str());
+	GetBuyLinesData(buyLines);
 	Global::SaveFileData(strBuyFilePath, buyLines, FALSE);
 	return 1L;
 //https://www.hipdf.cn/txt-to-pdf
 }
+
+void BeiDanDialog::GetBuyLinesData(std::string& abuyLines) {
+	abuyLines.clear();
+	if (m_Engine.get() == nullptr) {
+		return;
+	}
+	std::map<std::string, std::set<int>> pos_tids;
+	std::map<std::string, std::string> fixed_items;
+	for (const auto& r : m_Engine->GetFixedSources()) {
+		std::string codes;
+		for (const auto& item : r.bets) {
+			codes += item.codeStr();
+			pos_tids[r.id].insert(item.tid);
+		}
+		fixed_items[r.id] = codes;
+	}
+	std::vector<std::map<std::string, std::string>> items, backup_item;
+	for (const auto& r : m_Engine->getResult()) {
+		std::map<std::string, std::string> line_items;
+		for (const auto& item : r) {
+			line_items[item.id] = item.bet.codeStr();
+			pos_tids[item.id].insert(item.bet.tid);
+		}
+		for (const auto& r : fixed_items) {
+			line_items[r.first] = r.second;
+		}
+		items.push_back(line_items);
+	}
+	bool pos_unique_tid = true;
+	for (const auto& pair : pos_tids) {
+		if (pair.second.size() > 1) {
+			pos_unique_tid = false;
+			break;
+		}
+	}
+	if (m_Engine->getScriptAvgMultiple() > 0 || m_Engine->getScriptMinBonus() > 0.0) {
+		pos_unique_tid = false;
+	}
+	if (pos_unique_tid) {
+		backup_item = items;
+		if (Global::ComposeMultiSelected(backup_item, true)) {
+			items.swap(backup_item);
+		}
+		else {
+			MessageBox("合并复式结果失败了！", "错误", MB_ICONERROR | MB_OK);
+		}
+	}
+	for (const auto& item : items) {
+		std::string line;
+		for (const auto& m : item) {
+			std::string ms;
+			ms.append("[").append(m.first).append("]").append(m.second).append(" ");
+			line.append(ms);
+		}
+		CStringATL temp = line.c_str();
+		if (temp.Right(1) == ",") temp = temp.Left(temp.GetLength() - 1);
+		line.assign(temp).append("\r\n").append("\r\n");
+		abuyLines.append(line);
+	}
+}
+
 
 LRESULT BeiDanDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	CWaitCursor wait;

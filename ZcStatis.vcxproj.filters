@@ -52,6 +52,9 @@
     <Filter Include="beidan">
       <UniqueIdentifier>{feb7331b-0205-46f5-8389-0647dc497440}</UniqueIdentifier>
     </Filter>
+    <Filter Include="zucai">
+      <UniqueIdentifier>{10e6cd33-6159-44d1-b8d8-da0f04fd7e78}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lua\lbitlib.c">
@@ -291,6 +294,18 @@
     <ClCompile Include="BEIDAN\BeiDanStat.cc">
       <Filter>beidan</Filter>
     </ClCompile>
+    <ClCompile Include="ZUCAI\ZuCaiDialog.cc">
+      <Filter>zucai</Filter>
+    </ClCompile>
+    <ClCompile Include="ZUCAI\ZuCaiDialog_BetArea.cc">
+      <Filter>zucai</Filter>
+    </ClCompile>
+    <ClCompile Include="ZUCAI\ZuCaiDialog_Network.cc">
+      <Filter>zucai</Filter>
+    </ClCompile>
+    <ClCompile Include="ZUCAI\ZuCaiEngine.cc">
+      <Filter>zucai</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua\lctype.h">
@@ -506,6 +521,12 @@
     <ClInclude Include="BEIDAN\BeiDanStat.h">
       <Filter>beidan</Filter>
     </ClInclude>
+    <ClInclude Include="ZUCAI\ZuCaiDialog.h">
+      <Filter>zucai</Filter>
+    </ClInclude>
+    <ClInclude Include="ZUCAI\ZuCaiEngine.h">
+      <Filter>zucai</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="res\ZcStatis.exe.manifest">
@@ -526,6 +547,11 @@
     <None Include="res\ADDIN\template.lua">
       <Filter>res</Filter>
     </None>
-    <None Include="res\ADDIN\template_bd.lua" />
+    <None Include="res\ADDIN\template_zc.lua">
+      <Filter>res</Filter>
+    </None>
+    <None Include="res\ADDIN\template_bd.lua">
+      <Filter>res</Filter>
+    </None>
   </ItemGroup>
 </Project>

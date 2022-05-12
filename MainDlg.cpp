@@ -12,6 +12,7 @@
 #include "JQC/JQCDialog.h"
 #include "okooo/OkoooDialog.h"
 #include "beidan/BeiDanDialog.h"
+#include "zucai/ZuCaiDialog.h"
 
 #include <SQLiteCpp/SQLiteCpp.h>
 extern CMainDlg dlgMain;
@@ -98,6 +99,7 @@ LRESULT CMainDlg::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHand
     DestroyWindow();
 	OkoooDialog::Destroy();
 	BeiDanDialog::Destroy();
+	ZuCaiDialog::Destroy();
     ::PostQuitMessage(wID);
     return 1L;
 }
@@ -131,6 +133,12 @@ LRESULT CMainDlg::OnBeiDan(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOO
 	BeiDanDialog::PopUp(this->m_pDatabase);
 	return 1L;
 }
+
+LRESULT CMainDlg::OnZuCai(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	ZuCaiDialog::PopUp(this->m_pDatabase);
+	return 1L;
+}
+
 
 void CMainDlg::InitControls() {
 	DoDataExchange(FALSE);

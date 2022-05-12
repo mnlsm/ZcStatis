@@ -127,6 +127,7 @@ private:
 	void DoRefreshBetArea();
 
 	void DoReloadBackupResult();
+	void GetBuyLinesData(std::string& abuyLines);
 
 private:
 	CSortListViewCtrlEx<OkoooDialog> m_lstMatch;

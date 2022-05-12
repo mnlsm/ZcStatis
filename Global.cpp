@@ -373,6 +373,105 @@ CStringATL Global::GetNextDayString() {
 	return time;
 }
 
+CStringATL Global::GetUniqueCharStringLess(const CStringATL& src) {
+	std::set<TCHAR, std::less<TCHAR>> unique_set;
+	for (int i = 0; i < src.GetLength(); i++) {
+		if (src[i] != _T(' ') && src[i] != _T('\t') && src[i] != _T('\r') && src[i] != _T('\n')) {
+			unique_set.insert(src[i]);
+		}
+	}
+	if (!unique_set.empty()) {
+		CStringATL result;
+		for (const auto& c : unique_set) {
+			result.AppendChar(c);
+		}
+		return result;
+	}
+	return _T("");
+}
+
+
+CStringATL Global::GetUniqueCharStringGreater(const CStringATL& src) {
+	std::set<TCHAR, std::greater<TCHAR>> unique_set;
+	for (int i = 0; i < src.GetLength(); i++) {
+		if (src[i] != _T(' ') && src[i] != _T('\t') && src[i] != _T('\r') && src[i] != _T('\n')) {
+			unique_set.insert(src[i]);
+		}
+	}
+	if (!unique_set.empty()) {
+		CStringATL result;
+		for (const auto& c : unique_set) {
+			result.AppendChar(c);
+		}
+		return result;
+	}
+	return _T("");
+}
+
+bool Global::ComposeMultiSelected(std::vector<std::map<std::string, std::string>>& items, bool greater) {
+	int all_count_0 = 0, all_count_1 = 0;
+	for (auto& l : items) {
+		int line_count = 1;
+		for (auto& item : l) {
+			item.second = greater ? GetUniqueCharStringGreater(item.second.c_str()) : GetUniqueCharStringLess(item.second.c_str());
+			line_count = line_count * item.second.size();
+		}
+		all_count_0 += line_count;
+	}
+	bool do_loop = true;
+	while(do_loop) {
+		do_loop = false;
+		for (size_t i = 0;i < items.size(); i++) {
+			for (auto& samePair : items[i]) {
+				for (size_t j = i + 1; j < items.size(); j++) {
+					if (items[j].size() != items[i].size()) continue;
+					int checkCount = 0;
+					std::string sameVal = "";
+					for (const auto& curPair : items[j]) {
+						if (curPair.first == samePair.first) {
+							sameVal = curPair.second;
+							checkCount++;
+						}
+						else {
+							const auto& unSamePair = items[i].find(curPair.first);
+							if (unSamePair == items[i].end()) {
+								break;
+							}
+							if (unSamePair->second == curPair.second) {
+								checkCount++;
+							}
+						}
+					}
+					if (checkCount == items[i].size() && !sameVal.empty()) {
+						samePair.second += sameVal;
+						samePair.second = greater ? GetUniqueCharStringGreater(samePair.second.c_str()) : GetUniqueCharStringLess(samePair.second.c_str());
+						items.erase(items.begin() + j);
+						do_loop = true;
+						break;
+					}
+				}
+				if (do_loop) {
+					break;
+				}
+			}
+			if (do_loop) {
+				break;
+			}
+		}
+	}
+		for (auto& l : items) {
+		int line_count = 1;
+		for (auto& item : l) {
+			line_count = line_count * item.second.size();
+		}
+		all_count_1 += line_count;
+	}
+	return (all_count_0 == all_count_1);
+}
+
+
+
+
 CStringA GetElementAttrValue(tinyxml2::XMLElement* root, const CStringA& name) {
 	if (root == nullptr) {
 		return "";

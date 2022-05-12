@@ -344,6 +344,10 @@
     <ClCompile Include="wininet\HttpResponseHeaders.cpp" />
     <ClCompile Include="ZcStatis.cpp" />
     <ClCompile Include="ZlibStream.cpp" />
+    <ClCompile Include="ZUCAI\ZuCaiDialog.cc" />
+    <ClCompile Include="ZUCAI\ZuCaiDialog_BetArea.cc" />
+    <ClCompile Include="ZUCAI\ZuCaiDialog_Network.cc" />
+    <ClCompile Include="ZUCAI\ZuCaiEngine.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="atlctrlsext.h" />
@@ -417,6 +421,8 @@
     <ClInclude Include="wininet\HttpPostArgument.h" />
     <ClInclude Include="wininet\HttpResponseHeaders.h" />
     <ClInclude Include="ZlibStream.h" />
+    <ClInclude Include="ZUCAI\ZuCaiDialog.h" />
+    <ClInclude Include="ZUCAI\ZuCaiEngine.h" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="res\ZcStatis.exe.manifest" />
@@ -430,6 +436,7 @@
   <ItemGroup>
     <None Include="res\ADDIN\template.lua" />
     <None Include="res\ADDIN\template_bd.lua" />
+    <None Include="res\ADDIN\template_zc.lua" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

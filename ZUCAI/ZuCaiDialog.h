@@ -1,21 +1,21 @@
 #pragma once
 
 #include "resource.h"
-#include "BeiDanEngine.h"
+#include "ZuCaiEngine.h"
 #include "AsyncFuncDispatch.h"
 #include "http/HttpClientMgr.h"
 #include "browser/WebBrowser.h"
 
-class BeiDanDialog :
-	public CAxDialogImpl<BeiDanDialog>,
+class ZuCaiDialog :
+	public CAxDialogImpl<ZuCaiDialog>,
 	public CIdleHandler,
 	public CAsyncFuncDispatcher,
-	public CWinDataExchange<BeiDanDialog>,
+	public CWinDataExchange<ZuCaiDialog>,
 	public IWebBrowserCallback {
 
 private:
-	BeiDanDialog();
-	static BeiDanDialog sInst;
+	ZuCaiDialog();
+	static ZuCaiDialog sInst;
 public:
 	static void PopUp(const std::shared_ptr<SQLite::Database>& db);
 	static void Destroy();
@@ -25,9 +25,9 @@ public:
 	virtual BOOL OnIdle();
 
 public:
-	enum { IDD = IDD_OKOOO_BD, WM_ASYNC_DISPATCH = WM_APP + 0x360 };
+	enum { IDD = IDD_OKOOO_ZC, WM_ASYNC_DISPATCH = WM_APP + 0x360 };
 
-	BEGIN_DDX_MAP(BeiDanDialog)
+	BEGIN_DDX_MAP(ZuCaiDialog)
 		DDX_CONTROL(IDC_MATCH_LIST, m_lstMatch)
 		DDX_CONTROL(IDC_RESULT_LIST, m_lstResult)
 
@@ -38,7 +38,6 @@ public:
 		DDX_CONTROL(IDC_SEP1, m_stSep1)
 		DDX_CONTROL(IDC_SEP2, m_stSep2)
 		DDX_CONTROL(IDC_STATIC_RESULT, m_stResult)
-		DDX_CONTROL(IDC_BD_PROGRESS, m_stProgress)
 
 		DDX_CONTROL(IDC_BULOGIN, m_buLogin)
 		DDX_CONTROL(IDC_BULOGOFF, m_buLogoff)
@@ -48,13 +47,11 @@ public:
 		DDX_CONTROL(IDC_BUREFRESH, m_buRefresh)
 		DDX_CONTROL(IDC_COPY_CHOICES, m_buCopy)
 		DDX_CONTROL(IDC_EXTRACT_LUA, m_buExtractLua)
-		DDX_CONTROL(IDC_CHECK_RQ, m_ckRQ)
 
-		
 
 	END_DDX_MAP()
 
-	BEGIN_MSG_MAP(BeiDanDialog)
+	BEGIN_MSG_MAP(ZuCaiDialog)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
@@ -71,9 +68,8 @@ public:
 		COMMAND_ID_HANDLER(IDC_COPY_CHOICES, OnCopyChoices)
 		COMMAND_ID_HANDLER(IDC_BUBIFEN, OnRefreshBiFen)
 		COMMAND_ID_HANDLER(IDC_EXTRACT_LUA, OnExtractLua)
-		COMMAND_HANDLER(IDC_CHECK_RQ, BN_CLICKED, OnToggleRQ)
 
-		CHAIN_MSG_MAP(CAxDialogImpl<BeiDanDialog>)
+		CHAIN_MSG_MAP(CAxDialogImpl<ZuCaiDialog>)
 		REFLECT_NOTIFICATIONS()
 		ALT_MSG_MAP(1)
 		MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnListLButtonDbclk)
@@ -110,8 +106,6 @@ public:
 	LRESULT OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnRefreshBiFen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-	LRESULT OnToggleRQ(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-	
 
 	
 	LRESULT OnBetAreaLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -130,14 +124,15 @@ private:
 	void DoMatchListMenuCommand(UINT cmd, UINT index);
 	void DoRefreshMatchListResults();
 	CStringATL DoRefreshResultListResults(std::string& buyLines, std::string& checkLines);
+	void GetBuyLinesData(std::string& buyLines);
 	void DoRefreshBetArea();
 
 	void DoReloadBackupResult();
-	void GetBuyLinesData(std::string& abuyLines);
+	CStringATL GetLuaGlobalChoiceMember(bool multi_selected);
 
 private:
-	CSortListViewCtrlEx<BeiDanDialog> m_lstMatch;
-	CSortListViewCtrlEx<BeiDanDialog> m_lstResult;
+	CSortListViewCtrlEx<ZuCaiDialog> m_lstMatch;
+	CSortListViewCtrlEx<ZuCaiDialog> m_lstResult;
 	CContainedWindowT<CStatic> m_stYZM;
 	CContainedWindowT<CStatic> m_stBetArea;
 	CContainedWindowT<CStatic> m_stBetAreaTitle;
@@ -145,7 +140,6 @@ private:
 	CContainedWindowT<CStatic> m_stSep1;
 	CContainedWindowT<CStatic> m_stSep2;
 	CContainedWindowT<CStatic> m_stResult;
-	CContainedWindowT<CStatic> m_stProgress;
 
 	CContainedWindowT<CButton> m_buLogin;
 	CContainedWindowT<CButton> m_buLogoff;
@@ -155,7 +149,6 @@ private:
 	CContainedWindowT<CButton> m_buCalc;
 	CContainedWindowT<CButton> m_buUpload;
 	CContainedWindowT<CButton> m_buExtractLua;
-	CContainedWindowT<CButton> m_ckRQ;
 	CFont mMatchListFont;
 	CFont mBetAreaFont;
 
@@ -183,21 +176,17 @@ private:
 	int doJcMatchList();
 	void OnJcMatchListReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
-	void OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
-
-	int doBiFen();
-	void OnBiFenReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+	void OnZcPlReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
 public:
 
 
 private:
-	CWaitCursor m_waitCursor;
 	int m_pending_request;
 	std::map<std::string, std::shared_ptr<JCMatchItem>> m_order_items;
 	std::multimap<std::string, std::shared_ptr<JCMatchItem>> m_JCMatchItems;
 	std::shared_ptr<JCMatchItem> m_CurrentMatchItem;
-	JCMatchItem::Subject* get_subjects(const std::string& id, int tid, int code);
+	JCMatchItem::Subject* get_subjects(const std::string& id, bool multi_select, int tid, int code);
 
 	BOOL GetItemFromDB(const JCMatchItem& new_item, JCMatchItem& item);
 
@@ -222,7 +211,7 @@ private:
 	std::shared_ptr<SQLite::Database> m_pDatabase;
 
 private:
-	std::shared_ptr<BeiDanEngine> m_Engine;
+	std::shared_ptr<ZuCaiEngine> m_Engine;
 
 private:
 	std::map<std::string, std::shared_ptr<WebBrowser>> m_Browsers;

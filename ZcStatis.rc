@@ -268,6 +268,31 @@ BEGIN
     CONTROL         "包含让球",IDC_CHECK_RQ,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,45,48,10
 END
 
+IDD_OKOOO_ZC DIALOGEX 0, 0, 867, 538
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "澳客登录"
+FONT 9, "宋体", 400, 0, 0x0
+BEGIN
+    CONTROL         "",IDC_BETAREA,"Static",SS_BLACKFRAME | SS_NOTIFY | WS_DISABLED,554,59,303,412
+    CONTROL         "",IDC_SEP1,"Static",SS_ETCHEDHORZ,6,36,854,1
+    CONTROL         "",IDC_MATCH_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,8,59,533,415
+    CONTROL         "",IDC_SEP2,"Static",SS_ETCHEDHORZ,6,488,854,1
+    LTEXT           "赛事列表:",IDC_STATIC,10,45,37,8
+    LTEXT           "选择区域:",IDC_STBETAREA1,555,47,37,8
+    CONTROL         "",IDC_RESULT_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,6,495,854,36
+    LTEXT           "结果列表: ",IDC_STATIC_RESULT,8,477,415,8
+    PUSHBUTTON      "登录",IDC_BULOGIN,8,14,45,15,NOT WS_TABSTOP
+    PUSHBUTTON      "登出",IDC_BULOGOFF,56,14,45,15,WS_DISABLED | NOT WS_TABSTOP
+    PUSHBUTTON      "清空选择",IDC_BUCLEARALL,151,14,45,15,NOT WS_TABSTOP
+    PUSHBUTTON      "更新数据",IDC_BUREFRESH,104,14,45,15,NOT WS_TABSTOP
+    PUSHBUTTON      "计算结果",IDC_BUCALC,376,14,45,15,NOT WS_TABSTOP
+    PUSHBUTTON      "备份结果",IDC_BUUPLOAD,424,14,45,15,NOT WS_TABSTOP
+    CONTROL         "",IDC_YZM,"Static",SS_BLACKFRAME | NOT WS_VISIBLE,846,7,5,20
+    PUSHBUTTON      "复制选择",IDC_COPY_CHOICES,285,14,45,15,NOT WS_TABSTOP
+    PUSHBUTTON      "查看统计",IDC_BUBIFEN,554,14,45,15,NOT WS_TABSTOP
+    PUSHBUTTON      "脚本模板",IDC_EXTRACT_LUA,238,14,45,15,NOT WS_TABSTOP
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -345,6 +370,13 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 531
     END
+
+    IDD_OKOOO_ZC, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 531
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -362,8 +394,10 @@ BEGIN
         MENUITEM "刷新(&R)",                      IDM_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "进球彩",                         IDM_JQC
-        MENUITEM "澳客",                          IDM_OKOOO
-        MENUITEM "北单",                          IDM_BEIDAN
+        MENUITEM SEPARATOR
+        MENUITEM "澳客竞彩",                        IDM_OKOOO
+        MENUITEM "澳客北单",                        IDM_BEIDAN
+        MENUITEM "澳客足彩",                        IDM_ZUCAI
     END
 END
 
@@ -397,11 +431,18 @@ BEGIN
     0
 END
 
+IDD_OKOOO_ZC AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // ADDIN
 //
+
+IDR_ADDIN1              ADDIN                   "res\\ADDIN\\template_zc.lua"
 
 IDR_ADDIN2              ADDIN                   "res\\ADDIN\\template.lua"
 

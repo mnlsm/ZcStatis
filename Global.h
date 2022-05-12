@@ -35,7 +35,10 @@ public:
 
 	static CStringATL GetTimeString();
 	static CStringATL GetNextDayString();
+	static CStringATL GetUniqueCharStringGreater(const CStringATL& src);
+	static CStringATL GetUniqueCharStringLess(const CStringATL& src);
 
+	static bool ComposeMultiSelected(std::vector<std::map<std::string, std::string>>& items, bool greater);
 
 private:
 	static std::string  SysWideToUTF8(const wchar_t* wide);
