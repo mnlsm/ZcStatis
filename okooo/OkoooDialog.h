@@ -11,6 +11,7 @@ class OkoooDialog :
 	public CIdleHandler,
 	public CAsyncFuncDispatcher,
 	public CWinDataExchange<OkoooDialog>,
+	public CDialogResize<OkoooDialog>,
 	public IWebBrowserCallback {
 
 private:
@@ -26,6 +27,16 @@ public:
 
 public:
 	enum { IDD = IDD_OKOOO_JC, WM_ASYNC_DISPATCH = WM_APP + 0x360 };
+
+	typedef CDialogResize<OkoooDialog> _BaseDlgResize;
+	BEGIN_DLGRESIZE_MAP(OkoooDialog)
+		DLGRESIZE_CONTROL(IDC_BETAREA, DLSZ_MOVE_X | DLSZ_REPAINT)
+		DLGRESIZE_CONTROL(IDC_MATCH_LIST, DLSZ_SIZE_X | DLSZ_REPAINT)
+		DLGRESIZE_CONTROL(IDC_RESULT_LIST, DLSZ_SIZE_X | DLSZ_SIZE_Y | DLSZ_REPAINT)
+		DLGRESIZE_CONTROL(IDC_SEP1, DLSZ_SIZE_X | DLSZ_REPAINT)
+		DLGRESIZE_CONTROL(IDC_SEP2, DLSZ_SIZE_X | DLSZ_REPAINT)
+		DLGRESIZE_CONTROL(IDC_STBETAREA1, DLSZ_MOVE_X | DLSZ_REPAINT)
+	END_DLGRESIZE_MAP()
 
 	BEGIN_DDX_MAP(OkoooDialog)
 		DDX_CONTROL(IDC_MATCH_LIST, m_lstMatch)
@@ -69,6 +80,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_BUBIFEN, OnRefreshBiFen)
 		COMMAND_ID_HANDLER(IDC_EXTRACT_LUA, OnExtractLua)
 
+		CHAIN_MSG_MAP(_BaseDlgResize)
 		CHAIN_MSG_MAP(CAxDialogImpl<OkoooDialog>)
 		REFLECT_NOTIFICATIONS()
 		ALT_MSG_MAP(1)

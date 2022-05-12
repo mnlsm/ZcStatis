@@ -15,7 +15,7 @@ void OkoooDialog::PopUp(const std::shared_ptr<SQLite::Database>& db) {
 		sInst.Create(::GetDesktopWindow());
 	}
 	if (sInst.IsWindow()) {
-		sInst.ShowWindow(SW_SHOW);
+		sInst.ShowWindow(SW_SHOWMAXIMIZED);
 		::SetForegroundWindow(sInst.m_hWnd);
 	}
 }
@@ -63,6 +63,7 @@ LRESULT OkoooDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	pLoop->AddIdleHandler(this);
 
 	DoDataExchange(FALSE);
+	DlgResize_Init();
 
 	CRect rcDesktop;
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &rcDesktop, sizeof(RECT));
@@ -90,8 +91,8 @@ LRESULT OkoooDialog::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 	CRect rcDesktop;
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &rcDesktop, sizeof(RECT));
 	LPMINMAXINFO pMinMaxInfo = reinterpret_cast<LPMINMAXINFO>(lParam);
-	pMinMaxInfo->ptMaxSize.x = pMinMaxInfo->ptMaxTrackSize.x = rcDesktop.right - rcDesktop.left - 10;
-	pMinMaxInfo->ptMaxSize.y = pMinMaxInfo->ptMaxTrackSize.y = rcDesktop.bottom - rcDesktop.top - 10;
+	//pMinMaxInfo->ptMaxSize.x = pMinMaxInfo->ptMaxTrackSize.x = rcDesktop.right - rcDesktop.left - 10;
+	//pMinMaxInfo->ptMaxSize.y = pMinMaxInfo->ptMaxTrackSize.y = rcDesktop.bottom - rcDesktop.top - 10;
 	return 1L;
 }
 
