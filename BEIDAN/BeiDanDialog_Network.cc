@@ -47,6 +47,7 @@ CHttpRequestPtr BeiDanDialog::CreatePostRequest(const std::string& url, const st
 	ptr->request_headers.insert(std::make_pair("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"));
 	ptr->request_headers.insert(std::make_pair("Connection", "Keep-Alive"));
 	ptr->request_headers.insert(std::make_pair("Accept-Encoding", "gzip"));
+	ptr->request_headers.insert(std::make_pair("cookie", "LastUrl=; __utmz=56961525.1650162259.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); FirstURL=kj.okooo.com / ; FirstOKURL=https % 3A//www.okooo.com/danchang/kaijiang/; First_Source=kj.okooo.com; _ga=GA1.2.1953148046.1650162259; PHPSESSID=f10e97ef44b47fd188dce251c03e1d4816228600; __utma=56961525.1953148046.1650162259.1651827501.1652296390.3; __utmc=56961525; pm=; LStatus=N; LoginStr=%7B%22welcome%22%3A%22%u60A8%u597D%uFF0C%u6B22%u8FCE%u60A8%22%2C%22login%22%3A%22%u767B%u5F55%22%2C%22register%22%3A%22%u6CE8%u518C%22%2C%22TrustLoginArr%22%3A%7B%22alipay%22%3A%7B%22LoginCn%22%3A%22%u652F%u4ED8%u5B9D%22%7D%2C%22tenpay%22%3A%7B%22LoginCn%22%3A%22%u8D22%u4ED8%u901A%22%7D%2C%22weibo%22%3A%7B%22LoginCn%22%3A%22%u65B0%u6D6A%u5FAE%u535A%22%7D%2C%22renren%22%3A%7B%22LoginCn%22%3A%22%u4EBA%u4EBA%u7F51%22%7D%2C%22baidu%22%3A%7B%22LoginCn%22%3A%22%u767E%u5EA6%22%7D%2C%22snda%22%3A%7B%22LoginCn%22%3A%22%u76DB%u5927%u767B%u5F55%22%7D%7D%2C%22userlevel%22%3A%22%22%2C%22flog%22%3A%22hidden%22%2C%22UserInfo%22%3A%22%22%2C%22loginSession%22%3A%22___GlobalSession%22%7D; acw_tc=2f624a7c16522984571547396e7b12d938bc88db7e47bf16f3047017ed7a19; acw_sc__v3=627c15baccdabfeed9a6a907689e5c1f59c6a40c; Hm_lvt_213d524a1d07274f17dfa17b79db318f=1650162260,1651827501,1652299222; Hm_lpvt_213d524a1d07274f17dfa17b79db318f=1652299222; __utmb=56961525.18.8.1652299221829"));
 	ptr->request_url = url;
 	ptr->request_id = request_id;
 	ptr->request_type = HTTP_REQUEST_POST;
@@ -66,6 +67,7 @@ CHttpRequestPtr BeiDanDialog::CreateGetRequest(const std::string& url, const std
 	ptr->request_headers.insert(std::make_pair("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"));
 	ptr->request_headers.insert(std::make_pair("Connection", "Keep-Alive"));
 	ptr->request_headers.insert(std::make_pair("Accept-Encoding", "gzip"));
+	ptr->request_headers.insert(std::make_pair("cookie", "LastUrl=; __utmz=56961525.1650162259.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); FirstURL=kj.okooo.com / ; FirstOKURL=https % 3A//www.okooo.com/danchang/kaijiang/; First_Source=kj.okooo.com; _ga=GA1.2.1953148046.1650162259; PHPSESSID=f10e97ef44b47fd188dce251c03e1d4816228600; __utma=56961525.1953148046.1650162259.1651827501.1652296390.3; __utmc=56961525; pm=; LStatus=N; LoginStr=%7B%22welcome%22%3A%22%u60A8%u597D%uFF0C%u6B22%u8FCE%u60A8%22%2C%22login%22%3A%22%u767B%u5F55%22%2C%22register%22%3A%22%u6CE8%u518C%22%2C%22TrustLoginArr%22%3A%7B%22alipay%22%3A%7B%22LoginCn%22%3A%22%u652F%u4ED8%u5B9D%22%7D%2C%22tenpay%22%3A%7B%22LoginCn%22%3A%22%u8D22%u4ED8%u901A%22%7D%2C%22weibo%22%3A%7B%22LoginCn%22%3A%22%u65B0%u6D6A%u5FAE%u535A%22%7D%2C%22renren%22%3A%7B%22LoginCn%22%3A%22%u4EBA%u4EBA%u7F51%22%7D%2C%22baidu%22%3A%7B%22LoginCn%22%3A%22%u767E%u5EA6%22%7D%2C%22snda%22%3A%7B%22LoginCn%22%3A%22%u76DB%u5927%u767B%u5F55%22%7D%7D%2C%22userlevel%22%3A%22%22%2C%22flog%22%3A%22hidden%22%2C%22UserInfo%22%3A%22%22%2C%22loginSession%22%3A%22___GlobalSession%22%7D; acw_tc=2f624a7c16522984571547396e7b12d938bc88db7e47bf16f3047017ed7a19; acw_sc__v3=627c15baccdabfeed9a6a907689e5c1f59c6a40c; Hm_lvt_213d524a1d07274f17dfa17b79db318f=1650162260,1651827501,1652299222; Hm_lpvt_213d524a1d07274f17dfa17b79db318f=1652299222; __utmb=56961525.18.8.1652299221829"));
 	ptr->request_url = url;
 	ptr->request_id = request_id;
 	ptr->request_type = HTTP_REQUEST_GET;
@@ -299,6 +301,7 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 		}
 		
 		for (const auto& item : m_order_items) {
+			/*
 			if (item.second->hand == 0) {
 				for (int i = (int)item.second->subjects.size() - 1; i >= 0;i--) {
 					if (item.second->subjects[i].tid == 1) {
@@ -306,6 +309,7 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 					}
 				}
 			}
+			*/
 			CStringA url;
 			url.Format("https://m.okooo.com/match/change.php?mid=%s&pid=24&Type=Odds&c=1" ,item.second->orderid.c_str());
 			auto req = CreateGetRequest(std::string((LPCSTR)url), BEIDANWDL_REQ_PREFIX);
@@ -368,6 +372,9 @@ void BeiDanDialog::OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttp
 			}
 			child = child->FirstChildElement("span");
 			int index = 0;
+			int minodds_code = 3;
+			double minodds = 10000;
+			std::set<double> odds_kind;
 			while (child != nullptr) {
 				CStringA pl = GetElementText(child);
 				JCMatchItem::Subject sub;
@@ -381,8 +388,29 @@ void BeiDanDialog::OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttp
 				item->second->subjects.push_back(sub);
 				index++;
 				child = child->NextSiblingElement("span");
+				if (sub.odds < minodds) {
+					minodds = sub.odds;
+					minodds_code = sub.betCode;
+				}
+				odds_kind.insert(sub.odds);
 			}
-
+			int odds_kind_count = odds_kind.size();
+			if (odds_kind_count < 3) {
+				int add_code = 0, minus_code = 1;
+				if (minodds_code == 0) {
+					add_code = 3;
+				} else if (minodds_code == 1) {
+					minus_code = 3;
+				}
+				for (auto& sub : item->second->subjects) {
+					if (sub.betCode == add_code) {
+						sub.odds += 0.01;
+					}
+					if (sub.betCode == minus_code) {
+						sub.odds -= 0.01;
+					}
+				}
+			}
 		} while (false);
 	}
 
