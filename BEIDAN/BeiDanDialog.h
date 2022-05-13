@@ -60,10 +60,9 @@ public:
 		DDX_CONTROL(IDC_BUREFRESH, m_buRefresh)
 		DDX_CONTROL(IDC_COPY_CHOICES, m_buCopy)
 		DDX_CONTROL(IDC_EXTRACT_LUA, m_buExtractLua)
-		DDX_CONTROL(IDC_CHECK_RQ, m_ckRQ)
-
+		DDX_CONTROL(IDC_MATCH_FILTER, m_coMatchFilter)
 		
-
+		
 	END_DDX_MAP()
 
 	BEGIN_MSG_MAP(BeiDanDialog)
@@ -83,7 +82,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_COPY_CHOICES, OnCopyChoices)
 		COMMAND_ID_HANDLER(IDC_BUBIFEN, OnRefreshBiFen)
 		COMMAND_ID_HANDLER(IDC_EXTRACT_LUA, OnExtractLua)
-		COMMAND_HANDLER(IDC_CHECK_RQ, BN_CLICKED, OnToggleRQ)
+		COMMAND_HANDLER(IDC_MATCH_FILTER, CBN_SELCHANGE, OnMatchFilterChange)
 
 		CHAIN_MSG_MAP(_BaseDlgResize)
 		CHAIN_MSG_MAP(CAxDialogImpl<BeiDanDialog>)
@@ -123,7 +122,7 @@ public:
 	LRESULT OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnRefreshBiFen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-	LRESULT OnToggleRQ(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnMatchFilterChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	
 
 	
@@ -168,7 +167,8 @@ private:
 	CContainedWindowT<CButton> m_buCalc;
 	CContainedWindowT<CButton> m_buUpload;
 	CContainedWindowT<CButton> m_buExtractLua;
-	CContainedWindowT<CButton> m_ckRQ;
+	CContainedWindowT<CComboBox> m_coMatchFilter;
+
 	CFont mMatchListFont;
 	CFont mBetAreaFont;
 

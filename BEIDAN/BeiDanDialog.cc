@@ -45,7 +45,7 @@ BeiDanDialog::BeiDanDialog() :
 	m_stResult(this, 100),
 	m_buExtractLua(this, 100),
 	m_buUpload(this, 100),
-	m_ckRQ(this, 100),
+	m_coMatchFilter(this, 100),
 	m_waitCursor(false) {
 	m_FirstDrawBetArea = true;
 	SYSTEMTIME tm = { 0 };
@@ -67,7 +67,11 @@ LRESULT BeiDanDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 	DoDataExchange(FALSE);
 	DlgResize_Init();
-	m_ckRQ.SetCheck(1);
+	m_coMatchFilter.AddString(_T("所有赛事"));
+	m_coMatchFilter.AddString(_T("不让球赛事"));
+	m_coMatchFilter.AddString(_T("让球赛事"));
+	m_coMatchFilter.SetCurSel(0);
+
 
 	CRect rcDesktop;
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &rcDesktop, sizeof(RECT));
@@ -386,7 +390,7 @@ LRESULT BeiDanDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 	return 1L;
 }
 
-LRESULT BeiDanDialog::OnToggleRQ(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+LRESULT BeiDanDialog::OnMatchFilterChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	if (!m_JCMatchItems.empty()) {
 		ReloadMatchListData();
 	}
@@ -643,7 +647,8 @@ void BeiDanDialog::InitControls() {
 }
 
 void BeiDanDialog::ReloadMatchListData() {
-	BOOL isSkipRQ = (m_ckRQ.GetCheck() != 1);
+	int match_filter = m_coMatchFilter.GetCurSel();
+
 	m_lstMatch.DeleteAllItems();
 	CStringATL curTime = Global::GetTimeString();
 	CStringATL expireTime = Global::GetNextDayString() + " 10:00:00";
@@ -659,9 +664,15 @@ void BeiDanDialog::ReloadMatchListData() {
 		if (cmp <= 0) continue;
 		cmp = strcmp(ji->start_time.c_str(), expireTime);
 		if (cmp > 0) continue;
-		if (isSkipRQ) {
-			if (ji->hand != 0) {
-				continue;
+		if (match_filter > 0) {
+			if (match_filter == 1) {
+				if (ji->hand != 0) {
+					continue;
+				}
+			} else if (match_filter == 2) {
+				if (ji->hand == 0) {
+					continue;
+				}
 			}
 		}
 
@@ -685,15 +696,21 @@ void BeiDanDialog::ReloadMatchListData() {
 		m_lstMatch.SetItemText(iIndex, ++colIndex, temp);
 
 		sub = ji->get_subject(1, 3);
-		a = sub->odds;
-		sub = ji->get_subject(1, 1);
-		b = sub->odds;
-		sub = ji->get_subject(1, 0);
-		c = sub->odds;
-		if (ji->hand < 0) {
-			temp.Format("%.2f(%d)  %.2f  %.2f", a, (int)ji->hand, b, c);
-		} else {
-			temp.Format("%.2f(+%d)  %.2f  %.2f", a, (int)ji->hand, b, c);
+		if (sub == NULL) {
+			temp = "未 开 售";
+		}
+		else {
+			a = sub->odds;
+			sub = ji->get_subject(1, 1);
+			b = sub->odds;
+			sub = ji->get_subject(1, 0);
+			c = sub->odds;
+			if (ji->hand < 0) {
+				temp.Format("%.2f(%d)  %.2f  %.2f", a, (int)ji->hand, b, c);
+			}
+			else {
+				temp.Format("%.2f(+%d)  %.2f  %.2f", a, (int)ji->hand, b, c);
+			}
 		}
 		m_lstMatch.SetItemText(iIndex, ++colIndex, temp);
 	}

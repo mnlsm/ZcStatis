@@ -194,11 +194,14 @@ void BeiDanEngine::doFilterByBetsRankRatio(const TBetResult& allResult, const TB
 		result = validResult;
 		return;
 	}
-	
+	if (m_dBetsRankRatioMin < 0) {
+		m_dBetsRankRatioMin = 0;
+	}
 	std::vector<double> bets;
 	for (const auto& record : allResult) {
 		double temp = 1.0;
 		for (const auto& item : record) {
+			if (item.bet.hand != 0) continue;
 			temp = temp * item.bet.odds;
 		}
 		bets.emplace_back(temp);
@@ -212,6 +215,7 @@ void BeiDanEngine::doFilterByBetsRankRatio(const TBetResult& allResult, const TB
 	for (const auto& record : validResult) {
 		double temp = 1.0;
 		for (const auto& item : record) {
+			if (item.bet.hand != 0) continue;
 			temp = temp * item.bet.odds;
 		}
 		if (temp >= betMin && temp <= betMax) {
@@ -445,7 +449,7 @@ BOOL BeiDanEngine::IsAValidRecordImpl(const std::vector<JcBetItem>& record,
 	push_scriptfunc_params(L, record);
 	int call_ret = lua_pcall(L, 1, 1, 0);			    // 调用函数，调用完成以后，会将返回值压入栈中，1表示参数个数，2表示返回结果个数。
 	if (call_ret != 0) {
-		std::string errtext = dbgview_exception + lua_tostring(L, -1);
+		std::string errtext = dbgview_exception + lua_tostring(L, -1) + "\r\n";
 		OutputDebugStringA(errtext.c_str());
 		if (invalid_reason != NULL) {
 			*invalid_reason = CA2T(errtext.c_str()).m_psz;

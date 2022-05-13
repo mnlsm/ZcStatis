@@ -81,6 +81,8 @@
 #define IDC_CHECK1                      1044
 #define IDC_CHECK_RQ                    1044
 #define IDC_CHECK_CAT4                  1045
+#define IDC_COMBO1                      1045
+#define IDC_MATCH_FILTER                1045
 #define IDC_CORESULT1                   1078
 #define IDC_CORESULT2                   1079
 #define IDC_CORESULT3                   1080
@@ -164,7 +166,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        212
 #define _APS_NEXT_COMMAND_VALUE         32784
-#define _APS_NEXT_CONTROL_VALUE         1045
+#define _APS_NEXT_CONTROL_VALUE         1046
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

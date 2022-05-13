@@ -109,8 +109,6 @@ void BeiDanDialog::OnHttpReturn(const CHttpRequestPtr& request, const CHttpRespo
 	else if (request->request_id.find(BEIDANWDL_REQ_PREFIX) == 0) {
 		OnBeiDanWDLReturn(request, response);
 	}
-	
-
 }
 
 int BeiDanDialog::doLogin() {
@@ -191,6 +189,8 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 		}
 		CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_ACP).m_psz).m_psz;
 
+		CStringATL curTime = Global::GetTimeString();
+		CStringATL expireTime = Global::GetNextDayString() + " 10:00:00";
 		int nFindBegin = -1, nFindEnd = -1;
 		CStringA section_begin = "<tr class=\"alltrObj";
 		CStringA section_end = "</tr>";
@@ -240,7 +240,14 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 			CStringA orderid = href;
 			orderid.Replace("/soccer/match/", "");
 			orderid.Replace("/history/", "");
-
+			int cmp = strcmp(start_time, curTime);
+			if (cmp <= 0) {
+				continue;
+			}
+			cmp = strcmp(start_time, expireTime);
+			if (cmp > 0) {
+				break;
+			}
 			std::shared_ptr<JCMatchItem> ji(new JCMatchItem());
 			ji->id = adjustXuHaoText(xuhao);
 			ji->start_time = start_time;
@@ -292,6 +299,13 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 		}
 		
 		for (const auto& item : m_order_items) {
+			if (item.second->hand == 0) {
+				for (int i = (int)item.second->subjects.size() - 1; i >= 0;i--) {
+					if (item.second->subjects[i].tid == 1) {
+						item.second->subjects.erase(item.second->subjects.begin() + i);
+					}
+				}
+			}
 			CStringA url;
 			url.Format("https://m.okooo.com/match/change.php?mid=%s&pid=24&Type=Odds&c=1" ,item.second->orderid.c_str());
 			auto req = CreateGetRequest(std::string((LPCSTR)url), BEIDANWDL_REQ_PREFIX);

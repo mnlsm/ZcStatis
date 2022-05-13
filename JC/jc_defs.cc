@@ -58,22 +58,17 @@ int BetStruct::getPan() const {
 		if (hand < 0) {
 			if (code == 3) {
 				ret = -1;
-			}
-			else if (code == 1) {
+			} else if (code == 1) {
 				ret = 3;
-			}
-			else if (code == 0) {
+			} else if (code == 0) {
 				ret = 4;
 			}
-		}
-		else {
+		} else if(hand > 0){
 			if (code == 3) {
 				ret = 4;
-			}
-			else if (code == 1) {
+			} else if (code == 1) {
 				ret = 3;
-			}
-			else if (code == 0) {
+			} else if (code == 0) {
 				ret = -1;
 			}
 		}
@@ -83,15 +78,12 @@ int BetStruct::getPan() const {
 		if (hand < 0) {
 			if (code == 3) {
 				ret = 1;
-			}
-			else if (code == 1) {
+			} else if (code == 1) {
 				ret = 2;
-			}
-			else if (code == 0) {
+			} else if (code == 0) {
 				ret = -2;
 			}
-		}
-		else {
+		} else if (hand > 0) {
 			if (code == 3) {
 				ret = -2;
 			}
