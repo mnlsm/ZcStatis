@@ -45,6 +45,12 @@ LRESULT BeiDanDialog::OnBetAreaLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lPar
 			JCMatchItem::Subject* sub = m_CurrentMatchItem->get_subject(pItem->tid, pItem->betCode);
 			if (sub != NULL) {
 				sub->checked = !sub->checked;
+				if (pItem->tid == 6 && m_CurrentMatchItem->hand != 0) {
+					sub->checked = false;
+				}
+				if (pItem->tid == 1 && m_CurrentMatchItem->hand == 0) {
+					sub->checked = false;
+				}
 				m_stBetArea.Invalidate();
 				DoRefreshMatchListResults();
 			}

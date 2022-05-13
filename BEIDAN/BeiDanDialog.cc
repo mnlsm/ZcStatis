@@ -154,15 +154,16 @@ LRESULT BeiDanDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		if (menu.CreatePopupMenu()) {
 			menu.AppendMenu(MF_STRING, 100, _T("清空选择"));
 			menu.AppendMenu(MF_SEPARATOR);
-			menu.AppendMenu(MF_STRING, 101, _T("高赔全包"));
-			menu.AppendMenu(MF_STRING, 102, _T("高赔上盘"));
-			menu.AppendMenu(MF_STRING, 103, _T("高赔下盘"));
+			menu.AppendMenu(MF_STRING, 101, _T("全选"));
+			menu.AppendMenu(MF_STRING, 102, _T("胜平"));
+			menu.AppendMenu(MF_STRING, 103, _T("负平"));
+			menu.AppendMenu(MF_STRING, 104, _T("胜负"));
 			menu.AppendMenu(MF_SEPARATOR);
-			menu.AppendMenu(MF_STRING, 104, _T("低赔全包"));
-			menu.AppendMenu(MF_STRING, 105, _T("低赔上盘"));
-			menu.AppendMenu(MF_STRING, 106, _T("低赔下盘"));
+			menu.AppendMenu(MF_STRING, 105, _T("单胜"));
+			menu.AppendMenu(MF_STRING, 106, _T("单平"));
+			menu.AppendMenu(MF_STRING, 107, _T("单负"));
 			menu.AppendMenu(MF_SEPARATOR);
-			menu.AppendMenu(MF_STRING, 107, _T("分析预测"));
+			menu.AppendMenu(MF_STRING, 108, _T("分析预测"));
 			m_lstMatch.ClientToScreen(&pt);
 			UINT cmd = menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RETURNCMD, pt.x, pt.y, m_hWnd);
 			DoMatchListMenuCommand(cmd, index);
@@ -185,30 +186,83 @@ void BeiDanDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 					sub.checked = false;
 				}
 				int hand = iter->second->hand;
-				if (cmd == 101 || cmd == 102 || cmd == 103) {
+				if (cmd == 101) {
 					for (auto& sub : m_CurrentMatchItem->subjects) {
-						int pan = sub.getPan(hand);
-						if (cmd == 101 && pan > 0) {
+						if (hand == 0 && sub.tid == 6) {
+							sub.checked = true;
+						} else if (hand != 0 && sub.tid == 1) {
+							sub.checked = true;
+						} 
+					}
+					DoRefreshMatchListResults();
+				} else if (cmd == 102) {
+					for (auto& sub : m_CurrentMatchItem->subjects) {
+						if (hand == 0 && sub.tid == 6 
+							&& (sub.betCode == 3 || sub.betCode == 1)) {
 							sub.checked = true;
 						}
-						else if (cmd == 102 && (pan == 1 || pan == 2)) {
-							sub.checked = true;
-						}
-						else if (cmd == 103 && (pan == 3 || pan == 4)) {
+						else if (hand != 0 && sub.tid == 1
+							&& (sub.betCode == 3 || sub.betCode == 1)) {
 							sub.checked = true;
 						}
 					}
 					DoRefreshMatchListResults();
-				} else if (cmd == 104 || cmd == 105 || cmd == 106) {
+				} else if (cmd == 103) {
 					for (auto& sub : m_CurrentMatchItem->subjects) {
-						int pan = sub.getPan(hand);
-						if (cmd == 104 && pan < 0) {
+						if (hand == 0 && sub.tid == 6
+							&& (sub.betCode == 1 || sub.betCode == 0)) {
 							sub.checked = true;
 						}
-						else if (cmd == 105 && (pan == -1)) {
+						else if (hand != 0 && sub.tid == 1
+							&& (sub.betCode == 1 || sub.betCode == 0)) {
 							sub.checked = true;
 						}
-						else if (cmd == 106 && (pan == -2)) {
+					}
+					DoRefreshMatchListResults();
+				} else if (cmd == 104) {
+					for (auto& sub : m_CurrentMatchItem->subjects) {
+						if (hand == 0 && sub.tid == 6
+							&& (sub.betCode == 3 || sub.betCode == 0)) {
+							sub.checked = true;
+						}
+						else if (hand != 0 && sub.tid == 1
+							&& (sub.betCode == 3 || sub.betCode == 0)) {
+							sub.checked = true;
+						}
+					}
+					DoRefreshMatchListResults();
+				} else if (cmd == 105) {
+					for (auto& sub : m_CurrentMatchItem->subjects) {
+						if (hand == 0 && sub.tid == 6
+							&& (sub.betCode == 3 || sub.betCode == 3)) {
+							sub.checked = true;
+						}
+						else if (hand != 0 && sub.tid == 1
+							&& (sub.betCode == 3 || sub.betCode == 3)) {
+							sub.checked = true;
+						}
+					}
+					DoRefreshMatchListResults();
+				} else if (cmd == 106) {
+					for (auto& sub : m_CurrentMatchItem->subjects) {
+						if (hand == 0 && sub.tid == 6
+							&& (sub.betCode == 1 || sub.betCode == 1)) {
+							sub.checked = true;
+						}
+						else if (hand != 0 && sub.tid == 1
+							&& (sub.betCode == 1 || sub.betCode == 1)) {
+							sub.checked = true;
+						}
+					}
+					DoRefreshMatchListResults();
+				} else if (cmd == 107) {
+					for (auto& sub : m_CurrentMatchItem->subjects) {
+						if (hand == 0 && sub.tid == 6
+							&& (sub.betCode == 0 || sub.betCode == 0)) {
+							sub.checked = true;
+						}
+						else if (hand != 0 && sub.tid == 1
+							&& (sub.betCode == 0 || sub.betCode == 0)) {
 							sub.checked = true;
 						}
 					}
@@ -217,7 +271,7 @@ void BeiDanDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 					m_lstMatch.SetItemText(index, 6, "");
 				}
 				m_stBetArea.Invalidate();
-				if (cmd == 107) {
+				if (cmd == 108) {
 					ShowMatchWebBrowser(strMatchText);
 				}
 				break;
@@ -392,6 +446,7 @@ LRESULT BeiDanDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 
 LRESULT BeiDanDialog::OnMatchFilterChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	if (!m_JCMatchItems.empty()) {
+		DoRefreshBetArea();
 		ReloadMatchListData();
 	}
 	return 1L;
@@ -876,7 +931,7 @@ CStringATL BeiDanDialog::DoRefreshResultListResults(std::string& abuyLines, std:
 	char sz[64] = { '\0' };
 	std::map<CStringATL, std::tuple<int, double, CStringW, CStringATL>> rows;
 	for (const auto& r : m_Engine->getResult()) {
-		double bouns = 2.0;
+		double bouns = 2.0 * 0.65;
 		CStringATL strCodes; 
 		CStringW strBuyLine;
 		CStringATL strCheckLine;
@@ -1006,7 +1061,7 @@ CStringATL BeiDanDialog::DoRefreshResultListResults(std::string& abuyLines, std:
 	minBonusRate.Format("%d", (int)minBonusRatio); minBonusRate += "%";
 	result.Format("结果列表(共%d注,  投产比范围[%s-%s], 收益范围[%.2f-%.2f]):",
 		m_Engine->getResult().size(), 
-		minBonusRate, maxBonusRate,
+		minBonusRate , maxBonusRate ,
 		minBonus - 2 * m_Engine->getResult().size(), maxBonus - 2 * m_Engine->getResult().size()
 	);
 	return result;
