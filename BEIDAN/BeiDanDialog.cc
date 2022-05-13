@@ -448,6 +448,7 @@ LRESULT BeiDanDialog::OnMatchFilterChange(WORD wNotifyCode, WORD wID, HWND hWndC
 	if (!m_JCMatchItems.empty()) {
 		DoRefreshBetArea();
 		ReloadMatchListData();
+		DoRefreshMatchListResults();
 	}
 	return 1L;
 }
