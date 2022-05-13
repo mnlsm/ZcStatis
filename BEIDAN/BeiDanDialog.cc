@@ -413,7 +413,12 @@ void BeiDanDialog::GetBuyLinesData(std::string& abuyLines) {
 		std::string line;
 		for (const auto& m : item) {
 			std::string ms;
-			ms.append("[").append(m.first).append("]").append(m.second).append(" ");
+			CStringATL codeArea = m.second.c_str();
+			codeArea += ",";
+			while (codeArea.GetLength() < 4) {
+				codeArea.Append(" ");
+			}
+			ms.append("[").append(m.first).append("]").append(codeArea).append(" ");
 			line.append(ms);
 		}
 		CStringATL temp = line.c_str();
@@ -1142,6 +1147,9 @@ void BeiDanDialog::ShowMatchWebBrowser(const CStringATL& title) {
 		ShowWindow(ptr->IsIconic() ? SW_RESTORE : SW_SHOW);
 		::SetForegroundWindow(ptr->m_hWnd);
 	}
+
+	
+
 }
 
 void BeiDanDialog::CloseMatchWebBrowsers() {

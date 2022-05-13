@@ -47,7 +47,7 @@ CHttpRequestPtr BeiDanDialog::CreatePostRequest(const std::string& url, const st
 	ptr->request_headers.insert(std::make_pair("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"));
 	ptr->request_headers.insert(std::make_pair("Connection", "Keep-Alive"));
 	ptr->request_headers.insert(std::make_pair("Accept-Encoding", "gzip"));
-	ptr->request_headers.insert(std::make_pair("cookie", "LastUrl=; __utmz=56961525.1650162259.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); FirstURL=kj.okooo.com / ; FirstOKURL=https % 3A//www.okooo.com/danchang/kaijiang/; First_Source=kj.okooo.com; _ga=GA1.2.1953148046.1650162259; PHPSESSID=f10e97ef44b47fd188dce251c03e1d4816228600; __utma=56961525.1953148046.1650162259.1651827501.1652296390.3; __utmc=56961525; pm=; LStatus=N; LoginStr=%7B%22welcome%22%3A%22%u60A8%u597D%uFF0C%u6B22%u8FCE%u60A8%22%2C%22login%22%3A%22%u767B%u5F55%22%2C%22register%22%3A%22%u6CE8%u518C%22%2C%22TrustLoginArr%22%3A%7B%22alipay%22%3A%7B%22LoginCn%22%3A%22%u652F%u4ED8%u5B9D%22%7D%2C%22tenpay%22%3A%7B%22LoginCn%22%3A%22%u8D22%u4ED8%u901A%22%7D%2C%22weibo%22%3A%7B%22LoginCn%22%3A%22%u65B0%u6D6A%u5FAE%u535A%22%7D%2C%22renren%22%3A%7B%22LoginCn%22%3A%22%u4EBA%u4EBA%u7F51%22%7D%2C%22baidu%22%3A%7B%22LoginCn%22%3A%22%u767E%u5EA6%22%7D%2C%22snda%22%3A%7B%22LoginCn%22%3A%22%u76DB%u5927%u767B%u5F55%22%7D%7D%2C%22userlevel%22%3A%22%22%2C%22flog%22%3A%22hidden%22%2C%22UserInfo%22%3A%22%22%2C%22loginSession%22%3A%22___GlobalSession%22%7D; acw_tc=2f624a7c16522984571547396e7b12d938bc88db7e47bf16f3047017ed7a19; acw_sc__v3=627c15baccdabfeed9a6a907689e5c1f59c6a40c; Hm_lvt_213d524a1d07274f17dfa17b79db318f=1650162260,1651827501,1652299222; Hm_lpvt_213d524a1d07274f17dfa17b79db318f=1652299222; __utmb=56961525.18.8.1652299221829"));
+	//ptr->request_headers.insert(std::make_pair("cookie", "LastUrl=; __utmz=56961525.1650162259.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); FirstURL=kj.okooo.com / ; FirstOKURL=https % 3A//www.okooo.com/danchang/kaijiang/; First_Source=kj.okooo.com; _ga=GA1.2.1953148046.1650162259; PHPSESSID=f10e97ef44b47fd188dce251c03e1d4816228600; __utma=56961525.1953148046.1650162259.1651827501.1652296390.3; __utmc=56961525; pm=; LStatus=N; LoginStr=%7B%22welcome%22%3A%22%u60A8%u597D%uFF0C%u6B22%u8FCE%u60A8%22%2C%22login%22%3A%22%u767B%u5F55%22%2C%22register%22%3A%22%u6CE8%u518C%22%2C%22TrustLoginArr%22%3A%7B%22alipay%22%3A%7B%22LoginCn%22%3A%22%u652F%u4ED8%u5B9D%22%7D%2C%22tenpay%22%3A%7B%22LoginCn%22%3A%22%u8D22%u4ED8%u901A%22%7D%2C%22weibo%22%3A%7B%22LoginCn%22%3A%22%u65B0%u6D6A%u5FAE%u535A%22%7D%2C%22renren%22%3A%7B%22LoginCn%22%3A%22%u4EBA%u4EBA%u7F51%22%7D%2C%22baidu%22%3A%7B%22LoginCn%22%3A%22%u767E%u5EA6%22%7D%2C%22snda%22%3A%7B%22LoginCn%22%3A%22%u76DB%u5927%u767B%u5F55%22%7D%7D%2C%22userlevel%22%3A%22%22%2C%22flog%22%3A%22hidden%22%2C%22UserInfo%22%3A%22%22%2C%22loginSession%22%3A%22___GlobalSession%22%7D; acw_tc=2f624a7c16522984571547396e7b12d938bc88db7e47bf16f3047017ed7a19; acw_sc__v3=627c15baccdabfeed9a6a907689e5c1f59c6a40c; Hm_lvt_213d524a1d07274f17dfa17b79db318f=1650162260,1651827501,1652299222; Hm_lpvt_213d524a1d07274f17dfa17b79db318f=1652299222; __utmb=56961525.18.8.1652299221829"));
 	ptr->request_url = url;
 	ptr->request_id = request_id;
 	ptr->request_type = HTTP_REQUEST_POST;
@@ -67,7 +67,7 @@ CHttpRequestPtr BeiDanDialog::CreateGetRequest(const std::string& url, const std
 	ptr->request_headers.insert(std::make_pair("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"));
 	ptr->request_headers.insert(std::make_pair("Connection", "Keep-Alive"));
 	ptr->request_headers.insert(std::make_pair("Accept-Encoding", "gzip"));
-	ptr->request_headers.insert(std::make_pair("cookie", "LastUrl=; __utmz=56961525.1650162259.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); FirstURL=kj.okooo.com / ; FirstOKURL=https % 3A//www.okooo.com/danchang/kaijiang/; First_Source=kj.okooo.com; _ga=GA1.2.1953148046.1650162259; PHPSESSID=f10e97ef44b47fd188dce251c03e1d4816228600; __utma=56961525.1953148046.1650162259.1651827501.1652296390.3; __utmc=56961525; pm=; LStatus=N; LoginStr=%7B%22welcome%22%3A%22%u60A8%u597D%uFF0C%u6B22%u8FCE%u60A8%22%2C%22login%22%3A%22%u767B%u5F55%22%2C%22register%22%3A%22%u6CE8%u518C%22%2C%22TrustLoginArr%22%3A%7B%22alipay%22%3A%7B%22LoginCn%22%3A%22%u652F%u4ED8%u5B9D%22%7D%2C%22tenpay%22%3A%7B%22LoginCn%22%3A%22%u8D22%u4ED8%u901A%22%7D%2C%22weibo%22%3A%7B%22LoginCn%22%3A%22%u65B0%u6D6A%u5FAE%u535A%22%7D%2C%22renren%22%3A%7B%22LoginCn%22%3A%22%u4EBA%u4EBA%u7F51%22%7D%2C%22baidu%22%3A%7B%22LoginCn%22%3A%22%u767E%u5EA6%22%7D%2C%22snda%22%3A%7B%22LoginCn%22%3A%22%u76DB%u5927%u767B%u5F55%22%7D%7D%2C%22userlevel%22%3A%22%22%2C%22flog%22%3A%22hidden%22%2C%22UserInfo%22%3A%22%22%2C%22loginSession%22%3A%22___GlobalSession%22%7D; acw_tc=2f624a7c16522984571547396e7b12d938bc88db7e47bf16f3047017ed7a19; acw_sc__v3=627c15baccdabfeed9a6a907689e5c1f59c6a40c; Hm_lvt_213d524a1d07274f17dfa17b79db318f=1650162260,1651827501,1652299222; Hm_lpvt_213d524a1d07274f17dfa17b79db318f=1652299222; __utmb=56961525.18.8.1652299221829"));
+	//ptr->request_headers.insert(std::make_pair("cookie", "LastUrl=; __utmz=56961525.1650162259.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); FirstURL=kj.okooo.com / ; FirstOKURL=https % 3A//www.okooo.com/danchang/kaijiang/; First_Source=kj.okooo.com; _ga=GA1.2.1953148046.1650162259; PHPSESSID=f10e97ef44b47fd188dce251c03e1d4816228600; __utma=56961525.1953148046.1650162259.1651827501.1652296390.3; __utmc=56961525; pm=; LStatus=N; LoginStr=%7B%22welcome%22%3A%22%u60A8%u597D%uFF0C%u6B22%u8FCE%u60A8%22%2C%22login%22%3A%22%u767B%u5F55%22%2C%22register%22%3A%22%u6CE8%u518C%22%2C%22TrustLoginArr%22%3A%7B%22alipay%22%3A%7B%22LoginCn%22%3A%22%u652F%u4ED8%u5B9D%22%7D%2C%22tenpay%22%3A%7B%22LoginCn%22%3A%22%u8D22%u4ED8%u901A%22%7D%2C%22weibo%22%3A%7B%22LoginCn%22%3A%22%u65B0%u6D6A%u5FAE%u535A%22%7D%2C%22renren%22%3A%7B%22LoginCn%22%3A%22%u4EBA%u4EBA%u7F51%22%7D%2C%22baidu%22%3A%7B%22LoginCn%22%3A%22%u767E%u5EA6%22%7D%2C%22snda%22%3A%7B%22LoginCn%22%3A%22%u76DB%u5927%u767B%u5F55%22%7D%7D%2C%22userlevel%22%3A%22%22%2C%22flog%22%3A%22hidden%22%2C%22UserInfo%22%3A%22%22%2C%22loginSession%22%3A%22___GlobalSession%22%7D; acw_tc=2f624a7c16522984571547396e7b12d938bc88db7e47bf16f3047017ed7a19; acw_sc__v3=627c15baccdabfeed9a6a907689e5c1f59c6a40c; Hm_lvt_213d524a1d07274f17dfa17b79db318f=1650162260,1651827501,1652299222; Hm_lpvt_213d524a1d07274f17dfa17b79db318f=1652299222; __utmb=56961525.18.8.1652299221829"));
 	ptr->request_url = url;
 	ptr->request_id = request_id;
 	ptr->request_type = HTTP_REQUEST_GET;
@@ -188,6 +188,11 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 			zlib.DecompressGZip(response->response_content, raw_response);
 		} else {
 			raw_response = response->response_content;
+		}
+		int acp_code = CP_ACP;
+		if (raw_response.find("UTF-8") != std::string::npos
+			|| raw_response.find("utf-8") != std::string::npos) {
+			acp_code = CP_UTF8;
 		}
 		CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_ACP).m_psz).m_psz;
 
@@ -338,13 +343,18 @@ void BeiDanDialog::OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttp
 			} else {
 				raw_response = response->response_content;
 			}
-			CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_ACP).m_psz).m_psz;
+			int acp_code = CP_ACP;
+			if (raw_response.find("UTF-8") != std::string::npos 
+					|| raw_response.find("utf-8") != std::string::npos) {
+				acp_code = CP_UTF8;
+			}
+			CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_UTF8).m_psz).m_psz;
 			CStringA section_begin = "<table width=";
 			CStringA section_end = "</table>";
 
 			int nFindBegin = temp.Find(section_begin);
 			if (nFindBegin == -1) {
-				return;
+				break;
 			}
 			int nFindEnd = temp.Find(section_end, nFindBegin);
 			CStringA xmlText = temp.Mid(nFindBegin, nFindEnd - nFindBegin + section_end.GetLength());
@@ -352,7 +362,7 @@ void BeiDanDialog::OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttp
 			tinyxml2::XMLDocument doc;
 			tinyxml2::XMLElement* tempElement = nullptr;
 			if (doc.Parse(xmlText) != tinyxml2::XML_SUCCESS) {
-				return;
+				break;
 			}
 			tinyxml2::XMLElement* child = doc.FirstChildElement();
 			if (child == nullptr) {
