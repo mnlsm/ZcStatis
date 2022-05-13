@@ -575,7 +575,7 @@ void ZuCaiDialog::InitControls() {
 
 	//insert header;
 	int colIndex = 0;
-	m_lstMatch.InsertColumn(colIndex, "期号", LVCFMT_CENTER, 70);    //70
+	m_lstMatch.InsertColumn(colIndex, "期号", LVCFMT_CENTER, 50);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
 	m_lstMatch.InsertColumn(colIndex, "赛事", LVCFMT_CENTER, 100);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
@@ -583,9 +583,9 @@ void ZuCaiDialog::InitControls() {
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
 	m_lstMatch.InsertColumn(colIndex, "过期时间", LVCFMT_CENTER, 160);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
-	m_lstMatch.InsertColumn(colIndex, "胜平负", LVCFMT_CENTER, 200);    //70
+	m_lstMatch.InsertColumn(colIndex, "胜平负", LVCFMT_CENTER, 150);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_NONE);
-	m_lstMatch.InsertColumn(colIndex, "选择结果", LVCFMT_CENTER, 600);    //70
+	m_lstMatch.InsertColumn(colIndex, "选择结果", LVCFMT_LEFT, 670);    //70
 	m_lstMatch.SetColumnSortType(colIndex++, LVCOLSORT_TEXT);
 
 	m_lstMatch.SetSortColumn(0);
@@ -843,17 +843,56 @@ void ZuCaiDialog::GetBuyLinesData(std::string& abuyLines) {
 			MessageBox("合并复式结果失败了！", "错误", MB_ICONERROR | MB_OK);
 		}
 	}
-	for (const auto& item : items) {
-		std::string line;
-		for (const auto& m : item) {
-			std::string ms;
-			ms.append("[").append(m.first).append("]").append(m.second).append(" ");
-			line.append(ms);
+	backup_item.clear();
+	for (int i = (int)items.size() - 1; i >= 0; i--) { //分离单式、复式
+		int single_count = 0;
+		for (const auto& m : items[i]) {
+			if (m.second.size() == 1) {
+				single_count++;
+			}
 		}
-		CStringATL temp = line.c_str();
-		if (temp.Right(1) == ",") temp = temp.Left(temp.GetLength() - 1);
-		line.assign(temp).append("\r\n").append("\r\n");
-		abuyLines.append(line);
+		if (single_count == items[i].size()) {
+			backup_item.push_back(items[i]);
+			items.erase(items.begin() + i);
+		}
+	}
+	if (items.empty()) {
+		items.swap(backup_item);
+	}
+	bool is_toto14 = (pos_tids.size() == 14);
+	while (!items.empty()) {
+		if (is_toto14) {
+			for (const auto& item : items) {
+				std::string line;
+				for (const auto& m : item) {
+					std::string ms = m.second + ", ";
+					if (!backup_item.empty()) {
+						for (size_t i = ms.size(); i < 5; i++) {
+							ms.append(" ");
+						}
+					}
+					line.append(ms);
+				}
+				line.append("\r\n");
+				abuyLines.append(line);
+			}
+		} else {
+			for (const auto& item : items) {
+				std::string line;
+				for (const auto& m : item) {
+					std::string ms;
+					ms.append("[").append(m.first).append("]").append(m.second).append(" ");
+					line.append(ms);
+				}
+				CStringATL temp = line.c_str();
+				if (temp.Right(1) == ",") temp = temp.Left(temp.GetLength() - 1);
+				line.assign(temp).append("\r\n").append("\r\n");
+				abuyLines.append(line);
+			}
+		}
+		abuyLines.append("\r\n\r\n\r\n");
+		items.swap(backup_item);
+		backup_item.clear();
 	}
 }
 
