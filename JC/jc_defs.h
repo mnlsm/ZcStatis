@@ -1,9 +1,11 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <sstream>
 
 struct BetStruct {
 	int hand;
+	int odds_hand;
 	int tid;
 	int code;
 	double odds;
@@ -28,7 +30,7 @@ struct JcBetItem {
 typedef std::vector<std::vector<JcBetItem>> TBetResult;
 
 struct JCMatchItem {
-	JCMatchItem() { multi_selected = false; hand = 0; }
+	JCMatchItem() { multi_selected = false; hand = 0; odds_hand = 0; }
 	std::string id;
 	std::string match_category;
 	std::string descrition;
@@ -39,6 +41,7 @@ struct JCMatchItem {
 	std::string orderid;
 	std::string match_url;
 	bool multi_selected;
+	int64 odds_hand;
 	struct Subject {
 		int64 tid;
 		int64 betCode;
@@ -55,6 +58,8 @@ struct JCMatchItem {
 	std::vector<Subject> subjects;
 	Subject* get_subject(int tid, int betCode);
 	Subject* get_subject(int tid, const char* tip);
+
+	CStringATL get_lua_clause(int match_index);
 };
 
 CStringA CreateMatchDescription(const CStringA& ahost, const CStringA& aaway);

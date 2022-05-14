@@ -7,6 +7,11 @@ public:
 	static CStlString GetAppPath();
 	static BOOL DepartString(const CStlString& strTxt, const CStlString& strDim, 
 		CStlStrArray &arrPart);
+	static BOOL DepartString(const CStlString& strTxt, const CStlString& strDim,
+		bool trim, CStlStrArray& arrPart);
+
+	static void ReplaceStringInStrArrayOnce(CStlStrArray& lines,
+		const CStlString& old, const CStlString& n);
 
 #ifdef _UNICODE
 	static BOOL DepartString(const std::string& strTxt, const std::string& strDim,

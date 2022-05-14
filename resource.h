@@ -25,6 +25,7 @@
 #define IDD_OKOOO_ZC                    211
 #define IDR_ADDIN3                      212
 #define IDR_ADDIN1                      213
+#define IDR_ADDIN5                      216
 #define IDR_MENU1                       214
 #define IDC_STATIS_LIST                 1001
 #define IDC_LIST_QH                     1002

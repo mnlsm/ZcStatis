@@ -404,11 +404,16 @@ void BeiDanDialog::OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttp
 				}
 				odds_kind.insert(sub.odds);
 			}
+			item->second->odds_hand = -1;
+			if (minodds_code == 0) {
+				item->second->odds_hand = 1;
+			}
 			int odds_kind_count = odds_kind.size();
 			if (odds_kind_count < 3) {
 				int add_code = 0, minus_code = 1;
 				if (minodds_code == 0) {
 					add_code = 3;
+					item->second->hand = 1;
 				} else if (minodds_code == 1) {
 					minus_code = 3;
 				}
@@ -428,14 +433,14 @@ void BeiDanDialog::OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttp
 		std::multimap<std::string, std::shared_ptr<JCMatchItem>> items;
 		if (!m_order_items.empty()) {
 			for (auto& iter : m_order_items) {
-				JCMatchItem item;
-				if (GetItemFromDB(*iter.second, item)) {
-					*iter.second = item;
-				}
-				else {
+				//JCMatchItem item;
+				//if (GetItemFromDB(*iter.second, item)) {
+				//	*iter.second = item;
+				//}
+				//else {
 					InsertItemToDB(*iter.second);
-				}
-				items.insert(std::make_pair(iter.second->start_time, iter.second));
+				//}
+				items.insert(std::make_pair(iter.second->id, iter.second));
 			}
 			m_JCMatchItems.swap(items);
 		}

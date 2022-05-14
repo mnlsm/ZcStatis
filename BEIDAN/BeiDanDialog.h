@@ -147,6 +147,8 @@ private:
 	void DoReloadBackupResult();
 	void GetBuyLinesData(std::string& abuyLines);
 
+	CStringATL CopyChoicesText(int& choice_count);
+
 private:
 	CSortListViewCtrlEx<BeiDanDialog> m_lstMatch;
 	CSortListViewCtrlEx<BeiDanDialog> m_lstResult;

@@ -296,13 +296,14 @@ static void getJcBetItemSource(lua_State* L, const char* key, std::vector<JcBetI
 	for (const auto& match : arrMatchBets) {
 		CStlStrArray arrParts;
 		Global::DepartString(match, ";", arrParts);
-		if (arrParts.size() < 3) {
+		if (arrParts.size() < 4) {
 			return;
 		}
 		JcBetItemSource jbs;
 		jbs.id = arrParts[0];
 		int hand = atoi(arrParts[1].c_str());
-		for (int i = 2; i < arrParts.size(); i++) {
+		int odds_hand = atoi(arrParts[2].c_str());
+		for (int i = 3; i < arrParts.size(); i++) {
 			CStlStrArray arrBets;
 			Global::DepartString(arrParts[i], ",", arrBets);
 			if (arrBets.size() != 3) {
@@ -310,6 +311,7 @@ static void getJcBetItemSource(lua_State* L, const char* key, std::vector<JcBetI
 			}
 			BetStruct bs;
 			bs.hand = hand;
+			bs.odds_hand = odds_hand;
 			bs.tid = atoi(arrBets[0].c_str());
 			bs.code = atoi(arrBets[1].c_str());
 			bs.odds = atof(arrBets[2].c_str());

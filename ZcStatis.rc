@@ -448,6 +448,8 @@ IDR_ADDIN2              ADDIN                   "res\\ADDIN\\template.lua"
 
 IDR_ADDIN3              ADDIN                   "res\\ADDIN\\template_bd.lua"
 
+IDR_ADDIN5              ADDIN                   "res\\ADDIN\\template_selected.lua"
+
 #endif    // 中文(简体，中国) resources
 /////////////////////////////////////////////////////////////////////////////
 

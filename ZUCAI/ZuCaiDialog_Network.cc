@@ -370,7 +370,7 @@ void ZuCaiDialog::OnZcPlReturn(const CHttpRequestPtr& request, const CHttpRespon
 				else {
 					InsertItemToDB(*iter.second);
 				}
-				items.insert(std::make_pair(iter.second->start_time, iter.second));
+				items.insert(std::make_pair(iter.second->id, iter.second));
 			}
 			m_JCMatchItems.swap(items);
 		}

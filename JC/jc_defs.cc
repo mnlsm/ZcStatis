@@ -1,5 +1,18 @@
 #include "stdafx.h"
 #include "jc_defs.h"
+#include "Global.h"
+
+CStringA CreateMatchDescription(const CStringA& ahost, const CStringA& aaway) {
+	const char* vs("  VS  ");
+	const char* buf = "                   ";
+	CStringA result;
+	CStringA host(buf), away(buf);
+	memcpy((char*)(LPCSTR)host + host.GetLength() - ahost.GetLength(), (LPCSTR)ahost, ahost.GetLength());
+	memcpy((char*)(LPCSTR)away, (LPCSTR)aaway, aaway.GetLength());
+	result = host + vs + away;
+	return result;
+}
+
 
 std::string BetStruct::betCode() const {
 	std::string ret;
@@ -112,7 +125,11 @@ int BetStruct::getPan() const {
 		return 0;
 	}
 	if (tid == 6) {
-		if (hand < 0) {
+		int use_hand = hand;
+		if (use_hand == 0) {
+			use_hand = odds_hand;
+		}
+		if (use_hand < 0) {
 			if (code == 3) {
 				ret = -1;
 			} else if (code == 1) {
@@ -120,7 +137,7 @@ int BetStruct::getPan() const {
 			} else if (code == 0) {
 				ret = 4;
 			}
-		} else if(hand > 0){
+		} else if(use_hand > 0){
 			if (code == 3) {
 				ret = 4;
 			} else if (code == 1) {
@@ -129,7 +146,6 @@ int BetStruct::getPan() const {
 				ret = -1;
 			}
 		}
-
 	}
 	else if (tid == 1) {
 		if (hand < 0) {
@@ -355,13 +371,56 @@ JCMatchItem::Subject* JCMatchItem::get_subject(int tid, const char* tip) {
 	return result;
 }
 
-CStringA CreateMatchDescription(const CStringA& ahost, const CStringA& aaway) {
-	const char* vs("  VS  ");
-	const char* buf = "                   ";
-	CStringA result;
-	CStringA host(buf), away(buf);
-	memcpy((char*)(LPCSTR)host + host.GetLength() - ahost.GetLength(), (LPCSTR)ahost, ahost.GetLength());
-	memcpy((char*)(LPCSTR)away, (LPCSTR)aaway, aaway.GetLength());
-	result = host + vs + away;
-	return result;
+CStringATL JCMatchItem::get_lua_clause(int match_index) {
+	CStringATL temp;
+	std::ostringstream oss;
+	bool first = true;
+	bool has_spf = false, has_rspf = false;
+	for (auto& sub : subjects) {
+		if (!sub.checked) continue;
+		if (first) {
+			first = false;
+			std::string tmp = descrition;
+			Global::TrimBlank(tmp);
+			oss << _T("\n\t-- [") << id << _T("], [") << match_category << "]" << _T(", [") << tmp << "]";
+		}
+		if (sub.tid == 6) {
+			has_spf = true;
+		}
+		if (sub.tid == 1) {
+			has_rspf = true;
+		}
+	}
+	if (has_spf) {
+		const char* fmt1 = "\n\tlocal pan_%d_3 = GetIndexPanCount(%d, codes, 3);        --场次%d的下盘1的个数";
+		const char* fmt2 = "\n\tlocal pan_%d_4 = GetIndexPanCount(%d, codes, 4);        --场次%d的下盘2的个数";
+		const char* fmt3 = "\n\tlocal pan_%d_up = GetIndexPanCount(%d, codes, -1);      --场次%d的上盘的个数";
+		const char* fmt4 = "\n\tlocal pan_%d_down = pan_%d_3 + pan_%d_4;                 --场次%d的下盘的个数";
+		temp.Format(fmt1, match_index, match_index, match_index);
+		oss << temp;
+		temp.Format(fmt2, match_index, match_index, match_index);
+		oss << temp;
+		temp.Format(fmt3, match_index, match_index, match_index);
+		oss << temp;
+		temp.Format(fmt4, match_index, match_index, match_index, match_index);
+		oss << temp;
+	}
+	if (has_rspf) {
+		const char* fmt1 = "\n\tlocal pan_%d_1 = GetIndexPanCount(%d, codes, 1);        --场次%d的上盘1的个数";
+		const char* fmt2 = "\n\tlocal pan_%d_2 = GetIndexPanCount(%d, codes, 2);        --场次%d的上盘2的个数";
+		const char* fmt3 = "\n\tlocal pan_%d_down = GetIndexPanCount(%d, codes, -2);    --场次%d的下盘的个数";
+		const char* fmt4 = "\n\tlocal pan_%d_up = pan_%d_1 + pan_%d_2;                   --场次%d的上盘的个数";
+		temp.Format(fmt1, match_index, match_index, match_index);
+		oss << temp;
+		temp.Format(fmt2, match_index, match_index, match_index);
+		oss << temp;
+		temp.Format(fmt4, match_index, match_index, match_index, match_index);
+		oss << temp;
+		temp.Format(fmt3, match_index, match_index, match_index);
+		oss << temp;
+	}
+	std::string result = oss.str();
+	return result.c_str();
 }
+
+

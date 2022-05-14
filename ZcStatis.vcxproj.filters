@@ -553,5 +553,8 @@
     <None Include="res\ADDIN\template_bd.lua">
       <Filter>res</Filter>
     </None>
+    <None Include="res\addin\template_selected.lua">
+      <Filter>res</Filter>
+    </None>
   </ItemGroup>
 </Project>

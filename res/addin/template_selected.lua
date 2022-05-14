@@ -1,36 +1,16 @@
 --1
-kMatchTitle = "北京单场";
+kMatchTitle = "足彩脚本";
 kMatchDesc = "过滤";
 kMatchBetsLose = 0;
 kAvgMultiple = 0;
 kMinBonus = -5000000.0;
+kBetsRankRatioRange = "0.0-1.0";
 
-kBetsRankRatioRange = "0.12-0.4";
-
-
-kMatchBets = {
-    "052;0;6,3,3.08;6,1,3.75;6,0,2.09",    --           乌德勒支  VS  阿尔克马尔         
-    "055;0;6,3,1.96;6,1,3.03;6,0,4.02",    --       奥林匹亚科斯  VS  帕纳辛纳科斯       
-    "060;0;6,3,2.34;6,1,3.36;6,0,2.84",    --             布鲁日  VS  圣吉罗斯           
-    "077;0;6,3,3.47;6,1,3.07;6,0,2.06",    --           维拉诺瓦  VS  弗鲁米嫩塞         
-};
-
-
-
-
-
-
---[[
-kMatchBetsFixed = {
-    "20180307024;-1;6,3,1.47;6,1,3.80",         --蒙特雷   VS   克雷塔罗
-    "20180307025;-1;6,3,2.08;6,1,3.00",         --西雅图海湾人   VS   瓜达拉哈拉
-    "20180307026;-1;6,3,1.95;6,1,3.30",         --美洲狮   VS   普埃布拉大学
-};
---]]
+kMatchBets={};kMatchBetsFixed={};
 
 local function trace(level, info) 
 	if(level > 0) then
-		dbgview_print(info.."\r\n");
+		dbgview_print(info);
 	end
 end
 
@@ -90,55 +70,103 @@ function GetIndexCodeCount(index, codes, tid, code)
 	return found_count;
 end 
 
+function GetIndexPanCount(index, codes, pan)
+	local found_count = 0;
+	if index >= 1 and index <= #codes then
+		if (pan == codes[index].pan) then
+			found_count = found_count + 1;
+		end
+	end
+	return found_count;
+end 
+
 function IsFilterLua(params)
 	local errorCount = 0;
 	local ret = {code=0, info="ok", bonus=params.betbouns};
 	local codes = params.betcodes;
 	local bonus = params.betbouns;
 	local trace_prefix = "jc_dbg[";
-	local spf_1_3 =  GetIndexCodeCount(1, codes, 6, 3); --场次1的3的个数
-	local spf_1_1 =  GetIndexCodeCount(1, codes, 6, 1); --场次1的1的个数
-	local spf_1_0 =  GetIndexCodeCount(1, codes, 6, 0); --场次1的0的个数
-	local spf_2_3 =  GetIndexCodeCount(2, codes, 6, 3); --场次2的3的个数
-	local spf_2_1 =  GetIndexCodeCount(2, codes, 6, 1); --场次2的1的个数
-	local spf_2_0 =  GetIndexCodeCount(2, codes, 6, 0); --场次2的0的个数
-	local spf_3_3 =  GetIndexCodeCount(3, codes, 6, 3); --场次3的3的个数
-	local spf_3_1 =  GetIndexCodeCount(3, codes, 6, 1); --场次3的1的个数
-	local spf_3_0 =  GetIndexCodeCount(3, codes, 6, 0); --场次3的0的个数
-	local spf_4_3 =  GetIndexCodeCount(4, codes, 6, 3); --场次4的3的个数
-	local spf_4_1 =  GetIndexCodeCount(4, codes, 6, 1); --场次4的1的个数
-	local spf_4_0 =  GetIndexCodeCount(4, codes, 6, 0); --场次4的0的个数
-	local spf_5_3 =  GetIndexCodeCount(5, codes, 6, 3); --场次5的3的个数
-	local spf_5_1 =  GetIndexCodeCount(5, codes, 6, 1); --场次5的1的个数
-	local spf_5_0 =  GetIndexCodeCount(5, codes, 6, 0); --场次5的0的个数
-	local spf_6_3 =  GetIndexCodeCount(6, codes, 6, 3); --场次6的3的个数
-	local spf_6_1 =  GetIndexCodeCount(6, codes, 6, 1); --场次6的1的个数
-	local spf_6_0 =  GetIndexCodeCount(6, codes, 6, 0); --场次6的0的个数
-	local spf_7_3 =  GetIndexCodeCount(7, codes, 6, 3); --场次7的3的个数
-	local spf_7_1 =  GetIndexCodeCount(7, codes, 6, 1); --场次7的1的个数
-	local spf_7_0 =  GetIndexCodeCount(7, codes, 6, 0); --场次7的0的个数
-	local spf_8_3 =  GetIndexCodeCount(8, codes, 6, 3); --场次8的3的个数
-	local spf_8_1 =  GetIndexCodeCount(8, codes, 6, 1); --场次8的1的个数
-	local spf_8_0 =  GetIndexCodeCount(8, codes, 6, 0); --场次8的0的个数
-	local spf_9_3 =  GetIndexCodeCount(9, codes, 6, 3); --场次9的3的个数
-	local spf_9_1 =  GetIndexCodeCount(9, codes, 6, 1); --场次9的1的个数
-	local spf_9_0 =  GetIndexCodeCount(9, codes, 6, 0); --场次9的0的个数
-	local spf_a_3 =  GetIndexCodeCount(10, codes, 6, 3); --场次9的3的个数
-	local spf_a_1 =  GetIndexCodeCount(10, codes, 6, 1); --场次9的1的个数
-	local spf_a_0 =  GetIndexCodeCount(10, codes, 6, 0); --场次9的0的个数
+	local trace_subfix = "]\r\n";
+	local jq0 =  GetCodeCount(codes, 2, 0); --选择进球数0的个数
+	local jq1 =  GetCodeCount(codes, 2, 1); --选择进球数1的个数
+	local jq2 =  GetCodeCount(codes, 2, 2); --选择进球数2的个数
+	local jq3 =  GetCodeCount(codes, 2, 3); --选择进球数3的个数
+	local jq4 =  GetCodeCount(codes, 2, 4); --选择进球数4的个数
+	local jq5 =  GetCodeCount(codes, 2, 5); --选择进球数5的个数
+	local jq6 =  GetCodeCount(codes, 2, 6); --选择进球数6的个数
+	local jq7 =  GetCodeCount(codes, 2, 7); --选择进球数7的个数
+	local jq_sum = GetCodeSum(codes, 2);    --选择进球总数
 
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
+${REPLACE_CLAUSE}
 
-	
 --[[	
-	if(spf_1_3 > 2) then
+	if(jq1 > 2) then
 		ret.code = 1;
-		ret.info = trace_prefix .."spf_1_3>2]";
+		ret.info = trace_prefix .."jq1>2" .. trace_subfix;
 		trace(1, ret.info);
 		return ret;
 	end
+
 --]]	
-	
-	
 	return ret;
 end
 

@@ -360,76 +360,16 @@ LRESULT BeiDanDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHa
 	GetBuyLinesData(buyLines);
 	Global::SaveFileData(strBuyFilePath, buyLines, FALSE);
 	return 1L;
-//https://www.hipdf.cn/txt-to-pdf
 }
-
-void BeiDanDialog::GetBuyLinesData(std::string& abuyLines) {
-	abuyLines.clear();
-	if (m_Engine.get() == nullptr) {
-		return;
-	}
-	std::map<std::string, std::set<int>> pos_tids;
-	std::map<std::string, std::string> fixed_items;
-	for (const auto& r : m_Engine->GetFixedSources()) {
-		std::string codes;
-		for (const auto& item : r.bets) {
-			codes += item.codeStr();
-			pos_tids[r.id].insert(item.tid);
-		}
-		fixed_items[r.id] = codes;
-	}
-	std::vector<std::map<std::string, std::string>> items, backup_item;
-	for (const auto& r : m_Engine->getResult()) {
-		std::map<std::string, std::string> line_items;
-		for (const auto& item : r) {
-			line_items[item.id] = item.bet.codeStr();
-			pos_tids[item.id].insert(item.bet.tid);
-		}
-		for (const auto& r : fixed_items) {
-			line_items[r.first] = r.second;
-		}
-		items.push_back(line_items);
-	}
-	bool pos_unique_tid = true;
-	for (const auto& pair : pos_tids) {
-		if (pair.second.size() > 1) {
-			pos_unique_tid = false;
-			break;
-		}
-	}
-	if (m_Engine->getScriptAvgMultiple() > 0 || m_Engine->getScriptMinBonus() > 0.0) {
-		pos_unique_tid = false;
-	}
-	if (pos_unique_tid) {
-		backup_item = items;
-		if (Global::ComposeMultiSelected(backup_item, true)) {
-			items.swap(backup_item);
-		}
-		else {
-			MessageBox("合并复式结果失败了！", "错误", MB_ICONERROR | MB_OK);
-		}
-	}
-	for (const auto& item : items) {
-		std::string line;
-		for (const auto& m : item) {
-			std::string ms;
-			CStringATL codeArea = m.second.c_str();
-			codeArea += ",";
-			while (codeArea.GetLength() < 4) {
-				codeArea.Append(" ");
-			}
-			ms.append("[").append(m.first).append("]").append(codeArea).append(" ");
-			line.append(ms);
-		}
-		CStringATL temp = line.c_str();
-		if (temp.Right(1) == ",") temp = temp.Left(temp.GetLength() - 1);
-		line.assign(temp).append("\r\n").append("\r\n");
-		abuyLines.append(line);
-	}
-}
-
 
 LRESULT BeiDanDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	int choice_count = 0;
+	CStringATL strChoicesText = CopyChoicesText(choice_count);
+	if (choice_count == 0) {
+		MessageBox("请先选择投注项目!!!", "错误", MB_ICONERROR | MB_OK);
+		return 1L;
+	}
+	strChoicesText.Replace("\r", "");
 	CWaitCursor wait;
 	Sleep(1000);
 	SYSTEMTIME tm = { 0 };
@@ -439,9 +379,35 @@ LRESULT BeiDanDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 		tm.wYear, tm.wMonth,tm.wDay, tm.wHour, tm.wMinute, tm.wSecond);
 	DeleteFile(file_path);
 	CResource res;
-	if (res.Load(_T("ADDIN"), MAKEINTRESOURCE(IDR_ADDIN3))) {
-		Global::SaveFileData((LPCSTR)file_path, (uint8_t*)res.Lock(),
-			res.GetSize(), FALSE);
+	if (res.Load(_T("ADDIN"), MAKEINTRESOURCE(IDR_ADDIN5))) {
+		CStringATL text((const char*)res.Lock(), res.GetSize());
+		text = CW2T(CT2W(text, CP_UTF8).m_psz, CP_ACP).m_psz;
+		text.Replace("\r", "");
+		CStlStrArray lines;
+		Global::DepartString((LPCSTR)text, "\n", false, lines);
+		int index = 1;
+		for (auto& item : m_JCMatchItems) {
+			CStringATL clause = item.second->get_lua_clause(index);
+			if (!clause.IsEmpty()) {
+				index++;
+				Global::ReplaceStringInStrArrayOnce(lines, "${REPLACE_CLAUSE}", (LPCSTR)clause);
+			}
+		}
+		for (index = (int)lines.size() - 1; index >= 0; index--) {
+			if (lines[index] == "${REPLACE_CLAUSE}") {
+				lines.erase(lines.begin() + index);
+			}
+		}
+		text.Empty();
+		for (auto& line : lines) {
+			text.Append(line.c_str());
+			text.Append("\n");
+		}
+		text.Replace("kMatchBets={};kMatchBetsFixed={};", strChoicesText);
+		text.Replace("\n", "\r\n");
+		text = CW2T(CT2W(text, CP_ACP).m_psz, CP_UTF8).m_psz;
+		Global::SaveFileData((LPCSTR)file_path, (uint8_t*)(LPCSTR)text,
+			text.GetLength(), FALSE);
 		std::vector<const char*> select_files;
 		select_files.push_back((LPCSTR)file_path);
 		OpenDirAndSelectFiles((LPCSTR)m_strWorkDir, select_files);
@@ -451,13 +417,11 @@ LRESULT BeiDanDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 
 LRESULT BeiDanDialog::OnMatchFilterChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	if (!m_JCMatchItems.empty()) {
-		DoRefreshBetArea();
 		ReloadMatchListData();
 		DoRefreshMatchListResults();
 	}
 	return 1L;
 }
-
 
 LRESULT BeiDanDialog::OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	if (m_Engine.get() == nullptr) {
@@ -529,42 +493,8 @@ LRESULT BeiDanDialog::OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 
 LRESULT BeiDanDialog::OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	CWaitCursor wait;
-	CStringATL strMatchBets = "kMatchBets = {\r\n";
-	std::vector<CStringATL> prefixs, subfixs;
-	int max_prefixs_length = 0;
-	for (auto& item : m_JCMatchItems) {
-		CStringATL strBets;
-		for (auto& sub : item.second->subjects) {
-			if (sub.checked) {
-				char szTemp[128] = { '\0' };
-				sprintf(szTemp, "%d,%d,%.2f", (int)sub.tid, (int)sub.betCode, sub.odds);
-				if (!strBets.IsEmpty()) {
-					strBets += ";";
-				}
-				strBets += szTemp;
-			}
-		}
-		if (!strBets.IsEmpty()) {
-			CStringATL prefix;
-			prefix.Format("    \"%s;%d;%s\",    ", item.second->id.c_str(),
-				(int)item.second->hand, strBets);
-			prefixs.push_back(prefix);
-			if (prefix.GetLength() > max_prefixs_length) {
-				max_prefixs_length = prefix.GetLength();
-			}
-			subfixs.push_back(item.second->descrition.c_str());
-		}
-	}
-	for (int i = 0; i < prefixs.size(); i++) {
-		for (int j = prefixs[i].GetLength(); j < max_prefixs_length; j++) {
-			prefixs[i].AppendChar(' ');
-		}
-		CStringATL strItem;
-		strItem.Format("%s--%s\r\n", prefixs[i], subfixs[i]);
-		strMatchBets += strItem;
-
-	}
-	strMatchBets += "};\r\n";
+	int choice_count = 0;
+	CStringATL strMatchBets = CopyChoicesText(choice_count);
 	if (OpenClipboard()) {
 		EmptyClipboard();
 		if (!strMatchBets.IsEmpty()) {
@@ -1147,9 +1077,6 @@ void BeiDanDialog::ShowMatchWebBrowser(const CStringATL& title) {
 		ShowWindow(ptr->IsIconic() ? SW_RESTORE : SW_SHOW);
 		::SetForegroundWindow(ptr->m_hWnd);
 	}
-
-	
-
 }
 
 void BeiDanDialog::CloseMatchWebBrowsers() {
@@ -1174,4 +1101,113 @@ void BeiDanDialog::onWebBrowserClose(const std::string& url) {
 	}
 	ShowWindow(IsIconic()? SW_RESTORE:SW_SHOW);
 	::SetForegroundWindow(m_hWnd);
+}
+
+CStringATL BeiDanDialog::CopyChoicesText(int& choice_count) {
+	choice_count = 0;
+	CStringATL strMatchBets = "kMatchBets = {\r\n";
+	std::vector<CStringATL> prefixs, subfixs;
+	int max_prefixs_length = 0;
+	for (auto& item : m_JCMatchItems) {
+		CStringATL strBets;
+		for (auto& sub : item.second->subjects) {
+			if (sub.checked) {
+				char szTemp[128] = { '\0' };
+				sprintf(szTemp, "%d,%d,%.2f", (int)sub.tid, (int)sub.betCode, sub.odds);
+				if (!strBets.IsEmpty()) {
+					strBets += ";";
+				}
+				strBets += szTemp;
+			}
+		}
+		if (!strBets.IsEmpty()) {
+			CStringATL prefix;
+			int use_hand = (int)item.second->hand;
+			int odds_hand = (int)item.second->odds_hand;
+			prefix.Format("    \"%s;%d;%d;%s\",    ", item.second->id.c_str(),
+				use_hand, odds_hand, strBets);
+			prefixs.push_back(prefix);
+			if (prefix.GetLength() > max_prefixs_length) {
+				max_prefixs_length = prefix.GetLength();
+			}
+			subfixs.push_back(item.second->descrition.c_str());
+			choice_count++;
+		}
+	}
+	for (int i = 0; i < prefixs.size(); i++) {
+		for (int j = prefixs[i].GetLength(); j < max_prefixs_length; j++) {
+			prefixs[i].AppendChar(' ');
+		}
+		CStringATL strItem;
+		strItem.Format("%s--%s\r\n", prefixs[i], subfixs[i]);
+		strMatchBets += strItem;
+
+	}
+	strMatchBets += "};\r\n";
+	return strMatchBets;
+}
+
+void BeiDanDialog::GetBuyLinesData(std::string& abuyLines) {
+	abuyLines.clear();
+	if (m_Engine.get() == nullptr) {
+		return;
+	}
+	std::map<std::string, std::set<int>> pos_tids;
+	std::map<std::string, std::string> fixed_items;
+	for (const auto& r : m_Engine->GetFixedSources()) {
+		std::string codes;
+		for (const auto& item : r.bets) {
+			codes += item.codeStr();
+			pos_tids[r.id].insert(item.tid);
+		}
+		fixed_items[r.id] = codes;
+	}
+	std::vector<std::map<std::string, std::string>> items, backup_item;
+	for (const auto& r : m_Engine->getResult()) {
+		std::map<std::string, std::string> line_items;
+		for (const auto& item : r) {
+			line_items[item.id] = item.bet.codeStr();
+			pos_tids[item.id].insert(item.bet.tid);
+		}
+		for (const auto& r : fixed_items) {
+			line_items[r.first] = r.second;
+		}
+		items.push_back(line_items);
+	}
+	bool pos_unique_tid = true;
+	for (const auto& pair : pos_tids) {
+		if (pair.second.size() > 1) {
+			pos_unique_tid = false;
+			break;
+		}
+	}
+	if (m_Engine->getScriptAvgMultiple() > 0 || m_Engine->getScriptMinBonus() > 0.0) {
+		pos_unique_tid = false;
+	}
+	if (pos_unique_tid) {
+		backup_item = items;
+		if (Global::ComposeMultiSelected(backup_item, true)) {
+			items.swap(backup_item);
+		}
+		else {
+			MessageBox("合并复式结果失败了！", "错误", MB_ICONERROR | MB_OK);
+		}
+	}
+	for (const auto& item : items) {
+		std::string line;
+		for (const auto& m : item) {
+			std::string ms;
+			CStringATL codeArea = m.second.c_str();
+			codeArea += ",";
+			while (codeArea.GetLength() < 4) {
+				codeArea.Append(" ");
+			}
+			ms.append("[").append(m.first).append("]").append(codeArea).append(" ");
+			line.append(ms);
+		}
+		CStringATL temp = line.c_str();
+		if (temp.Right(1) == ",") temp = temp.Left(temp.GetLength() - 1);
+		line.assign(temp).append("\r\n").append("\r\n");
+		abuyLines.append(line);
+	}
 }

@@ -436,6 +436,7 @@
   <ItemGroup>
     <None Include="res\ADDIN\template.lua" />
     <None Include="res\ADDIN\template_bd.lua" />
+    <None Include="res\addin\template_selected.lua" />
     <None Include="res\ADDIN\template_zc.lua" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

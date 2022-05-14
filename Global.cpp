@@ -81,33 +81,53 @@ CStringATL Global::GetFileNameExt(LPCTSTR fileName) {
 }
 
 BOOL Global::DepartString(const CStlString& strTxt, const CStlString& strDim, CStlStrArray &arrPart) {
-    arrPart.clear();
-    if(strDim.empty()) {
-        return false;
-    }
-    CStlString::size_type pos = CStlString::npos;
-    CStlString::size_type offset = 0;
-    while((pos = strTxt.find(strDim, offset)) != CStlString::npos) {
-        CStlString token = strTxt.substr(offset, pos - offset);
-        TrimBlank(token);
-        if(!token.empty()) {
-            arrPart.push_back(token);
-        }
-        offset = pos + strDim.length();
-    }
-    if(!arrPart.empty()) {
-        if(offset < strTxt.length()) {
-            CStlString token = strTxt.substr(offset);
-            TrimBlank(token);
-            if(!token.empty()) {
-                arrPart.push_back(token);
-            }
-        }
-	} else if(offset == 0) {
+    return Global::DepartString(strTxt, strDim, true, arrPart);
+}
+
+BOOL Global::DepartString(const CStlString& strTxt, const CStlString& strDim, bool trim, CStlStrArray& arrPart) {
+	arrPart.clear();
+	if (strDim.empty()) {
+		return false;
+	}
+	CStlString::size_type pos = CStlString::npos;
+	CStlString::size_type offset = 0;
+	while ((pos = strTxt.find(strDim, offset)) != CStlString::npos) {
+		CStlString token = strTxt.substr(offset, pos - offset);
+		if (trim) {
+			TrimBlank(token);
+		}
+		if (!token.empty()) {
+			arrPart.push_back(token);
+		}
+		offset = pos + strDim.length();
+	}
+	if (!arrPart.empty()) {
+		if (offset < strTxt.length()) {
+			CStlString token = strTxt.substr(offset);
+			if (trim) {
+				TrimBlank(token);
+			}
+			if (!token.empty()) {
+				arrPart.push_back(token);
+			}
+		}
+	}
+	else if (offset == 0) {
 		arrPart.push_back(strTxt);
 		//return FALSE;
 	}
-    return TRUE;
+	return TRUE;
+}
+
+void Global::ReplaceStringInStrArrayOnce(CStlStrArray& lines, const CStlString& old, const CStlString& n) {
+	for (auto& line : lines) {
+		CStlString temp = line;
+		TrimBlank(temp);
+		if (temp == old) {
+			line = n;
+			break;
+		}
+	}
 }
 
 #ifdef _UNICODE
