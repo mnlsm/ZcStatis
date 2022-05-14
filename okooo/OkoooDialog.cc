@@ -307,34 +307,17 @@ void OkoooDialog::GetBuyLinesData(std::string& abuyLines) {
 		return;
 	}
 	std::map<std::string, std::set<int>> pos_tids;
-	std::map<std::string, std::string> fixed_items;
-	for (const auto& r : m_Engine->GetFixedSources()) {
-		std::string codes;
-		for (const auto& item : r.bets) {
-			codes += item.codeStr();
-			pos_tids[r.id].insert(item.tid);
-		}
-		fixed_items[r.id] = codes;
-	}
-	std::vector<std::map<std::string, std::string>> items, backup_item;
+	std::vector<std::map<std::string, std::pair<int, std::string>>> items, backup_item;
 	for (const auto& r : m_Engine->getResult()) {
-		std::map<std::string, std::string> line_items;
+		std::map<std::string, std::pair<int, std::string>> line_items;
 		for (const auto& item : r) {
-			line_items[item.id] = item.bet.codeStr();
+			line_items[item.id].first = item.bet.tid;
+			line_items[item.id].second = item.bet.codeStrJC();
 			pos_tids[item.id].insert(item.bet.tid);
-		}
-		for (const auto& r : fixed_items) {
-			line_items[r.first] = r.second;
 		}
 		items.push_back(line_items);
 	}
 	bool pos_unique_tid = true;
-	for (const auto& pair : pos_tids) {
-		if (pair.second.size() > 1) {
-			pos_unique_tid = false;
-			break;
-		}
-	}
 	if (m_Engine->getScriptAvgMultiple() > 0 || m_Engine->getScriptMinBonus() > 0.0) {
 		pos_unique_tid = false;
 	}
@@ -356,7 +339,7 @@ void OkoooDialog::GetBuyLinesData(std::string& abuyLines) {
 			temp = m.first.c_str();
 			temp.Replace(qh, "");
 			std::string ms;
-			ms.append("[").append(temp).append("]").append(m.second).append(" ");
+			ms.append("[").append(temp).append("]").append(m.second.second).append(" ");
 			line.append(ms);
 		}
 		temp = line.c_str();

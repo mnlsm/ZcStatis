@@ -38,7 +38,13 @@ public:
 	static CStringATL GetUniqueCharStringGreater(const CStringATL& src);
 	static CStringATL GetUniqueCharStringLess(const CStringATL& src);
 
+	static CStringATL GetUniqueCharString(const CStringATL& src, bool greater);
+	static size_t GetCharCount(const char* src, const char c);
+
+
 	static bool ComposeMultiSelected(std::vector<std::map<std::string, std::string>>& items, bool greater);
+
+	static bool ComposeMultiSelected(std::vector<std::map<std::string, std::pair<int, std::string>>>& items, bool greater);
 
 private:
 	static std::string  SysWideToUTF8(const wchar_t* wide);

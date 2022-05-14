@@ -1,5 +1,5 @@
 --1
-kMatchTitle = "竞彩足球 合买";
+kMatchTitle = "竞彩足球";
 kMatchDesc = "过滤";
 kMatchBetsLose = 0;
 kAvgMultiple = 0;
@@ -75,12 +75,33 @@ function GetCodeSum(codes, tid)
 	return sum;
 end 
 
+function GetIndexCodeCount(index, codes, tid, code)
+	local found_count = 0;
+	if index >= 1 and index <= #codes then
+		if (tid == codes[index].tid and code == codes[index].code) then
+			found_count = found_count + 1;
+		end
+	end
+	return found_count;
+end 
+
+function GetIndexPanCount(index, codes, pan)
+	local found_count = 0;
+	if index >= 1 and index <= #codes then
+		if (pan == codes[index].pan) then
+			found_count = found_count + 1;
+		end
+	end
+	return found_count;
+end 
+
 function IsFilterLua(params)
 	local errorCount = 0;
 	local ret = {code=0, info="ok", bonus=params.betbouns};
 	local codes = params.betcodes;
 	local bonus = params.betbouns;
 	local trace_prefix = "jc_dbg[";
+	local trace_subfix = "]\r\n";
 	local jq0 =  GetCodeCount(codes, 2, 0); --选择进球数0的个数
 	local jq1 =  GetCodeCount(codes, 2, 1); --选择进球数1的个数
 	local jq2 =  GetCodeCount(codes, 2, 2); --选择进球数2的个数
@@ -91,46 +112,66 @@ function IsFilterLua(params)
 	local jq7 =  GetCodeCount(codes, 2, 7); --选择进球数7的个数
 	local jq_sum = GetCodeSum(codes, 2);    --选择进球总数
 
+	local pan_1_1 =  GetIndexPanCount(1, codes, 1);  --场次1的pan1的个数
+	local pan_1_2 =  GetIndexPanCount(1, codes, 2);  --场次1的pan2的个数
+	local pan_1_3 =  GetIndexPanCount(1, codes, 3);  --场次1的pan3的个数
+	local pan_1_4 =  GetIndexPanCount(1, codes, 4);  --场次1的pan4的个数
+	local pan_1_up =  pan_1_1 + pan_1_2;			  --场次1的上pan的个数
+	local pan_2_1 =  GetIndexPanCount(2, codes, 1);  --场次2的pan1的个数
+	local pan_2_2 =  GetIndexPanCount(2, codes, 2);  --场次2的pan2的个数
+	local pan_2_3 =  GetIndexPanCount(2, codes, 3);  --场次2的pan3的个数
+	local pan_2_4 =  GetIndexPanCount(2, codes, 4);  --场次2的pan4的个数
+	local pan_2_up =  pan_2_1 + pan_2_2;			  --场次2的上pan的个数
+	local pan_3_1 =  GetIndexPanCount(3, codes, 1);  --场次3的pan1的个数
+	local pan_3_2 =  GetIndexPanCount(3, codes, 2);  --场次3的pan2的个数
+	local pan_3_3 =  GetIndexPanCount(3, codes, 3);  --场次3的pan3的个数
+	local pan_3_4 =  GetIndexPanCount(3, codes, 4);  --场次3的pan4的个数
+	local pan_3_up =  pan_3_1 + pan_3_2;			  --场次3的上pan的个数
+	local pan_4_1 =  GetIndexPanCount(4, codes, 1);  --场次4的pan1的个数
+	local pan_4_2 =  GetIndexPanCount(4, codes, 2);  --场次4的pan2的个数
+	local pan_4_3 =  GetIndexPanCount(4, codes, 3);  --场次4的pan3的个数
+	local pan_4_4 =  GetIndexPanCount(4, codes, 4);  --场次4的pan4的个数
+	local pan_4_up =  pan_4_1 + pan_4_2;			  --场次4的上pan的个数
+	local pan_5_1 =  GetIndexPanCount(5, codes, 1);  --场次5的pan1的个数
+	local pan_5_2 =  GetIndexPanCount(5, codes, 2);  --场次5的pan2的个数
+	local pan_5_3 =  GetIndexPanCount(5, codes, 3);  --场次5的pan3的个数
+	local pan_5_4 =  GetIndexPanCount(5, codes, 4);  --场次5的pan4的个数
+	local pan_5_up =  pan_5_1 + pan_5_2;			  --场次5的上pan的个数
+	local pan_6_1 =  GetIndexPanCount(6, codes, 1);  --场次6的pan1的个数
+	local pan_6_2 =  GetIndexPanCount(6, codes, 2);  --场次6的pan2的个数
+	local pan_6_3 =  GetIndexPanCount(6, codes, 3);  --场次6的pan3的个数
+	local pan_6_4 =  GetIndexPanCount(6, codes, 4);  --场次6的pan4的个数
+	local pan_6_up =  pan_6_1 + pan_6_2;			  --场次6的上pan的个数
+	local pan_7_1 =  GetIndexPanCount(7, codes, 1);  --场次7的pan1的个数
+	local pan_7_2 =  GetIndexPanCount(7, codes, 2);  --场次7的pan2的个数
+	local pan_7_3 =  GetIndexPanCount(7, codes, 3);  --场次7的pan3的个数
+	local pan_7_4 =  GetIndexPanCount(7, codes, 4);  --场次7的pan4的个数
+	local pan_7_up =  pan_7_1 + pan_7_2;			  --场次7的上pan的个数
+	local pan_8_1 =  GetIndexPanCount(8, codes, 1);  --场次8的pan1的个数
+	local pan_8_2 =  GetIndexPanCount(8, codes, 2);  --场次8的pan2的个数
+	local pan_8_3 =  GetIndexPanCount(8, codes, 3);  --场次8的pan3的个数
+	local pan_8_4 =  GetIndexPanCount(8, codes, 4);  --场次8的pan4的个数
+	local pan_8_up =  pan_8_1 + pan_8_2;			  --场次8的上pan的个数
+
+	local pan1_sum = pan_1_1 + pan_2_1 + pan_3_1 + pan_4_1 + pan_5_1 + pan_6_1 + pan_7_1 + pan_8_1;
+	local pan2_sum = pan_1_2 + pan_2_2 + pan_3_2 + pan_4_2 + pan_5_2 + pan_6_2 + pan_7_2 + pan_8_2;
+	local pan3_sum = pan_1_3 + pan_2_3 + pan_3_3 + pan_4_3 + pan_5_3 + pan_6_3 + pan_7_3 + pan_8_3;
+	local pan4_sum = pan_1_4 + pan_2_4 + pan_3_4 + pan_4_4 + pan_5_4 + pan_6_4 + pan_7_4 + pan_8_4;
+	local pan_up_sum = pan1_sum + pan2_sum;
+	local pan_down_sum = pan3_sum + pan4_sum;
+
+
+
+
+
 --[[	
 	if(jq1 > 2) then
-		ret.info = trace_prefix .."jq1>2]";
+		ret.code = 1;
+		ret.info = trace_prefix .."jq1>2" .. trace_subfix;
 		trace(1, ret.info);
-		return ret;
-	end
-	if(jq2 == 3) then
-		ret.info = trace_prefix .."jq2=3]";
-		trace(1, ret.info);
-		return ret;
-	end
-	if(jq3 == 3) then
-		ret.info = trace_prefix .."jq3=3]";
-		trace(1, ret.info);
-		return ret;
-	end
-	if(jq4 > 2) then
-		ret.info = trace_prefix .."jq4>2]";
-		trace(1, ret.info);
-		return ret;
-	end
-	if(jq2 + jq3 >= 2) then
-		ret.info = trace_prefix .. "ok 1]";
-		trace(1, ret.info);
-		ret.code = 0;
-		return ret;
-	end
-	if(jq1 + jq2 + jq3 == 3) then
-		ret.info = trace_prefix .. "ok 2]";
-		trace(1, ret.info);
-		ret.code = 0;
 		return ret;
 	end
 
-	if(jq4 + jq2 + jq3 == 3) then
-		ret.info = trace_prefix .. "ok 3]";
-		trace(1, ret.info);
-		ret.code = 0;
-		return ret;
-	end
 --]]	
 	return ret;
 end

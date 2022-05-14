@@ -49,6 +49,63 @@ std::string BetStruct::codeStr() const {
 	return ret;
 }
 
+std::string BetStruct::codeStrJC() const {
+	std::string ret;
+	char cb[20] = { '\0' };
+	if (tid == 6) {
+		if (code == 3) {
+			ret = "胜,";
+		} else if (code == 1) {
+			ret = "平,";
+		} else if (code == 0) {
+			ret = "负,";
+		}
+	}
+	else if (tid == 1) {
+		if (code == 3) {
+			ret = "让胜,";
+		}
+		else if (code == 1) {
+			ret = "让平,";
+		}
+		else if (code == 0) {
+			ret = "让负,";
+		}
+	} else if (tid == 2) {
+		sprintf(cb, "%d", (int)code);
+		ret = cb;
+	} else if (tid == 4) {
+		std::map<int, std::string> pair = {
+			{0, "胜/胜,"},
+			{1, "胜/平,"},
+			{2, "胜/负,"},
+			{3, "平/胜,"},
+			{4, "平/平,"},
+			{5, "平/负,"},
+			{6, "负/胜,"},
+			{7, "负/平,"},
+			{8, "负/负,"},
+		};
+		const auto& iter = pair.find(code);
+		if (iter != pair.end()) {
+			ret = iter->second;
+		}
+	} else if (tid == 3) {
+		std::vector<std::string> cn = { "1:0,", "2:0,", "2:1,", "3:0,", "3:1,", "3:2,", "4:0,", "4:1,", "4:2,", "5:0,", "5:1,", "5:2,", "胜其他,", "0:0,", "1:1,", "2:2,", "3:3,", "平其他,", "0:1,", "0:2,", "1:2,", "0:3,", "1:3,", "2:3,", "0:4,", "1:4,", "2:4,", "0:5,", "1:5,", "2:5,", "负其他," };
+		std::vector<std::string> bets = { "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50", "51", "52", "53", "54", "55", "56", "57", "58", "59", "60" };
+		std::map<int, std::string> pair;
+		for (int i = 0; i < bets.size(); i++) {
+			int k = atoi(bets[i].c_str()) - 30;
+			pair[k] = cn[k];
+		}
+		const auto& iter = pair.find(code);
+		if (iter != pair.end()) {
+			ret = iter->second;
+		}
+	}
+	return ret;
+}
+
 int BetStruct::getPan() const {
 	int ret = 0;
 	if (odds == 0.00) {

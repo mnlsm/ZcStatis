@@ -10,6 +10,8 @@ struct BetStruct {
 	int getPan() const;
 	std::string betCode() const;
 	std::string codeStr() const;
+	std::string codeStrJC() const;
+
 };
 
 struct JcBetItemSource {

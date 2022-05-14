@@ -408,6 +408,49 @@ CStringATL Global::GetUniqueCharStringGreater(const CStringATL& src) {
 	return _T("");
 }
 
+CStringATL Global::GetUniqueCharString(const CStringATL& src, bool greater) {
+	CStlStrArray parts;
+	Global::DepartString((LPCSTR)src, ",", parts);
+	CStringATL result;
+	if (greater) {
+		std::set<std::string, std::greater<std::string>> unique_set;
+		for (const auto& item : parts) {
+			unique_set.insert(item);
+		}
+		for (const auto& item : unique_set) {
+			result.Append(item.c_str());
+			result.Append(",");
+		}
+	}
+	else {
+		std::set<std::string, std::less<std::string>> unique_set;
+		for (const auto& item : parts) {
+			unique_set.insert(item);
+		}
+		for (const auto& item : unique_set) {
+			result.Append(item.c_str());
+			result.Append(",");
+		}
+	}
+	return result;
+}
+
+size_t Global::GetCharCount(const char* src, const char c) {
+	if (src == nullptr) {
+		return 0;
+	}
+	size_t result = 0;
+	const char* pos = src;
+	while (*pos != '\0') {
+		if (*pos == c) {
+			result++;
+		}
+		pos++;
+	}
+	return result;
+}
+
+
 bool Global::ComposeMultiSelected(std::vector<std::map<std::string, std::string>>& items, bool greater) {
 	int all_count_0 = 0, all_count_1 = 0;
 	for (auto& l : items) {
@@ -459,7 +502,7 @@ bool Global::ComposeMultiSelected(std::vector<std::map<std::string, std::string>
 			}
 		}
 	}
-		for (auto& l : items) {
+	for (auto& l : items) {
 		int line_count = 1;
 		for (auto& item : l) {
 			line_count = line_count * item.second.size();
@@ -470,6 +513,69 @@ bool Global::ComposeMultiSelected(std::vector<std::map<std::string, std::string>
 }
 
 
+bool Global::ComposeMultiSelected(std::vector<std::map<std::string, std::pair<int, std::string>>>& items, bool greater) {
+	int all_count_0 = 0, all_count_1 = 0;
+	for (auto& l : items) {
+		int line_count = 1;
+		for (auto& item : l) {
+			item.second.second = GetUniqueCharString(item.second.second.c_str(), greater);
+			line_count = line_count * GetCharCount(item.second.second.c_str(), ',');
+		}
+		all_count_0 += line_count;
+	}
+	bool do_loop = true;
+	while (do_loop) {
+		do_loop = false;
+		for (size_t i = 0;i < items.size(); i++) {
+			for (auto& samePair : items[i]) {
+				for (size_t j = i + 1; j < items.size(); j++) {
+					if (items[j].size() != items[i].size()) continue;
+					int checkCount = 0;
+					std::string sameVal = "";
+					for (const auto& curPair : items[j]) {
+						if (curPair.first == samePair.first) {
+							if (curPair.second.first == samePair.second.first) {
+								sameVal = curPair.second.second;
+								checkCount++;
+							}
+						}
+						else {
+							const auto& unSamePair = items[i].find(curPair.first);
+							if (unSamePair == items[i].end()) {
+								break;
+							}
+							if (unSamePair->second.first == curPair.second.first 
+								&& unSamePair->second.second == curPair.second.second) {
+								checkCount++;
+							}
+						}
+					}
+					if (checkCount == items[i].size() && !sameVal.empty()) {
+						samePair.second.second += sameVal;
+						samePair.second.second = GetUniqueCharString(samePair.second.second.c_str(), greater);
+						items.erase(items.begin() + j);
+						do_loop = true;
+						break;
+					}
+				}
+				if (do_loop) {
+					break;
+				}
+			}
+			if (do_loop) {
+				break;
+			}
+		}
+	}
+	for (auto& l : items) {
+		int line_count = 1;
+		for (auto& item : l) {
+			line_count = line_count * GetCharCount(item.second.second.c_str(), ',');
+		}
+		all_count_1 += line_count;
+	}
+	return (all_count_0 == all_count_1);
+}
 
 
 CStringA GetElementAttrValue(tinyxml2::XMLElement* root, const CStringA& name) {

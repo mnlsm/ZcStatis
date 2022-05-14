@@ -85,50 +85,39 @@ function GetIndexCodeCount(index, codes, tid, code)
 	return found_count;
 end 
 
+function GetIndexPanCount(index, codes, pan)
+	local found_count = 0;
+	if index >= 1 and index <= #codes then
+		if (pan == codes[index].pan) then
+			found_count = found_count + 1;
+		end
+	end
+	return found_count;
+end 
+
 function IsFilterLua(params)
 	local errorCount = 0;
 	local ret = {code=0, info="ok", bonus=params.betbouns};
 	local codes = params.betcodes;
 	local bonus = params.betbouns;
 	local trace_prefix = "jc_dbg[";
+	local trace_subfix = "]\r\n";
 	local tid = 6;
-	local spf_1_3 =  GetIndexCodeCount(1, codes, tid, 3); --场次1的3的个数
-	local spf_1_1 =  GetIndexCodeCount(1, codes, tid, 1); --场次1的1的个数
-	local spf_1_0 =  GetIndexCodeCount(1, codes, tid, 0); --场次1的0的个数
-	local spf_2_3 =  GetIndexCodeCount(2, codes, tid, 3); --场次2的3的个数
-	local spf_2_1 =  GetIndexCodeCount(2, codes, tid, 1); --场次2的1的个数
-	local spf_2_0 =  GetIndexCodeCount(2, codes, tid, 0); --场次2的0的个数
-	local spf_3_3 =  GetIndexCodeCount(3, codes, tid, 3); --场次3的3的个数
-	local spf_3_1 =  GetIndexCodeCount(3, codes, tid, 1); --场次3的1的个数
-	local spf_3_0 =  GetIndexCodeCount(3, codes, tid, 0); --场次3的0的个数
-	local spf_4_3 =  GetIndexCodeCount(4, codes, tid, 3); --场次4的3的个数
-	local spf_4_1 =  GetIndexCodeCount(4, codes, tid, 1); --场次4的1的个数
-	local spf_4_0 =  GetIndexCodeCount(4, codes, tid, 0); --场次4的0的个数
-	local spf_5_3 =  GetIndexCodeCount(5, codes, tid, 3); --场次5的3的个数
-	local spf_5_1 =  GetIndexCodeCount(5, codes, tid, 1); --场次5的1的个数
-	local spf_5_0 =  GetIndexCodeCount(5, codes, tid, 0); --场次5的0的个数
-	local spf_6_3 =  GetIndexCodeCount(6, codes, tid, 3); --场次6的3的个数
-	local spf_6_1 =  GetIndexCodeCount(6, codes, tid, 1); --场次6的1的个数
-	local spf_6_0 =  GetIndexCodeCount(6, codes, tid, 0); --场次6的0的个数
-	local spf_7_3 =  GetIndexCodeCount(7, codes, tid, 3); --场次7的3的个数
-	local spf_7_1 =  GetIndexCodeCount(7, codes, tid, 1); --场次7的1的个数
-	local spf_7_0 =  GetIndexCodeCount(7, codes, tid, 0); --场次7的0的个数
-	local spf_8_3 =  GetIndexCodeCount(8, codes, tid, 3); --场次8的3的个数
-	local spf_8_1 =  GetIndexCodeCount(8, codes, tid, 1); --场次8的1的个数
-	local spf_8_0 =  GetIndexCodeCount(8, codes, tid, 0); --场次8的0的个数
-	local spf_9_3 =  GetIndexCodeCount(9, codes, tid, 3); --场次9的3的个数
-	local spf_9_1 =  GetIndexCodeCount(9, codes, tid, 1); --场次9的1的个数
-	local spf_9_0 =  GetIndexCodeCount(9, codes, tid, 0); --场次9的0的个数
-	local spf_a_3 =  GetIndexCodeCount(10, codes, tid, 3); --场次9的3的个数
-	local spf_a_1 =  GetIndexCodeCount(10, codes, tid, 1); --场次9的1的个数
-	local spf_a_0 =  GetIndexCodeCount(10, codes, tid, 0); --场次9的0的个数
+	local spf_1_3 =  GetIndexCodeCount(1, codes, tid, 3); --场次1的3的个数(胜平负)
+	local spf_1_1 =  GetIndexCodeCount(1, codes, tid, 1); --场次1的1的个数(胜平负)
+	local spf_1_0 =  GetIndexCodeCount(1, codes, tid, 0); --场次1的0的个数(胜平负)
+
+	local pan_1_1 =  GetIndexPanCount(1, codes, 1);			--场次1的上盘大的个数
+	local pan_1_2 =  GetIndexPanCount(1, codes, 2);			--场次1的上盘小的个数
+	local pan_1_down =  GetIndexPanCount(1, codes, -2);		--场次1的下盘的个数
+	local pan_1_up =  pan_1_1 + pan_1_2;					--场次1的上盘的个数
 
 
 	
 --[[	
 	if(spf_1_3 > 2) then
 		ret.code = 1;
-		ret.info = trace_prefix .."spf_1_3>2]";
+		ret.info = trace_prefix .."spf_1_3>2" ..trace_subfix;
 		trace(1, ret.info);
 		return ret;
 	end
