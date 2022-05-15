@@ -80,6 +80,17 @@ function GetIndexPanCount(index, codes, pan)
 	return found_count;
 end 
 
+function GetIndexCode(index, codes, tid)
+	local found_code = -100;
+	if index >= 1 and index <= #codes then
+		if (tid == codes[index].tid) then
+			found_code = codes[index].code;
+		end
+	end
+	return found_code;
+end 
+
+
 function IsFilterLua(params)
 	local errorCount = 0;
 	local ret = {code=0, info="ok", bonus=params.betbouns};

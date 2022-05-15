@@ -13,7 +13,6 @@ struct BetStruct {
 	std::string betCode() const;
 	std::string codeStr() const;
 	std::string codeStrJC() const;
-
 };
 
 struct JcBetItemSource {
@@ -59,7 +58,8 @@ struct JCMatchItem {
 	Subject* get_subject(int tid, int betCode);
 	Subject* get_subject(int tid, const char* tip);
 
-	CStringATL get_lua_clause(int match_index);
+	CStringATL get_lua_clause(int match_index, 
+		std::map<std::string, std::vector<std::string>>& stat);
 };
 
 CStringA CreateMatchDescription(const CStringA& ahost, const CStringA& aaway);

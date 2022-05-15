@@ -371,7 +371,22 @@ JCMatchItem::Subject* JCMatchItem::get_subject(int tid, const char* tip) {
 	return result;
 }
 
-CStringATL JCMatchItem::get_lua_clause(int match_index) {
+static void appendStatItem(std::map<std::string, std::vector<std::string>>& stat,
+	const std::string& key, const char* fmt, int index) {
+	CStringATL tmp;
+	tmp.Format(fmt, index);
+	auto& iter = stat.find(key);
+	if (iter != stat.end()) {
+		iter->second.push_back((LPCSTR)tmp);
+	} else {
+		std::vector<std::string> v;
+		v.push_back((LPCSTR)tmp);
+		stat[key] = v;
+	}
+}
+
+CStringATL JCMatchItem::get_lua_clause(int match_index, 
+		std::map<std::string, std::vector<std::string>>& stat) {
 	CStringATL temp;
 	std::ostringstream oss;
 	bool first = true;
@@ -382,7 +397,7 @@ CStringATL JCMatchItem::get_lua_clause(int match_index) {
 			first = false;
 			std::string tmp = descrition;
 			Global::TrimBlank(tmp);
-			oss << _T("\n\t-- [") << id << _T("], [") << match_category << "]" << _T(", [") << tmp << "]";
+			oss << _T("\n\t-- [") << match_index << _T("], [") << id << _T("], [") << match_category << "]" << _T(", [") << tmp << "]";
 		}
 		if (sub.tid == 6) {
 			has_spf = true;
@@ -392,10 +407,19 @@ CStringATL JCMatchItem::get_lua_clause(int match_index) {
 		}
 	}
 	if (has_spf) {
-		const char* fmt1 = "\n\tlocal pan_%d_3 = GetIndexPanCount(%d, codes, 3);        --场次%d的下盘1的个数";
-		const char* fmt2 = "\n\tlocal pan_%d_4 = GetIndexPanCount(%d, codes, 4);        --场次%d的下盘2的个数";
-		const char* fmt3 = "\n\tlocal pan_%d_up = GetIndexPanCount(%d, codes, -1);      --场次%d的上盘的个数";
-		const char* fmt4 = "\n\tlocal pan_%d_down = pan_%d_3 + pan_%d_4;                 --场次%d的下盘的个数";
+		const char* fmt5 = "\n\tlocal code_%d_3 = GetIndexCodeCount(%d, codes, 6, 3);         --场次%d的3的个数";
+		const char* fmt6 = "\n\tlocal code_%d_1 = GetIndexCodeCount(%d, codes, 6, 1);         --场次%d的1的个数";
+		const char* fmt7 = "\n\tlocal code_%d_0 = GetIndexCodeCount(%d, codes, 6, 0);         --场次%d的3的个数";
+		temp.Format(fmt5, match_index, match_index, match_index);
+		oss << temp;
+		temp.Format(fmt6, match_index, match_index, match_index);
+		oss << temp;
+		temp.Format(fmt7, match_index, match_index, match_index);
+		oss << temp;
+		const char* fmt1 = "\n\tlocal pan_%d_3 = GetIndexPanCount(%d, codes, 3);              --场次%d的下盘1的个数";
+		const char* fmt2 = "\n\tlocal pan_%d_4 = GetIndexPanCount(%d, codes, 4);              --场次%d的下盘2的个数";
+		const char* fmt3 = "\n\tlocal pan_%d_up = GetIndexPanCount(%d, codes, -1);            --场次%d的上盘的个数";
+		const char* fmt4 = "\n\tlocal pan_%d_down = pan_%d_3 + pan_%d_4;                       --场次%d的下盘的个数";
 		temp.Format(fmt1, match_index, match_index, match_index);
 		oss << temp;
 		temp.Format(fmt2, match_index, match_index, match_index);
@@ -404,12 +428,28 @@ CStringATL JCMatchItem::get_lua_clause(int match_index) {
 		oss << temp;
 		temp.Format(fmt4, match_index, match_index, match_index, match_index);
 		oss << temp;
+		appendStatItem(stat, "local code_3_sum", "code_%d_3", match_index);
+		appendStatItem(stat, "local code_1_sum", "code_%d_1", match_index);
+		appendStatItem(stat, "local code_0_sum", "code_%d_0", match_index);
+		appendStatItem(stat, "local pan_3_sum", "pan_%d_3", match_index);
+		appendStatItem(stat, "local pan_4_sum", "pan_%d_4", match_index);
+		appendStatItem(stat, "local pan_up_sum", "pan_%d_up", match_index);
+		appendStatItem(stat, "local pan_down_sum", "pan_%d_down", match_index);
 	}
 	if (has_rspf) {
-		const char* fmt1 = "\n\tlocal pan_%d_1 = GetIndexPanCount(%d, codes, 1);        --场次%d的上盘1的个数";
-		const char* fmt2 = "\n\tlocal pan_%d_2 = GetIndexPanCount(%d, codes, 2);        --场次%d的上盘2的个数";
-		const char* fmt3 = "\n\tlocal pan_%d_down = GetIndexPanCount(%d, codes, -2);    --场次%d的下盘的个数";
-		const char* fmt4 = "\n\tlocal pan_%d_up = pan_%d_1 + pan_%d_2;                   --场次%d的上盘的个数";
+		const char* fmt5 = "\n\tlocal code_%d_3 = GetIndexCodeCount(%d, codes, 1, 3);         --场次%d的3的个数";
+		const char* fmt6 = "\n\tlocal code_%d_1 = GetIndexCodeCount(%d, codes, 1, 1);         --场次%d的1的个数";
+		const char* fmt7 = "\n\tlocal code_%d_0 = GetIndexCodeCount(%d, codes, 1, 0);         --场次%d的3的个数";
+		temp.Format(fmt5, match_index, match_index, match_index);
+		oss << temp;
+		temp.Format(fmt6, match_index, match_index, match_index);
+		oss << temp;
+		temp.Format(fmt7, match_index, match_index, match_index);
+		oss << temp;
+		const char* fmt1 = "\n\tlocal pan_%d_1 = GetIndexPanCount(%d, codes, 1);              --场次%d的上盘1的个数";
+		const char* fmt2 = "\n\tlocal pan_%d_2 = GetIndexPanCount(%d, codes, 2);              --场次%d的上盘2的个数";
+		const char* fmt3 = "\n\tlocal pan_%d_down = GetIndexPanCount(%d, codes, -2);          --场次%d的下盘的个数";
+		const char* fmt4 = "\n\tlocal pan_%d_up = pan_%d_1 + pan_%d_2;                         --场次%d的上盘的个数";
 		temp.Format(fmt1, match_index, match_index, match_index);
 		oss << temp;
 		temp.Format(fmt2, match_index, match_index, match_index);
@@ -418,6 +458,13 @@ CStringATL JCMatchItem::get_lua_clause(int match_index) {
 		oss << temp;
 		temp.Format(fmt3, match_index, match_index, match_index);
 		oss << temp;
+		appendStatItem(stat, "local rq_code_3_sum", "code_%d_3", match_index);
+		appendStatItem(stat, "local rq_code_1_sum", "code_%d_1", match_index);
+		appendStatItem(stat, "local rq_code_0_sum", "code_%d_0", match_index);
+		appendStatItem(stat, "local pan_1_sum", "pan_%d_1", match_index);
+		appendStatItem(stat, "local pan_2_sum", "pan_%d_2", match_index);
+		appendStatItem(stat, "local pan_up_sum", "pan_%d_up", match_index);
+		appendStatItem(stat, "local pan_down_sum", "pan_%d_down", match_index);
 	}
 	std::string result = oss.str();
 	return result.c_str();

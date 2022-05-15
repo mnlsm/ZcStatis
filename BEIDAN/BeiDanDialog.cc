@@ -386,13 +386,38 @@ LRESULT BeiDanDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 		CStlStrArray lines;
 		Global::DepartString((LPCSTR)text, "\n", false, lines);
 		int index = 1;
+		std::map<std::string, std::vector<std::string>> stat_clause;
 		for (auto& item : m_JCMatchItems) {
-			CStringATL clause = item.second->get_lua_clause(index);
+			CStringATL clause = item.second->get_lua_clause(index, stat_clause);
 			if (!clause.IsEmpty()) {
 				index++;
 				Global::ReplaceStringInStrArrayOnce(lines, "${REPLACE_CLAUSE}", (LPCSTR)clause);
 			}
 		}
+		if (!stat_clause.empty()) {
+			CStringATL caluses;
+			caluses.Append("\n\t -- stat items");
+			for (const auto& iter : stat_clause) {
+				CStringATL clause;
+				for (const auto& part : iter.second) {
+					if (clause.IsEmpty()) {
+						clause.Append("\n\t");
+						clause.Append(iter.first.c_str());
+						clause.Append(" = ");
+						clause.Append(part.c_str());
+					} else {
+						clause.Append(" + ");
+						clause.Append(part.c_str());
+					}
+				}
+				if (!clause.IsEmpty()) {
+					clause.Append(";");
+					caluses.Append(clause);
+				}
+			}
+			Global::ReplaceStringInStrArrayOnce(lines, "${REPLACE_CLAUSE}", (LPCSTR)caluses);
+		}
+
 		for (index = (int)lines.size() - 1; index >= 0; index--) {
 			if (lines[index] == "${REPLACE_CLAUSE}") {
 				lines.erase(lines.begin() + index);
@@ -1181,6 +1206,14 @@ void BeiDanDialog::GetBuyLinesData(std::string& abuyLines) {
 			break;
 		}
 	}
+	int all_count_0 = 0;
+	for (const auto& l : items) {
+		int line_count = 1;
+		for (auto& item : l) {
+			line_count = line_count * item.second.size();
+		}
+		all_count_0 += line_count;
+	}
 	if (m_Engine->getScriptAvgMultiple() > 0 || m_Engine->getScriptMinBonus() > 0.0) {
 		pos_unique_tid = false;
 	}
@@ -1193,21 +1226,44 @@ void BeiDanDialog::GetBuyLinesData(std::string& abuyLines) {
 			MessageBox("合并复式结果失败了！", "错误", MB_ICONERROR | MB_OK);
 		}
 	}
+	std::map<int, int> col_width;
+	for (const auto& item : items) {
+		int col = 0;
+		for (const auto& m : item) {
+			int val = 0;
+			const auto& it = col_width.find(col);
+			if (it != col_width.end()) {
+				val = it->second;
+			}
+			if (m.second.length() + 1 > val) {
+				col_width[col] = m.second.length() + 1;
+			}
+			col++;
+		}
+	}
 	for (const auto& item : items) {
 		std::string line;
+		int col = 0;
 		for (const auto& m : item) {
 			std::string ms;
 			CStringATL codeArea = m.second.c_str();
 			codeArea += ",";
-			while (codeArea.GetLength() < 4) {
+			while (codeArea.GetLength() < col_width[col]) {
 				codeArea.Append(" ");
 			}
+			col++;
 			ms.append("[").append(m.first).append("]").append(codeArea).append(" ");
 			line.append(ms);
 		}
 		CStringATL temp = line.c_str();
+		temp.Trim();
 		if (temp.Right(1) == ",") temp = temp.Left(temp.GetLength() - 1);
 		line.assign(temp).append("\r\n").append("\r\n");
 		abuyLines.append(line);
+	}
+	if (!items.empty()) {
+		CStringATL stat_line;
+		stat_line.Format(_T("共有%u张，%d元。\r\n"), items.size(), all_count_0 * 2);
+		abuyLines.append((LPCSTR)stat_line);
 	}
 }
