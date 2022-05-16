@@ -47,6 +47,7 @@ CHttpRequestPtr OkoooDialog::CreatePostRequest(const std::string& url, const std
 	//ptr->request_headers.insert(std::make_pair("Content-Type", "application/x-www-form-urlencoded"));
 	ptr->request_headers.insert(std::make_pair("Connection", "Keep-Alive"));
 	ptr->request_headers.insert(std::make_pair("Accept-Encoding", "gzip"));
+	ptr->request_headers.insert(std::make_pair("Cache-Control", "no-store"));
 	ptr->request_url = url;
 	ptr->request_id = request_id;
 	ptr->request_type = HTTP_REQUEST_POST;
@@ -65,6 +66,7 @@ CHttpRequestPtr OkoooDialog::CreateGetRequest(const std::string& url, const std:
 	ptr->agent = "Dalvik/2.1.0 (Linux; U; Android 6.0; M5s Build/MRA58K)";
 	ptr->request_headers.insert(std::make_pair("Connection", "Keep-Alive"));
 	ptr->request_headers.insert(std::make_pair("Accept-Encoding", "gzip"));
+	ptr->request_headers.insert(std::make_pair("Cache-Control", "no-store"));
 	ptr->request_url = url;
 	ptr->request_id = request_id;
 	ptr->request_type = HTTP_REQUEST_GET;
@@ -146,12 +148,22 @@ void OkoooDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 	std::multimap<std::string, std::shared_ptr<JCMatchItem>> items;
 	std::map<std::string, std::shared_ptr<JCMatchItem>> order_items;
 	if (response->httperror == talk_base::HE_NONE && response->response_content.size() > 0) {
-		CZlibStream zlib;
 		std::string raw_response;
-		zlib.DecompressGZip(response->response_content, raw_response);
+		if (response->response_headers.Find("Content-Encoding: gzip") != -1) {
+			CZlibStream zlib;
+			zlib.DecompressGZip(response->response_content, raw_response);
+		}
+		else {
+			raw_response = response->response_content;
+		}
 		CStringA section_begin = "<section id=\"match_list\" class=\"listbox listbox_jingcai\"";
 		CStringA section_end = "</section>";
-		CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_UTF8).m_psz).m_psz;
+		int acp_code = CP_ACP;
+		if (raw_response.find("UTF-8") != std::string::npos
+			|| raw_response.find("utf-8") != std::string::npos) {
+			acp_code = CP_UTF8;
+		}
+		CStringA temp = CW2A(CA2W(raw_response.c_str(), acp_code).m_psz).m_psz;
 		int nFindBegin = temp.Find(section_begin);
 		if (nFindBegin == -1) {
 			return;
@@ -364,9 +376,14 @@ void OkoooDialog::OnBiFenReturn(const CHttpRequestPtr& request, const CHttpRespo
 		std::map<CStringATL, CStringATL> mapBiFen;
 		CStringATL beginDay, endDay, beginWeekDay;
 		Global::getBiFenDateInfo(beginDay, endDay, beginWeekDay);
-		CZlibStream zlib;
 		std::string raw_response;
-		zlib.DecompressGZip(response->response_content, raw_response);
+		if (response->response_headers.Find("Content-Encoding: gzip") != -1) {
+			CZlibStream zlib;
+			zlib.DecompressGZip(response->response_content, raw_response);
+		}
+		else {
+			raw_response = response->response_content;
+		}
 		CStringATL html = raw_response.c_str();
 		int nFindRow = html.Find(strRowBegin);
 		int nFindRow1 = html.Find(strRowBegin1);

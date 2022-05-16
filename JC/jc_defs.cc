@@ -385,6 +385,17 @@ static void appendStatItem(std::map<std::string, std::vector<std::string>>& stat
 	}
 }
 
+CStringATL JCMatchItem::get_odds_string(int tid, int code) {
+	CStringATL result;
+	for (auto& sub : subjects) {
+		if (sub.tid == tid && code == sub.betCode) {
+			result.Format("%.2f", sub.odds);
+		}
+	}
+	return result;
+}
+
+
 CStringATL JCMatchItem::get_lua_clause(int match_index, 
 		std::map<std::string, std::vector<std::string>>& stat) {
 	CStringATL temp;
@@ -407,14 +418,14 @@ CStringATL JCMatchItem::get_lua_clause(int match_index,
 		}
 	}
 	if (has_spf) {
-		const char* fmt5 = "\n\tlocal code_%d_3 = GetIndexCodeCount(%d, codes, 6, 3);         --场次%d的3的个数";
-		const char* fmt6 = "\n\tlocal code_%d_1 = GetIndexCodeCount(%d, codes, 6, 1);         --场次%d的1的个数";
-		const char* fmt7 = "\n\tlocal code_%d_0 = GetIndexCodeCount(%d, codes, 6, 0);         --场次%d的3的个数";
-		temp.Format(fmt5, match_index, match_index, match_index);
+		const char* fmt5 = "\n\tlocal code_%d_3 = GetIndexCodeCount(%d, codes, 6, 3);         --场次%d的3的个数[%s]";
+		const char* fmt6 = "\n\tlocal code_%d_1 = GetIndexCodeCount(%d, codes, 6, 1);         --场次%d的1的个数[%s]";
+		const char* fmt7 = "\n\tlocal code_%d_0 = GetIndexCodeCount(%d, codes, 6, 0);         --场次%d的0的个数[%s]";
+		temp.Format(fmt5, match_index, match_index, match_index, get_odds_string(6, 3));
 		oss << temp;
-		temp.Format(fmt6, match_index, match_index, match_index);
+		temp.Format(fmt6, match_index, match_index, match_index, get_odds_string(6, 1));
 		oss << temp;
-		temp.Format(fmt7, match_index, match_index, match_index);
+		temp.Format(fmt7, match_index, match_index, match_index, get_odds_string(6, 0));
 		oss << temp;
 		const char* fmt1 = "\n\tlocal pan_%d_3 = GetIndexPanCount(%d, codes, 3);              --场次%d的下盘1的个数";
 		const char* fmt2 = "\n\tlocal pan_%d_4 = GetIndexPanCount(%d, codes, 4);              --场次%d的下盘2的个数";
@@ -437,14 +448,14 @@ CStringATL JCMatchItem::get_lua_clause(int match_index,
 		appendStatItem(stat, "local pan_down_sum", "pan_%d_down", match_index);
 	}
 	if (has_rspf) {
-		const char* fmt5 = "\n\tlocal code_%d_3 = GetIndexCodeCount(%d, codes, 1, 3);         --场次%d的3的个数";
-		const char* fmt6 = "\n\tlocal code_%d_1 = GetIndexCodeCount(%d, codes, 1, 1);         --场次%d的1的个数";
-		const char* fmt7 = "\n\tlocal code_%d_0 = GetIndexCodeCount(%d, codes, 1, 0);         --场次%d的3的个数";
-		temp.Format(fmt5, match_index, match_index, match_index);
+		const char* fmt5 = "\n\tlocal code_%d_3 = GetIndexCodeCount(%d, codes, 1, 3);         --场次%d的3的个数[%s]";
+		const char* fmt6 = "\n\tlocal code_%d_1 = GetIndexCodeCount(%d, codes, 1, 1);         --场次%d的1的个数[%s]";
+		const char* fmt7 = "\n\tlocal code_%d_0 = GetIndexCodeCount(%d, codes, 1, 0);         --场次%d的0的个数[%s]";
+		temp.Format(fmt5, match_index, match_index, match_index, get_odds_string(6, 3));
 		oss << temp;
-		temp.Format(fmt6, match_index, match_index, match_index);
+		temp.Format(fmt6, match_index, match_index, match_index, get_odds_string(6, 1));
 		oss << temp;
-		temp.Format(fmt7, match_index, match_index, match_index);
+		temp.Format(fmt7, match_index, match_index, match_index, get_odds_string(6, 0));
 		oss << temp;
 		const char* fmt1 = "\n\tlocal pan_%d_1 = GetIndexPanCount(%d, codes, 1);              --场次%d的上盘1的个数";
 		const char* fmt2 = "\n\tlocal pan_%d_2 = GetIndexPanCount(%d, codes, 2);              --场次%d的上盘2的个数";

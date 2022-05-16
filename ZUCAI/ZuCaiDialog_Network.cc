@@ -171,8 +171,12 @@ void ZuCaiDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 		else {
 			raw_response = response->response_content;
 		}
-		CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_UTF8).m_psz).m_psz;
-
+		int acp_code = CP_ACP;
+		if (raw_response.find("UTF-8") != std::string::npos
+			|| raw_response.find("utf-8") != std::string::npos) {
+			acp_code = CP_UTF8;
+		}
+		CStringA temp = CW2A(CA2W(raw_response.c_str(), acp_code).m_psz).m_psz;
 		int nFindBegin = -1, nFindEnd = -1;
 		CStringA section_begin = "<tr id=\"tr";
 		CStringA section_end = "</tr>";
@@ -306,7 +310,12 @@ void ZuCaiDialog::OnZcPlReturn(const CHttpRequestPtr& request, const CHttpRespon
 			else {
 				raw_response = response->response_content;
 			}
-			CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_ACP).m_psz).m_psz;
+			int acp_code = CP_ACP;
+			if (raw_response.find("UTF-8") != std::string::npos
+				|| raw_response.find("utf-8") != std::string::npos) {
+				acp_code = CP_UTF8;
+			}
+			CStringA temp = CW2A(CA2W(raw_response.c_str(), acp_code).m_psz).m_psz;
 			int nFirstFind = temp.Find("≥ı÷∏");
 			if (nFirstFind == -1) {
 				break;

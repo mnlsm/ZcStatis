@@ -73,3 +73,5 @@ tinyxml2::XMLElement* FindElementByClassAttr(tinyxml2::XMLElement* root,
 
 
 void OpenDirAndSelectFiles(const char* sFile, const std::vector<const char*>& lFilelist);
+
+ULONG GetSecondsSince1970();

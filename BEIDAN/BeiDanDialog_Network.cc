@@ -194,7 +194,7 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 			|| raw_response.find("utf-8") != std::string::npos) {
 			acp_code = CP_UTF8;
 		}
-		CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_ACP).m_psz).m_psz;
+		CStringA temp = CW2A(CA2W(raw_response.c_str(), acp_code).m_psz).m_psz;
 
 		CStringATL curTime = Global::GetTimeString();
 		CStringATL expireTime = Global::GetNextDayString() + " 10:00:00";
@@ -348,7 +348,7 @@ void BeiDanDialog::OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttp
 					|| raw_response.find("utf-8") != std::string::npos) {
 				acp_code = CP_UTF8;
 			}
-			CStringA temp = CT2A(CA2T(raw_response.c_str(), CP_UTF8).m_psz).m_psz;
+			CStringA temp = CW2A(CA2W(raw_response.c_str(), acp_code).m_psz).m_psz;
 			CStringA section_begin = "<table width=";
 			CStringA section_end = "</table>";
 

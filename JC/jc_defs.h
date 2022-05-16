@@ -60,6 +60,7 @@ struct JCMatchItem {
 
 	CStringATL get_lua_clause(int match_index, 
 		std::map<std::string, std::vector<std::string>>& stat);
+	CStringATL get_odds_string(int tid, int code);
 };
 
 CStringA CreateMatchDescription(const CStringA& ahost, const CStringA& aaway);

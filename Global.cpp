@@ -656,3 +656,42 @@ void OpenDirAndSelectFiles(const char* sFile, const std::vector<const char*>& lF
 		ILFree(*(selection + _index));
 	}
 }
+
+
+
+extern "C" typedef BOOL(WINAPI* LFN_RtlTimeToSecondsSince1970)(PLARGE_INTEGER Time, PULONG ElapsedSeconds);
+
+
+
+
+LFN_RtlTimeToSecondsSince1970 lfn_RtlTimeToSecondsSince1970 = NULL;
+
+static void InitRtlTimeToSecondsSince1970() {
+	if (lfn_RtlTimeToSecondsSince1970 != NULL) {
+		return;
+	}
+	HMODULE hMod = LoadLibrary(_T("Ntdll.dll"));
+	if (hMod != NULL) {
+		FARPROC proc = GetProcAddress(hMod, "RtlTimeToSecondsSince1970");
+		if (proc != NULL) {
+			lfn_RtlTimeToSecondsSince1970 = (LFN_RtlTimeToSecondsSince1970)proc;
+		}
+	}
+}
+
+ULONG GetSecondsSince1970() {
+	InitRtlTimeToSecondsSince1970();
+	if (lfn_RtlTimeToSecondsSince1970 == NULL) {
+		return 0;
+	}
+	ULONG result = 0l;
+	SYSTEMTIME st = { 0 };
+	FILETIME ft = { 0 };
+	GetSystemTime(&st);
+	SystemTimeToFileTime(&st, &ft);
+	LARGE_INTEGER li = { 0 };
+	li.LowPart = ft.dwLowDateTime;
+	li.HighPart = ft.dwHighDateTime;
+	lfn_RtlTimeToSecondsSince1970(&li, &result);
+	return result;
+}
