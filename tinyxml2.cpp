@@ -1786,9 +1786,9 @@ char* XMLElement::ParseAttributes( char* p, int* curLineNumPtr )
 
             p = attrib->ParseDeep( p, _document->ProcessEntities(), curLineNumPtr );
             if ( !p || Attribute( attrib->Name() ) ) {
-                DeleteAttribute( attrib );
-                _document->SetError( XML_ERROR_PARSING_ATTRIBUTE, start, p, attrLineNum );
-                return 0;
+                //DeleteAttribute( attrib );
+               // _document->SetError( XML_ERROR_PARSING_ATTRIBUTE, start, p, attrLineNum );
+               // return 0;
             }
             // There is a minor bug here: if the attribute in the source xml
             // document is duplicated, it will not be detected and the

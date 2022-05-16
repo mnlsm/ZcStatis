@@ -47,7 +47,7 @@ CHttpRequestPtr OkoooDialog::CreatePostRequest(const std::string& url, const std
 	//ptr->request_headers.insert(std::make_pair("Content-Type", "application/x-www-form-urlencoded"));
 	ptr->request_headers.insert(std::make_pair("Connection", "Keep-Alive"));
 	ptr->request_headers.insert(std::make_pair("Accept-Encoding", "gzip"));
-	ptr->request_headers.insert(std::make_pair("Cache-Control", "no-store"));
+//	ptr->request_headers.insert(std::make_pair("Cache-Control", "no-store"));
 	ptr->request_url = url;
 	ptr->request_id = request_id;
 	ptr->request_type = HTTP_REQUEST_POST;

@@ -2,6 +2,11 @@
 #include "StlFiles.h"
 #include "tinyxml2.h"
 
+typedef void(*LFN_ComposeMultiSelectedProgress)(void* owner, int row_index, int row_max, int col_index, int col_max);
+
+
+
+
 class Global {
 public:
 	static CStlString GetAppPath();
@@ -47,9 +52,11 @@ public:
 	static size_t GetCharCount(const char* src, const char c);
 
 
-	static bool ComposeMultiSelected(std::vector<std::map<std::string, std::string>>& items, bool greater);
+	static bool ComposeMultiSelected(std::vector<std::map<std::string, std::string>>& items, 
+		bool greater, LFN_ComposeMultiSelectedProgress afn, void* owner);
 
-	static bool ComposeMultiSelected(std::vector<std::map<std::string, std::pair<int, std::string>>>& items, bool greater);
+	static bool ComposeMultiSelected(std::vector<std::map<std::string, std::pair<int, std::string>>>& items, 
+		bool greater);
 
 private:
 	static std::string  SysWideToUTF8(const wchar_t* wide);

@@ -836,7 +836,7 @@ void ZuCaiDialog::GetBuyLinesData(std::string& abuyLines) {
 	}
 	if (pos_unique_tid) {
 		backup_item = items;
-		if (Global::ComposeMultiSelected(backup_item, true)) {
+		if (Global::ComposeMultiSelected(backup_item, true, nullptr, nullptr)) {
 			items.swap(backup_item);
 		}
 		else {

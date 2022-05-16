@@ -1172,7 +1172,21 @@ CStringATL BeiDanDialog::CopyChoicesText(int& choice_count) {
 	return strMatchBets;
 }
 
+void BeiDanDialog::onComposeMultiSelectedProgress(void* owner, int row_index,
+	int row_max, int col_index, int col_max) {
+	DWORD dwTick = GetTickCount();
+	BeiDanDialog* dlg = reinterpret_cast<BeiDanDialog*>(owner);
+	if (dlg->m_compose_timestamp + 1000 < dwTick) {
+		dlg->m_compose_timestamp = dwTick;
+		CStringATL tmp;
+		tmp.Format("compose: %d/%d, %d/%d", row_index + 1, row_max, col_index + 1, col_max);
+		dlg->m_stProgress.SetWindowText(tmp);
+	}
+}
+
 void BeiDanDialog::GetBuyLinesData(std::string& abuyLines) {
+	m_stProgress.SetWindowText("");
+	m_compose_timestamp = GetTickCount();
 	abuyLines.clear();
 	if (m_Engine.get() == nullptr) {
 		return;
@@ -1219,7 +1233,8 @@ void BeiDanDialog::GetBuyLinesData(std::string& abuyLines) {
 	}
 	if (pos_unique_tid) {
 		backup_item = items;
-		if (Global::ComposeMultiSelected(backup_item, true)) {
+		if (Global::ComposeMultiSelected(backup_item, true, 
+				BeiDanDialog::onComposeMultiSelectedProgress, this)) {
 			items.swap(backup_item);
 		}
 		else {
@@ -1266,4 +1281,5 @@ void BeiDanDialog::GetBuyLinesData(std::string& abuyLines) {
 		stat_line.Format(_T("共有%u张，%d元。\r\n"), items.size(), all_count_0 * 2);
 		abuyLines.append((LPCSTR)stat_line);
 	}
+	m_stProgress.SetWindowText("");
 }

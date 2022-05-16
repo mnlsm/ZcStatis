@@ -471,7 +471,8 @@ size_t Global::GetCharCount(const char* src, const char c) {
 }
 
 
-bool Global::ComposeMultiSelected(std::vector<std::map<std::string, std::string>>& items, bool greater) {
+bool Global::ComposeMultiSelected(std::vector<std::map<std::string, std::string>>& items, 
+		bool greater, LFN_ComposeMultiSelectedProgress afn, void* owner) {
 	int all_count_0 = 0, all_count_1 = 0;
 	for (auto& l : items) {
 		int line_count = 1;
@@ -487,6 +488,9 @@ bool Global::ComposeMultiSelected(std::vector<std::map<std::string, std::string>
 		for (size_t i = 0;i < items.size(); i++) {
 			for (auto& samePair : items[i]) {
 				for (size_t j = i + 1; j < items.size(); j++) {
+					if (afn != nullptr) {
+						afn(owner, i, items.size(), j, items.size());
+					}
 					if (items[j].size() != items[i].size()) continue;
 					int checkCount = 0;
 					std::string sameVal = "";
@@ -533,7 +537,8 @@ bool Global::ComposeMultiSelected(std::vector<std::map<std::string, std::string>
 }
 
 
-bool Global::ComposeMultiSelected(std::vector<std::map<std::string, std::pair<int, std::string>>>& items, bool greater) {
+bool Global::ComposeMultiSelected(std::vector<std::map<std::string, std::pair<int, std::string>>>& items, 
+	bool greater) {
 	int all_count_0 = 0, all_count_1 = 0;
 	for (auto& l : items) {
 		int line_count = 1;
