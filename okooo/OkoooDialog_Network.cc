@@ -104,7 +104,6 @@ void OkoooDialog::OnHttpReturn(const CHttpRequestPtr& request, const CHttpRespon
 	else if (request->request_id.find(BIFEN_REQ_PREFIX) == 0) {
 		OnBiFenReturn(request, response);
 	}
-
 }
 
 int OkoooDialog::doLogin() {

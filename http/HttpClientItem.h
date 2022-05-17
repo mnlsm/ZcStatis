@@ -46,6 +46,7 @@ public:
 		use_ssl = FALSE;
 		callback = NULL;
 		request_time = -1;
+		request_hwnd = NULL;
 	}
 	virtual ~THttpRequestData(){}
 public:
@@ -53,6 +54,7 @@ public:
 	std::string cmd;
 	std::string request_id;
 	std::string request_url;
+	HWND request_hwnd;
 	talk_base::HttpData::HeaderMap request_headers;
 	EWebRequestCategory request_type;
 	EWebResponseCategory response_type;

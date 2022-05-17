@@ -4,13 +4,39 @@
 static const CStlString DZ_FILTER_NAME = _T("结果文件(*.txt)");
 static const CStlString DZ_FILTER = _T("*.txt");
 
+JQCDialog JQCDialog::sInst;
+void JQCDialog::PopUp(const std::shared_ptr<SQLite::Database>& db) {
+	if (!sInst.IsWindow()) {
+		//sInst.m_pDatabase = db;
+		sInst.Create(::GetDesktopWindow());
+	}
+	if (sInst.IsWindow()) {
+		sInst.ShowWindow(SW_SHOWMAXIMIZED);
+		::SetForegroundWindow(sInst.m_hWnd);
+	}
+}
+
+void JQCDialog::Destroy() {
+	if (sInst.IsWindow()) {
+		sInst.DestroyWindow();
+	}
+}
+
 
 JQCDialog::JQCDialog()
-	:m_lstStatis(this, 1) {
-
+		:m_lstStatis(this, 1)
+		,m_stInfo(this, 1) {
+	httpMgr_.reset(new (std::nothrow) CHttpClientMgr());
+	if (httpMgr_.get() != nullptr) {
+		httpMgr_->Init();
+	}
 }
 
 LRESULT JQCDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	CMessageLoop* pLoop = _Module.GetMessageLoop();
+	ATLASSERT(pLoop != NULL);
+	pLoop->AddIdleHandler(this);
+
 	CenterWindow();
 	InitControls();
 	DlgResize_Init();
@@ -22,7 +48,7 @@ LRESULT JQCDialog::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 	rcDesktop.DeflateRect(gapX, gapY, gapX, gapY);
 	SetWindowPos(NULL, &rcDesktop, SWP_NOZORDER);
 
-	ReloadStatisData();
+	ReloadStatisDataFromLocal(0);
 	return TRUE;
 }
 
@@ -30,8 +56,8 @@ LRESULT JQCDialog::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	CRect rcDesktop;
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &rcDesktop, sizeof(RECT));
 	LPMINMAXINFO pMinMaxInfo = reinterpret_cast<LPMINMAXINFO>(lParam);
-	pMinMaxInfo->ptMaxSize.x = pMinMaxInfo->ptMaxTrackSize.x = rcDesktop.right - rcDesktop.left - 10;
-	pMinMaxInfo->ptMaxSize.y = pMinMaxInfo->ptMaxTrackSize.y = rcDesktop.bottom - rcDesktop.top - 10;
+	//pMinMaxInfo->ptMaxSize.x = pMinMaxInfo->ptMaxTrackSize.x = rcDesktop.right - rcDesktop.left - 10;
+	//pMinMaxInfo->ptMaxSize.y = pMinMaxInfo->ptMaxTrackSize.y = rcDesktop.bottom - rcDesktop.top - 10;
 	return 1L;
 }
 
@@ -43,6 +69,12 @@ LRESULT JQCDialog::OnInitMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	menu.ModifyMenu(IDM_ADDRECORD, MF_BYCOMMAND | MF_STRING, IDM_ADDRECORD, text);
 	menu.RemoveMenu(IDM_JQC, MF_BYCOMMAND);
 	menu.RemoveMenu(IDM_DANLUE, MF_BYCOMMAND);
+	menu.RemoveMenu(IDM_OKOOO, MF_BYCOMMAND);
+	menu.RemoveMenu(IDM_ZUCAI, MF_BYCOMMAND);
+	menu.RemoveMenu(IDM_BEIDAN, MF_BYCOMMAND);
+	menu.DeleteMenu(2, MF_BYPOSITION);
+	menu.DeleteMenu(2, MF_BYPOSITION);
+
 	return 1L;
 }
 
@@ -57,7 +89,9 @@ LRESULT JQCDialog::OnListLButtonDbclk(UINT uMsg, WPARAM wParam, LPARAM lParam, B
 }
 
 LRESULT JQCDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-	EndDialog(0);
+	//EndDialog(0);
+	//_Module.GetMessageLoop()->RemoveIdleHandler(this);
+	ShowWindow(SW_HIDE);
 	return 1L;
 }
 
@@ -87,7 +121,7 @@ LRESULT JQCDialog::OnAddRecord(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 }
 
 LRESULT JQCDialog::OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-	ReloadStatisData();
+	ReloadStatisDataFromLocal(0);
 	return 1L;
 }
 
@@ -127,14 +161,16 @@ void JQCDialog::InitControls() {
 	m_lstStatis.SetSortColumn(0);
 }
 
-void JQCDialog::ReloadStatisData() {
+void JQCDialog::ReloadStatisDataFromLocal(int from) {
 	CStlString strTextFile = Global::GetAppPath() + _T("jqc.txt");
+	m_lstStatis.DeleteAllItems();
+	m_localids.clear();
 	if (PathFileExists(strTextFile.c_str())) {
-		m_lstStatis.DeleteAllItems();
 		std::string filedate;
 		Global::ReadFileData(strTextFile, filedate);
+		CMiscHelper::string_replace(filedate, "\r\n", "\n");
 		std::vector<CStlString> arrLines;
-		Global::DepartString(filedate, _T("\r\n"), arrLines);
+		Global::DepartString(filedate, _T("\n"), arrLines);
 		int iIndex = 0, maxQH = 0;
 		for (const auto& line : arrLines) {
 			int colIndex = 0;
@@ -150,6 +186,7 @@ void JQCDialog::ReloadStatisData() {
 			if (qh > maxQH) {
 				maxQH = qh;
 			}
+			m_localids.insert(std::make_pair(arrParts[0], line));
 			iIndex = m_lstStatis.InsertItem(iIndex, arrParts[0].c_str());
 			m_lstStatis.SetItemText(iIndex, ++colIndex, arrParts[3].c_str());
 			m_lstStatis.SetItemText(iIndex, ++colIndex, arrParts[2].c_str());
@@ -173,6 +210,9 @@ void JQCDialog::ReloadStatisData() {
 		}
 		m_strQH.Format(_T("%u"), maxQH + 1);
 		CreateWorkDir();
+		if (from == 0) {
+			doNetUpdateResults();
+		}
 	}
 }
 

@@ -157,6 +157,7 @@
     <ClCompile Include="http\HttpClientMgr_Session.cpp" />
     <ClCompile Include="JC\jc_defs.cc" />
     <ClCompile Include="JQC\JQCDialog.cc" />
+    <ClCompile Include="JQC\JQCDialog_Network.cc" />
     <ClCompile Include="JQC\JQCEngine.cc" />
     <ClCompile Include="lua\lapi.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>

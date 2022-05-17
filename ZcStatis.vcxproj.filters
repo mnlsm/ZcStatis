@@ -306,6 +306,9 @@
     <ClCompile Include="ZUCAI\ZuCaiEngine.cc">
       <Filter>zucai</Filter>
     </ClCompile>
+    <ClCompile Include="JQC\JQCDialog_Network.cc">
+      <Filter>JQC</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua\lctype.h">

@@ -100,6 +100,7 @@ LRESULT CMainDlg::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHand
 	OkoooDialog::Destroy();
 	BeiDanDialog::Destroy();
 	ZuCaiDialog::Destroy();
+	JQCDialog::Destroy();
     ::PostQuitMessage(wID);
     return 1L;
 }
@@ -113,8 +114,7 @@ LRESULT CMainDlg::OnAddRecord(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, 
 }
 
 LRESULT CMainDlg::OnMenuJQC(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
-	JQCDialog jqc;
-	jqc.DoModal();
+	JQCDialog::PopUp(this->m_pDatabase);
 	return 1L;
 }
 

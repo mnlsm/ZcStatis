@@ -700,3 +700,89 @@ ULONG GetSecondsSince1970() {
 	lfn_RtlTimeToSecondsSince1970(&li, &result);
 	return result;
 }
+
+bool parse_json_string(const std::string& data, Json::Value& result) {
+	if (data.empty()) {
+		return false;
+	}
+	Json::Reader reader;
+	return reader.parse(data, result, true);
+}
+
+bool json_get_string(const Json::Value& in, std::string* out) {
+	if (out == NULL) {
+		return false;
+	}
+	if (!in.isString()) {
+		char buffer[32];
+		if (in.isBool()) {
+			out->assign(in.asBool() ? "true" : "false");
+		}
+		else if (in.isInt()) {
+			sprintf(buffer, "%d", in.asInt());
+			out->assign(buffer);
+		}
+		else if (in.isUInt()) {
+			sprintf(buffer, "%u", in.asUInt());
+			out->assign(buffer);
+		}
+		else if (in.isDouble()) {
+			sprintf(buffer, "%lf", in.asDouble());
+			out->assign(buffer);
+		}
+		else {
+			return false;
+		}
+	}
+	else {
+		*out = in.asString();
+	}
+	return true;
+}
+
+bool json_get_object(const Json::Value& in, const std::string& k, Json::Value* out) {
+	if (!in.isObject() || !in.isMember(k)) {
+		return false;
+	}
+	*out = in[k];
+	return true;
+}
+
+bool json_get_string(const Json::Value& in, const std::string& k,
+	std::string* out) {
+	Json::Value x;
+	return json_get_object(in, k, &x) && json_get_string(x, out);
+}
+
+bool json_get_int64(const Json::Value& in, const std::string& k, int64_t* out) {
+	Json::Value x;
+	bool ret = false;
+	if (json_get_object(in, k, &x)) {
+		if (!x.isString()) {
+			ret = x.isConvertibleTo(Json::intValue);
+			if (ret) {
+				*out = x.asInt64();
+			}
+		}
+		else {
+			int64_t val = 0;  // NOLINT
+			const char* c_str = x.asCString();
+			char* end_ptr = NULL;
+			//set_errno(0);
+			val = strtoll(c_str, &end_ptr, 10); // NOLINT
+			ret = (end_ptr != c_str && *end_ptr == '\0' && !errno/*
+				&& val >= std::numeric_limits<int64_t>::min()
+				&& val <= std::numeric_limits<int64_t>::max()*/);
+			*out = val;
+		}
+	}
+	return ret;
+}
+
+bool jsonarray_get_object(const Json::Value& in, size_t n, Json::Value* out) {
+	if (!in.isArray() || !in.isValidIndex(n)) {
+		return false;
+	}
+	*out = in[static_cast<Json::Value::ArrayIndex>(n)];
+	return true;
+}

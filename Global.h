@@ -82,3 +82,10 @@ tinyxml2::XMLElement* FindElementByClassAttr(tinyxml2::XMLElement* root,
 void OpenDirAndSelectFiles(const char* sFile, const std::vector<const char*>& lFilelist);
 
 ULONG GetSecondsSince1970();
+
+bool parse_json_string(const std::string& data, Json::Value& result);
+bool json_get_string(const Json::Value& in, std::string* out);
+bool json_get_object(const Json::Value& in, const std::string& k, Json::Value* out);
+bool json_get_string(const Json::Value& in, const std::string& k, std::string* out);
+bool json_get_int64(const Json::Value& in, const std::string& k, int64_t* out);
+bool jsonarray_get_object(const Json::Value& in, size_t n, Json::Value* out);
