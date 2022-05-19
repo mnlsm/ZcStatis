@@ -163,6 +163,14 @@ LRESULT BeiDanDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
 			menu.AppendMenu(MF_STRING, 106, _T("单平"));
 			menu.AppendMenu(MF_STRING, 107, _T("单负"));
 			menu.AppendMenu(MF_SEPARATOR);
+			/*
+			menu.AppendMenu(MF_STRING, 201, _T("上单"));
+			menu.AppendMenu(MF_STRING, 202, _T("上双"));
+			menu.AppendMenu(MF_STRING, 203, _T("下单"));
+			menu.AppendMenu(MF_STRING, 204, _T("下双"));
+			*/
+			menu.AppendMenu(MF_STRING, 205, _T("单双全包"));
+			menu.AppendMenu(MF_SEPARATOR);
 			menu.AppendMenu(MF_STRING, 108, _T("分析预测"));
 			m_lstMatch.ClientToScreen(&pt);
 			UINT cmd = menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RETURNCMD, pt.x, pt.y, m_hWnd);
@@ -190,14 +198,16 @@ void BeiDanDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 					for (auto& sub : m_CurrentMatchItem->subjects) {
 						if (hand == 0 && sub.tid == 6) {
 							sub.checked = true;
-						} else if (hand != 0 && sub.tid == 1) {
+						}
+						else if (hand != 0 && sub.tid == 1) {
 							sub.checked = true;
-						} 
+						}
 					}
 					DoRefreshMatchListResults();
-				} else if (cmd == 102) {
+				}
+				else if (cmd == 102) {
 					for (auto& sub : m_CurrentMatchItem->subjects) {
-						if (hand == 0 && sub.tid == 6 
+						if (hand == 0 && sub.tid == 6
 							&& (sub.betCode == 3 || sub.betCode == 1)) {
 							sub.checked = true;
 						}
@@ -207,7 +217,8 @@ void BeiDanDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 						}
 					}
 					DoRefreshMatchListResults();
-				} else if (cmd == 103) {
+				}
+				else if (cmd == 103) {
 					for (auto& sub : m_CurrentMatchItem->subjects) {
 						if (hand == 0 && sub.tid == 6
 							&& (sub.betCode == 1 || sub.betCode == 0)) {
@@ -219,7 +230,8 @@ void BeiDanDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 						}
 					}
 					DoRefreshMatchListResults();
-				} else if (cmd == 104) {
+				}
+				else if (cmd == 104) {
 					for (auto& sub : m_CurrentMatchItem->subjects) {
 						if (hand == 0 && sub.tid == 6
 							&& (sub.betCode == 3 || sub.betCode == 0)) {
@@ -231,7 +243,8 @@ void BeiDanDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 						}
 					}
 					DoRefreshMatchListResults();
-				} else if (cmd == 105) {
+				}
+				else if (cmd == 105) {
 					for (auto& sub : m_CurrentMatchItem->subjects) {
 						if (hand == 0 && sub.tid == 6
 							&& (sub.betCode == 3 || sub.betCode == 3)) {
@@ -243,7 +256,8 @@ void BeiDanDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 						}
 					}
 					DoRefreshMatchListResults();
-				} else if (cmd == 106) {
+				}
+				else if (cmd == 106) {
 					for (auto& sub : m_CurrentMatchItem->subjects) {
 						if (hand == 0 && sub.tid == 6
 							&& (sub.betCode == 1 || sub.betCode == 1)) {
@@ -255,7 +269,8 @@ void BeiDanDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 						}
 					}
 					DoRefreshMatchListResults();
-				} else if (cmd == 107) {
+				}
+				else if (cmd == 107) {
 					for (auto& sub : m_CurrentMatchItem->subjects) {
 						if (hand == 0 && sub.tid == 6
 							&& (sub.betCode == 0 || sub.betCode == 0)) {
@@ -267,8 +282,34 @@ void BeiDanDialog::DoMatchListMenuCommand(UINT cmd, UINT index) {
 						}
 					}
 					DoRefreshMatchListResults();
-				} else if (cmd == 100) {
+				}
+				else if (cmd == 100) {
 					m_lstMatch.SetItemText(index, 6, "");
+				}
+				else if (cmd == 201 || cmd == 202 || cmd == 203 || cmd == 204) {
+					for (auto& sub : m_CurrentMatchItem->subjects) {
+						if (cmd == 201 && (sub.tid == 7 && sub.betCode == 3)) {
+							sub.checked = true;
+						}
+						else if (cmd == 202 && (sub.tid == 7 && sub.betCode == 4)) {
+							sub.checked = true;
+						}
+						else if (cmd == 203 && (sub.tid == 7 && sub.betCode == 1)) {
+							sub.checked = true;
+						}
+						else if (cmd == 204 && (sub.tid == 7 && sub.betCode == 2)) {
+							sub.checked = true;
+						}
+					}
+					DoRefreshMatchListResults();
+				}
+				else if (cmd == 205) {
+					for (auto& sub : m_CurrentMatchItem->subjects) {
+						if (sub.tid == 7) {
+							sub.checked = true;
+						}
+					}
+					DoRefreshMatchListResults();
 				}
 				m_stBetArea.Invalidate();
 				if (cmd == 108) {

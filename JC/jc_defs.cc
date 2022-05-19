@@ -25,7 +25,7 @@ std::string BetStruct::betCode() const {
 std::string BetStruct::codeStr() const {
 	std::string ret;
 	char cb[20] = { '\0' };
-	if (tid == 6 || tid == 1 || tid == 2) {
+	if (tid == 6 || tid == 1 || tid == 2 || tid == 7) {
 		sprintf(cb, "%d", (int)code);
 		ret = cb;
 	}
@@ -114,6 +114,20 @@ std::string BetStruct::codeStrJC() const {
 		const auto& iter = pair.find(code);
 		if (iter != pair.end()) {
 			ret = iter->second;
+		}
+	}
+	else if (tid == 7) {
+		if (code == 1) {
+			ret = "下单,";
+		}
+		else if (code == 2) {
+			ret = "下双,";
+		}
+		else if (code == 3) {
+			ret = "上单,";
+		}
+		else if (code == 4) {
+			ret = "上双,";
 		}
 	}
 	return ret;
@@ -237,6 +251,20 @@ void JCMatchItem::Subject::calcTip(int hand) {
 		const auto& iter = pair.find(betCode);
 		if (iter != pair.end()) {
 			tip = iter->second;
+		}
+	}
+	else if (tid == 7) {
+		if (betCode == 1) {
+			tip = "下单";
+		}
+		else if (betCode == 2) {
+			tip = "下双";
+		}
+		else if (betCode == 3) {
+			tip = "上单";
+		}
+		else if (betCode == 4) {
+			tip = "上双";
 		}
 	}
 }
@@ -401,7 +429,7 @@ CStringATL JCMatchItem::get_lua_clause(int match_index,
 	CStringATL temp;
 	std::ostringstream oss;
 	bool first = true;
-	bool has_spf = false, has_rspf = false;
+	bool has_spf = false, has_rspf = false, has_danshuang = false;
 	for (auto& sub : subjects) {
 		if (!sub.checked) continue;
 		if (first) {
@@ -415,6 +443,9 @@ CStringATL JCMatchItem::get_lua_clause(int match_index,
 		}
 		if (sub.tid == 1) {
 			has_rspf = true;
+		}
+		if (sub.tid == 7) {
+			has_danshuang = true;
 		}
 	}
 	if (has_spf) {
@@ -476,6 +507,32 @@ CStringATL JCMatchItem::get_lua_clause(int match_index,
 		appendStatItem(stat, "local pan_2_sum", "pan_%d_2", match_index);
 		appendStatItem(stat, "local pan_up_sum", "pan_%d_up", match_index);
 		appendStatItem(stat, "local pan_down_sum", "pan_%d_down", match_index);
+	}
+	if (has_danshuang) {
+		const char* fmt1 = "\n\tlocal ds_%d_1 = GetIndexCodeCount(%d, codes, 7, 1);              --场次%d的下单的个数";
+		const char* fmt2 = "\n\tlocal ds_%d_2 = GetIndexCodeCount(%d, codes, 7, 2);              --场次%d的下双的个数";
+		const char* fmt3 = "\n\tlocal ds_%d_3 = GetIndexCodeCount(%d, codes, 7, 3);              --场次%d的上单的个数";
+		const char* fmt4 = "\n\tlocal ds_%d_4 = GetIndexCodeCount(%d, codes, 7, 4);              --场次%d的上双的个数";
+		const char* fmt5 = "\n\tlocal ds_%d_down = ds_%d_1 + ds_%d_2;						 --场次%d的小球的个数";
+		const char* fmt6 = "\n\tlocal ds_%d_up = ds_%d_3 + ds_%d_4;                          --场次%d的大球的个数";
+		temp.Format(fmt1, match_index, match_index, match_index);
+		oss << temp;
+		temp.Format(fmt2, match_index, match_index, match_index);
+		oss << temp;
+		temp.Format(fmt3, match_index, match_index, match_index);
+		oss << temp;
+		temp.Format(fmt4, match_index, match_index, match_index);
+		oss << temp;
+		temp.Format(fmt5, match_index, match_index, match_index, match_index);
+		oss << temp;
+		temp.Format(fmt6, match_index, match_index, match_index, match_index);
+		oss << temp;
+		appendStatItem(stat, "local ds_1_sum", "ds_%d_1", match_index);
+		appendStatItem(stat, "local ds_2_sum", "ds_%d_2", match_index);
+		appendStatItem(stat, "local ds_3_sum", "ds_%d_3", match_index);
+		appendStatItem(stat, "local ds_4_sum", "ds_%d_4", match_index);
+		appendStatItem(stat, "local ds_up_sum", "ds_%d_up", match_index);
+		appendStatItem(stat, "local ds_down_sum", "ds_%d_down", match_index);
 	}
 	std::string result = oss.str();
 	return result.c_str();

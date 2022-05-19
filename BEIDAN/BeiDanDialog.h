@@ -199,6 +199,9 @@ private:
 	void OnJcMatchListReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
 	void OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+	void OnBeiDanDSReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+
+
 
 	int doBiFen();
 	void OnBiFenReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
