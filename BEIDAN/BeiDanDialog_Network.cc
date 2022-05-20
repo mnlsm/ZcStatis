@@ -97,6 +97,7 @@ static const char* BIFEN_REQ_PREFIX = "bifen_req_prefix";
 
 static const char* BEIDANWDL_REQ_PREFIX = "beidanwdl_req_prefix";
 static const char* BEIDANDS_REQ_PREFIX = "beidandanshuang_req_prefix";
+static const char* BEIDANJQ_REQ_PREFIX = "beidanjingqiu_req_prefix";
 
 
 
@@ -116,8 +117,9 @@ void BeiDanDialog::OnHttpReturn(const CHttpRequestPtr& request, const CHttpRespo
 	else if (request->request_id.find(BEIDANDS_REQ_PREFIX) == 0) {
 		OnBeiDanDSReturn(request, response);
 	}
-
-	
+	else if (request->request_id.find(BEIDANJQ_REQ_PREFIX) == 0) {
+		OnBeiDanJQReturn(request, response);
+	}
 }
 
 int BeiDanDialog::doLogin() {
@@ -309,6 +311,15 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 				sub.calcTip(ji->hand);
 				ji->subjects.push_back(sub);
 			}
+			for (size_t i = 0; i <= 7; i++) {
+				JCMatchItem::Subject sub;
+				sub.tid = 2;
+				sub.odds = 1.0f;
+				sub.betCode = i;
+				sub.checked = false;
+				sub.calcTip(ji->hand);
+				ji->subjects.push_back(sub);
+			}
 			m_order_items.insert(std::make_pair(ji->orderid, ji));
 		}
 		
@@ -338,7 +349,16 @@ void BeiDanDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 			m_pending_request++;
 			httpMgr_->DoHttpCommandRequest(req);
 		}
-		
+		/*
+		if (!m_order_items.empty()) {
+			//
+			CStringA url = "https://www.okooo.com/danchang/jinqiu/";
+			auto req = CreateGetRequest(std::string((LPCSTR)url), BEIDANJQ_REQ_PREFIX);
+			req->request_headers.insert(std::make_pair("Referer", "https://www.okooo.com/danchang"));
+			m_pending_request++;
+			httpMgr_->DoHttpCommandRequest(req);
+		}
+		*/
 	}
 	if (m_order_items.empty()) {
 		MessageBox("获取对阵列表失败 5, 没有比赛场次！", "错误", MB_ICONERROR | MB_OK);
@@ -597,6 +617,146 @@ void BeiDanDialog::OnBeiDanDSReturn(const CHttpRequestPtr& request, const CHttpR
 		m_stProgress.SetWindowText("");
 	}
 }
+
+
+
+void BeiDanDialog::OnBeiDanJQReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
+	m_pending_request--;
+	CStringATL progress;
+	progress.Format("%d/%d", m_order_items.size() - m_pending_request, m_order_items.size());
+	m_stProgress.SetWindowText(progress);
+
+	if (response->httperror == talk_base::HE_NONE && response->response_content.size() > 0) {
+		do {
+			std::string raw_response;
+			if (response->response_headers.Find("Content-Encoding: gzip") != -1) {
+				CZlibStream zlib;
+				zlib.DecompressGZip(response->response_content, raw_response);
+			}
+			else {
+				raw_response = response->response_content;
+			}
+			int acp_code = CP_ACP;
+			if (raw_response.find("UTF-8") != std::string::npos
+				|| raw_response.find("utf-8") != std::string::npos) {
+				acp_code = CP_UTF8;
+			}
+			CStringA temp = CW2A(CA2W(raw_response.c_str(), acp_code).m_psz).m_psz;
+			CStringA section_begin = "<tr class=\"alltrObj";
+			CStringA section_end = "</tr>";
+			int nFindBegin = 0;
+			while ((nFindBegin = temp.Find(section_begin, nFindBegin)) != -1) {
+				int nFindEnd = temp.Find(section_end, nFindBegin);
+				CStringA xmlText = temp.Mid(nFindBegin, nFindEnd - nFindBegin + section_end.GetLength());
+				nFindBegin = nFindEnd;
+				adjustXmlText(xmlText);
+				std::string date;
+				tinyxml2::XMLDocument doc;
+				tinyxml2::XMLElement* tempElement = nullptr;
+				if (doc.Parse(xmlText) != tinyxml2::XML_SUCCESS) {
+					break;
+				}
+				tinyxml2::XMLElement* child = doc.FirstChildElement();
+				if (child == nullptr) {
+					break;
+				}
+				auto node = FindElementByClassAttr(child, "xh");
+				if (node == nullptr) {
+					//MessageBox("获取对阵列表失败 4！", "错误", MB_ICONERROR | MB_OK);
+					break;
+				}
+				CStringA xuhao = adjustXuHaoText(GetElementText(node->FirstChildElement()));
+				std::shared_ptr<JCMatchItem> item;
+				for (auto& c : m_order_items) {
+					if (xuhao == c.second->id.c_str()) {
+						item = c.second;
+						break;
+					}
+				}
+				if (item.get() == nullptr) {
+					continue;
+				}
+				node = FindElementByClassAttr(child, "td4 ztbox");
+				std::map<CStringA, double> codes;
+				if (node != nullptr) {
+					auto son = node->FirstChildElement("a");
+					while (son != nullptr) {
+						auto son_child = son->FirstChildElement("em");
+						while (son_child != nullptr) {
+							CStringA code = GetElementText(son_child);
+							if (!code.IsEmpty()) {
+								CStringA name = GetElementAttrValue(son, "name");
+								codes[name] = atof(code);
+								break;
+							}
+							son_child = son_child->NextSiblingElement("em");
+						}
+						son = son->NextSiblingElement("a");
+					}
+				}
+				if (codes.find("c1") == codes.cend() || codes.find("c3") == codes.cend()
+					|| codes.find("c5") == codes.cend() || codes.find("c7") == codes.cend()) {
+					break;
+				}
+				for (const auto& c : codes) {
+					if (c.first == "c7") {
+						JCMatchItem::Subject sub;
+						sub.tid = 7;
+						sub.odds = c.second;
+						sub.betCode = 2;
+						sub.checked = false;
+						sub.calcTip(item->hand);
+						item->subjects.push_back(sub);
+					}
+					else if (c.first == "c5") {
+						JCMatchItem::Subject sub;
+						sub.tid = 7;
+						sub.odds = c.second;
+						sub.betCode = 1;
+						sub.checked = false;
+						sub.calcTip(item->hand);
+						item->subjects.push_back(sub);
+					}
+					else if (c.first == "c3") {
+						JCMatchItem::Subject sub;
+						sub.tid = 7;
+						sub.odds = c.second;
+						sub.betCode = 4;
+						sub.checked = false;
+						sub.calcTip(item->hand);
+						item->subjects.push_back(sub);
+					}
+					if (c.first == "c1") {
+						JCMatchItem::Subject sub;
+						sub.tid = 7;
+						sub.odds = c.second;
+						sub.betCode = 3;
+						sub.checked = false;
+						sub.calcTip(item->hand);
+						item->subjects.push_back(sub);
+					}
+				}
+			}
+		} while (false);
+	}
+
+	if (m_pending_request <= 0) {
+		std::multimap<std::string, std::shared_ptr<JCMatchItem>> items;
+		if (!m_order_items.empty()) {
+			for (auto& iter : m_order_items) {
+				InsertItemToDB(*iter.second);
+				items.insert(std::make_pair(iter.second->id, iter.second));
+			}
+			m_JCMatchItems.swap(items);
+		}
+		ReloadMatchListData();
+		m_buLogin.EnableWindow(FALSE);
+		m_buLogoff.EnableWindow(TRUE);
+		m_stProgress.SetWindowText("");
+	}
+}
+
+
 
 int BeiDanDialog::doBiFen() {
 	/*

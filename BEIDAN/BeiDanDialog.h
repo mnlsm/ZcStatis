@@ -200,6 +200,7 @@ private:
 
 	void OnBeiDanWDLReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 	void OnBeiDanDSReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+	void OnBeiDanJQReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
 
 

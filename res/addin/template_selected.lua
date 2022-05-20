@@ -98,15 +98,15 @@ function IsFilterLua(params)
 	local bonus = params.betbouns;
 	local trace_prefix = "jc_dbg[";
 	local trace_subfix = "]\r\n";
-	local jq0 =  GetCodeCount(codes, 2, 0); --选择进球数0的个数
-	local jq1 =  GetCodeCount(codes, 2, 1); --选择进球数1的个数
-	local jq2 =  GetCodeCount(codes, 2, 2); --选择进球数2的个数
-	local jq3 =  GetCodeCount(codes, 2, 3); --选择进球数3的个数
-	local jq4 =  GetCodeCount(codes, 2, 4); --选择进球数4的个数
-	local jq5 =  GetCodeCount(codes, 2, 5); --选择进球数5的个数
-	local jq6 =  GetCodeCount(codes, 2, 6); --选择进球数6的个数
-	local jq7 =  GetCodeCount(codes, 2, 7); --选择进球数7的个数
-	local jq_sum = GetCodeSum(codes, 2);    --选择进球总数
+	local jq0_sum =  GetCodeCount(codes, 2, 0); --选择进球数0的个数
+	local jq1_sum =  GetCodeCount(codes, 2, 1); --选择进球数1的个数
+	local jq2_sum =  GetCodeCount(codes, 2, 2); --选择进球数2的个数
+	local jq3_sum =  GetCodeCount(codes, 2, 3); --选择进球数3的个数
+	local jq4_sum =  GetCodeCount(codes, 2, 4); --选择进球数4的个数
+	local jq5_sum =  GetCodeCount(codes, 2, 5); --选择进球数5的个数
+	local jq6_sum =  GetCodeCount(codes, 2, 6); --选择进球数6的个数
+	local jq7_sum =  GetCodeCount(codes, 2, 7); --选择进球数7的个数
+	local jq_all_sum = GetCodeSum(codes, 2);    --选择进球总数
 
 ${REPLACE_CLAUSE}
 ${REPLACE_CLAUSE}

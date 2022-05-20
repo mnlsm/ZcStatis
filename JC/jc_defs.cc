@@ -13,7 +13,7 @@ CStringA CreateMatchDescription(const CStringA& ahost, const CStringA& aaway) {
 	return result;
 }
 
-
+/*
 std::string BetStruct::betCode() const {
 	std::string ret;
 	char cb[20] = { '\0' };
@@ -21,6 +21,7 @@ std::string BetStruct::betCode() const {
 	ret = cb;
 	return ret;
 }
+*/
 
 std::string BetStruct::codeStr() const {
 	std::string ret;
@@ -399,20 +400,6 @@ JCMatchItem::Subject* JCMatchItem::get_subject(int tid, const char* tip) {
 	return result;
 }
 
-static void appendStatItem(std::map<std::string, std::vector<std::string>>& stat,
-	const std::string& key, const char* fmt, int index) {
-	CStringATL tmp;
-	tmp.Format(fmt, index);
-	auto& iter = stat.find(key);
-	if (iter != stat.end()) {
-		iter->second.push_back((LPCSTR)tmp);
-	} else {
-		std::vector<std::string> v;
-		v.push_back((LPCSTR)tmp);
-		stat[key] = v;
-	}
-}
-
 CStringATL JCMatchItem::get_odds_string(int tid, int code) {
 	CStringATL result;
 	for (auto& sub : subjects) {
@@ -424,12 +411,29 @@ CStringATL JCMatchItem::get_odds_string(int tid, int code) {
 }
 
 
+static void appendStatItem(std::map<std::string, std::vector<std::string>>& stat,
+	const std::string& key, const char* fmt, int index) {
+	CStringATL tmp;
+	tmp.Format(fmt, index);
+	auto& iter = stat.find(key);
+	if (iter != stat.end()) {
+		iter->second.push_back((LPCSTR)tmp);
+	}
+	else {
+		std::vector<std::string> v;
+		v.push_back((LPCSTR)tmp);
+		stat[key] = v;
+	}
+}
+
+
 CStringATL JCMatchItem::get_lua_clause(int match_index, 
 		std::map<std::string, std::vector<std::string>>& stat) {
 	CStringATL temp;
 	std::ostringstream oss;
 	bool first = true;
 	bool has_spf = false, has_rspf = false, has_danshuang = false;
+	bool has_jq = false;
 	for (auto& sub : subjects) {
 		if (!sub.checked) continue;
 		if (first) {
@@ -446,6 +450,9 @@ CStringATL JCMatchItem::get_lua_clause(int match_index,
 		}
 		if (sub.tid == 7) {
 			has_danshuang = true;
+		}
+		if (sub.tid == 2) {
+			has_jq = true;
 		}
 	}
 	if (has_spf) {
@@ -533,6 +540,11 @@ CStringATL JCMatchItem::get_lua_clause(int match_index,
 		appendStatItem(stat, "local ds_4_sum", "ds_%d_4", match_index);
 		appendStatItem(stat, "local ds_up_sum", "ds_%d_up", match_index);
 		appendStatItem(stat, "local ds_down_sum", "ds_%d_down", match_index);
+	}
+	if (has_jq) {
+		const char* fmt1 = "\n\tlocal jq_%d_code = GetIndexCode(%d, codes, 2);              --场次%d的进球数";
+		temp.Format(fmt1, match_index, match_index, match_index);
+		oss << temp;
 	}
 	std::string result = oss.str();
 	return result.c_str();

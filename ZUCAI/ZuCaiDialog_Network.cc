@@ -372,13 +372,13 @@ void ZuCaiDialog::OnZcPlReturn(const CHttpRequestPtr& request, const CHttpRespon
 		std::multimap<std::string, std::shared_ptr<JCMatchItem>> items;
 		if (!m_order_items.empty()) {
 			for (auto& iter : m_order_items) {
-				JCMatchItem item;
-				if (GetItemFromDB(*iter.second, item)) {
-					*iter.second = item;
-				}
-				else {
+				//CMatchItem item;
+				//if (GetItemFromDB(*iter.second, item)) {
+				//	*iter.second = item;
+				//}
+				//else {
 					InsertItemToDB(*iter.second);
-				}
+				//}
 				items.insert(std::make_pair(iter.second->id, iter.second));
 			}
 			m_JCMatchItems.swap(items);

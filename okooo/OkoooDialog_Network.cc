@@ -327,7 +327,7 @@ void OkoooDialog::OnJcMatchListReturn(const CHttpRequestPtr& request,
 					for (const auto& sub : item.second->subjects) {
 						lines += sub.lineStr();
 					}
-					Global::SaveFileData("e:\\zcjc.txt", lines, FALSE);
+					//Global::SaveFileData("e:\\zcjc.txt", lines, FALSE);
 				}
 			}
 		}

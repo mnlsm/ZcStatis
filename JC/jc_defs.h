@@ -10,7 +10,7 @@ struct BetStruct {
 	int code;
 	double odds;
 	int getPan() const;
-	std::string betCode() const;
+	//std::string betCode() const;
 	std::string codeStr() const;
 	std::string codeStrJC() const;
 };
