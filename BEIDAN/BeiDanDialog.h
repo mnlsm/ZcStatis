@@ -207,11 +207,6 @@ private:
 	int doBiFen();
 	void OnBiFenReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
-public:
-	static void onComposeMultiSelectedProgress(void* owner, int row_index, 
-		int row_max, int col_index, int col_max);
-
-
 private:
 	DWORD m_compose_timestamp;
 	CWaitCursor m_waitCursor;

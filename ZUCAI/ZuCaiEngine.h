@@ -2,6 +2,8 @@
 
 #include "../JC/jc_defs.h"
 
+
+
 class ZuCaiEngine {
 
 public:
@@ -18,6 +20,11 @@ public:
 	void setScriptFile(const char* file) { m_strScriptFile = file; }
 	const CStlString& getScriptFile() { return m_strScriptFile; }
 	const std::vector<JcBetItemSource>& GetFixedSources() { return m_vecFixedSources; }
+
+	const CStlString& getKaiJiangCodes() { return m_strKaiJiangCodes; }
+
+	void setFilterProgressCallback(const std::function<void(size_t, size_t)>& func) { m_FilterProgressCallback = func; };
+
 
 	void setCheckResult(const CStlString& result) { m_strCheckResult = result; }
 	const CStlString& getCheckResult(){ return m_strCheckResult; }
@@ -52,7 +59,7 @@ protected:
 	TBetResult m_vecResults;
 	TBetResult m_vecDiscardResults;
 
-	CStlString m_strFanAnTitle, m_strFanAnDesc;
+	CStlString m_strFanAnTitle, m_strFanAnDesc, m_strKaiJiangCodes;
 	int m_nMatchBetsLose;
 	double m_dMinBonus;
 	int m_nAvgMultiple;
@@ -62,5 +69,6 @@ protected:
 
 	CStlString m_strCheckResult;
 	std::vector<std::shared_ptr<JCMatchItem>> m_vecMatchItems;
+	std::function<void(size_t, size_t)> m_FilterProgressCallback;
 
 };

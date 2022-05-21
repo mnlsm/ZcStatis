@@ -73,6 +73,8 @@ ZuCaiEngine::ZuCaiEngine(const CStlString& script, const char* logf) {
 		m_strLogPath = logf;
 		m_strLogPath += "\\debug.log";
 		DeleteFileA(m_strLogPath.c_str());
+		CStlString tmp = m_strLogPath + ".1";
+		DeleteFileA(tmp.c_str());
 	}
 }
 
@@ -80,7 +82,7 @@ int __cdecl ZuCaiEngine::LUA_DbgTrace(lua_State* L) {
 	if (lua_type(L, 1) == LUA_TSTRING) {
 		std::string line = dbgview_prefix + lua_tostring(L, 1);
 		ZuCaiEngine* pThis = (ZuCaiEngine*)lua_touserdata(L, lua_upvalueindex(1));
-		const CStlString& path = pThis->m_strLogPath;
+		const CStlString& path = pThis->m_strLogPath + ".1";
 		if (!path.empty()) {
 			Global::SaveFileData(path.c_str(), line, TRUE);
 		}
@@ -165,6 +167,7 @@ BOOL ZuCaiEngine::CalculateAllResultImpl(CStlString& failed_reason) {
 	double bonus = 0.0;
 	TBetResult allResult, tempAll, discardAll, validAll, filterAll;
 	if (GeneratorBets(m_vecSources, allResult)) {
+		size_t index = 0;
 		for (const auto& record : allResult) {
 			CStlString error_text;
 			if (IsAValidRecordImpl(record, lua_state, bonus, &error_text)) {
@@ -172,9 +175,13 @@ BOOL ZuCaiEngine::CalculateAllResultImpl(CStlString& failed_reason) {
 			} else {
 				discardAll.push_back(record);
 			}
-			if (!error_text.empty()) {
-				failed_reason.append("\n").append(error_text);
+			if (!error_text.empty() && failed_reason.size() < 512 * 1024) {
+				failed_reason.append(error_text);
 			}
+			if (m_FilterProgressCallback) {
+				m_FilterProgressCallback(index, allResult.size());
+			}
+			index++;
 		}
 		doFilterByBetsRankRatio(allResult, validAll, filterAll);
 		doAvgMultipleResult(filterAll, tempAll);
@@ -197,9 +204,9 @@ void ZuCaiEngine::doFilterByBetsRankRatio(const TBetResult& allResult, const TBe
 	
 	std::vector<double> bets;
 	for (const auto& record : allResult) {
-		double temp = 1.0;
+		double temp = 0.0;
 		for (const auto& item : record) {
-			temp = temp * item.bet.odds;
+			temp = temp + item.bet.odds;
 		}
 		bets.emplace_back(temp);
 	}
@@ -210,9 +217,9 @@ void ZuCaiEngine::doFilterByBetsRankRatio(const TBetResult& allResult, const TBe
 	index = (int)((double)bets.size() * m_dBetsRankRatioMin);
 	double betMin = bets[index];
 	for (const auto& record : validResult) {
-		double temp = 1.0;
+		double temp = 0.0;
 		for (const auto& item : record) {
-			temp = temp * item.bet.odds;
+			temp = temp + item.bet.odds;
 		}
 		if (temp >= betMin && temp <= betMax) {
 			result.emplace_back(record);
@@ -298,7 +305,8 @@ static void getJcBetItemSource(lua_State* L, const char* key, std::vector<JcBetI
 		JcBetItemSource jbs;
 		jbs.id = arrParts[0];
 		int hand = atoi(arrParts[1].c_str());
-		for (int i = 2; i < arrParts.size(); i++) {
+		int odds_hand = atoi(arrParts[2].c_str());
+		for (int i = 3; i < arrParts.size(); i++) {
 			CStlStrArray arrBets;
 			Global::DepartString(arrParts[i], ",", arrBets);
 			if (arrBets.size() != 3) {
@@ -306,6 +314,7 @@ static void getJcBetItemSource(lua_State* L, const char* key, std::vector<JcBetI
 			}
 			BetStruct bs;
 			bs.hand = hand;
+			bs.odds_hand = odds_hand;
 			bs.tid = atoi(arrBets[0].c_str());
 			bs.code = atoi(arrBets[1].c_str());
 			bs.odds = atof(arrBets[2].c_str());
@@ -381,6 +390,12 @@ lua_State* ZuCaiEngine::InitLua(CStlString& failed_reason) {
 		m_strFanAnDesc = lua_tostring(L, -1);
 		lua_pop(L, 1);
 	}
+
+	if (lua_getglobal(L, "kZcKaiJiangResult") == LUA_TSTRING) {
+		m_strKaiJiangCodes = lua_tostring(L, -1);
+		lua_pop(L, 1);
+	}
+
 	std::vector<JcBetItemSource> sources;
 	getJcBetItemSource(L, "kMatchBets", sources);
 	if (sources.empty()) {
@@ -394,6 +409,13 @@ lua_State* ZuCaiEngine::InitLua(CStlString& failed_reason) {
 	}
 	getJcBetItemSource(L, "kMatchBetsFixed", sources);
 	SetFixedSources(sources);
+
+	size_t match_count = m_vecSources.size() + m_vecFixedSources.size();
+	if (match_count != 9 && match_count != 14) {
+		failed_reason.append("\n").append(_T("match count not 9 or 14 !!"));
+		lua_close(L);
+		return NULL;
+	}
 
 	return L;
 }

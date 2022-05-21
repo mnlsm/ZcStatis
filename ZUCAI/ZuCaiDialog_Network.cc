@@ -341,28 +341,71 @@ void ZuCaiDialog::OnZcPlReturn(const CHttpRequestPtr& request, const CHttpRespon
 				break;
 			}
 			child = child->FirstChildElement("td");
+			int minodds_code = 3;
+			double minodds = 10000;
+			std::set<double> odds_kind;
 			int index = -1;
 			while (child != nullptr) {
 				if (index == 0) {
 					auto sub = item->second->get_subject(6, 3);
 					if (sub != nullptr) {
 						sub->odds = atof(GetElementText(child));
+						if (sub->odds < minodds) {
+							minodds = sub->odds;
+							minodds_code = sub->betCode;
+						}
+						odds_kind.insert(sub->odds);
 					}
 				} else if (index == 1) {
 					auto sub = item->second->get_subject(6, 1);
 					if (sub != nullptr) {
 						sub->odds = atof(GetElementText(child));
+						if (sub->odds < minodds) {
+							minodds = sub->odds;
+							minodds_code = sub->betCode;
+						}
+						odds_kind.insert(sub->odds);
 					}
 				} else if (index == 2) {
 					auto sub = item->second->get_subject(6, 0);
 					if (sub != nullptr) {
 						sub->odds = atof(GetElementText(child));
+						if (sub->odds < minodds) {
+							minodds = sub->odds;
+							minodds_code = sub->betCode;
+						}
+						odds_kind.insert(sub->odds);
 					}
 				} else if (index > 2) {
 					break;
 				}
 				child = child->NextSiblingElement("td");
 				index++;
+			}
+			item->second->odds_hand = -1;
+			if (minodds_code == 0) {
+				item->second->odds_hand = 1;
+			}
+			item->second->hand = item->second->odds_hand;
+			int odds_kind_count = odds_kind.size();
+			if (odds_kind_count < 3) {
+				int add_code = 0, minus_code = 1;
+				if (minodds_code == 0) {
+					add_code = 3;
+					item->second->hand = 1;
+				}
+				else if (minodds_code == 1) {
+					minus_code = 3;
+					item->second->hand = -1;
+				}
+				for (auto& sub : item->second->subjects) {
+					if (sub.betCode == add_code) {
+						sub.odds += 0.01;
+					}
+					if (sub.betCode == minus_code) {
+						sub.odds -= 0.01;
+					}
+				}
 			}
 
 		} while (false);

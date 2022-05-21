@@ -62,5 +62,4 @@ protected:
 
 	CStlString m_strCheckResult;
 	std::vector<std::shared_ptr<JCMatchItem>> m_vecMatchItems;
-
 };

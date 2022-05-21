@@ -50,6 +50,8 @@ public:
 		DDX_CONTROL(IDC_SEP1, m_stSep1)
 		DDX_CONTROL(IDC_SEP2, m_stSep2)
 		DDX_CONTROL(IDC_STATIC_RESULT, m_stResult)
+		DDX_CONTROL(IDC_STATIC_TIP, m_stTip)
+
 
 		DDX_CONTROL(IDC_BULOGIN, m_buLogin)
 		DDX_CONTROL(IDC_BULOGOFF, m_buLogoff)
@@ -152,6 +154,7 @@ private:
 	CContainedWindowT<CStatic> m_stSep1;
 	CContainedWindowT<CStatic> m_stSep2;
 	CContainedWindowT<CStatic> m_stResult;
+	CContainedWindowT<CStatic> m_stTip;
 
 	CContainedWindowT<CButton> m_buLogin;
 	CContainedWindowT<CButton> m_buLogoff;
@@ -190,7 +193,8 @@ private:
 
 	void OnZcPlReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
 
-public:
+private:
+	CStringATL CopyChoicesText(int& choice_count);
 
 
 private:
@@ -224,6 +228,7 @@ private:
 
 private:
 	std::shared_ptr<ZuCaiEngine> m_Engine;
+	DWORD m_compose_timestamp;
 
 private:
 	std::map<std::string, std::shared_ptr<WebBrowser>> m_Browsers;

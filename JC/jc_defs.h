@@ -4,6 +4,7 @@
 #include <sstream>
 
 struct BetStruct {
+	BetStruct() { hand = odds_hand = 0; }
 	int hand;
 	int odds_hand;
 	int tid;

@@ -39,6 +39,7 @@ ZuCaiDialog::ZuCaiDialog() :
 	m_buCalc(this, 100),
 	m_stSep1(this, 100),
 	m_stSep2(this, 100),
+	m_stTip(this, 100),
 	m_buCopy(this, 100),
 	m_stResult(this, 100),
 	m_buExtractLua(this, 100),
@@ -160,6 +161,12 @@ LRESULT ZuCaiDialog::OnListRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 			menu.AppendMenu(MF_STRING, 111, _T("复式胜负"));
 			menu.AppendMenu(MF_SEPARATOR);
 			menu.AppendMenu(MF_STRING, 112, _T("分析预测"));
+
+			//menu.EnableMenuItem(109, MF_DISABLED);
+			//menu.EnableMenuItem(110, MF_DISABLED);
+			//menu.EnableMenuItem(111, MF_DISABLED);
+
+
 			m_lstMatch.ClientToScreen(&pt);
 			UINT cmd = menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RETURNCMD, pt.x, pt.y, m_hWnd);
 			DoMatchListMenuCommand(cmd, index);
@@ -276,6 +283,8 @@ LRESULT ZuCaiDialog::OnLoginOff(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 }
 
 LRESULT ZuCaiDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	m_compose_timestamp = 0;
+	m_stTip.SetWindowText("");
 	std::string filedata;
 	TCHAR szFilterName[30] = { _T('\0') };
 	_tcscpy(szFilterName, LUA_FILTER_NAME.c_str());
@@ -306,6 +315,29 @@ LRESULT ZuCaiDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 	if (engine.get() != NULL) {
 		engine->setMatchItems(match_items);
 		engine->setScriptFile(strLoadPath.c_str());
+		auto func = [this](size_t index, size_t count) mutable->void {
+			DWORD dwTick = GetTickCount();
+			if (m_compose_timestamp + 1000 < dwTick) {
+				m_compose_timestamp = dwTick;
+				CStringATL tmp;
+				tmp.Format("InFileter: %u/%u", index, count);
+				m_stTip.SetWindowText(tmp);
+			}
+			if ((index % 500) == 0) {
+				MSG m_msg;
+				int msg_count = 0;
+				while (::PeekMessage(&m_msg, NULL, 0, 0, PM_NOREMOVE)) {
+					if (::GetMessage(&m_msg, NULL, 0, 0)) {
+						::TranslateMessage(&m_msg);
+						::DispatchMessage(&m_msg);
+					}
+					if (++msg_count > 50) {
+						break;
+					}
+				}
+			}
+		};
+		engine->setFilterProgressCallback(func);
 		CStlString reason = "";
 		if (!engine->CalculateAllResult(reason)) {
 			wait.Restore();
@@ -329,10 +361,11 @@ LRESULT ZuCaiDialog::OnCalc(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 	DeleteFileA(strBuyFilePath.c_str());
 	GetBuyLinesData(buyLines);
 	Global::SaveFileData(strBuyFilePath, buyLines, FALSE);
+	m_stTip.SetWindowText("");
 	return 1L;
 //https://www.hipdf.cn/txt-to-pdf
 }
-
+/*
 LRESULT ZuCaiDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	CWaitCursor wait;
 	Sleep(1000);
@@ -352,6 +385,88 @@ LRESULT ZuCaiDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 	}
 	return 1L;
 }
+*/
+
+LRESULT ZuCaiDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	int choice_count = 0;
+	CStringATL strChoicesText = CopyChoicesText(choice_count);
+	if (choice_count == 0) {
+		MessageBox("请先选择投注项目!!!", "错误", MB_ICONERROR | MB_OK);
+		return 1L;
+	}
+	strChoicesText.Replace("\r", "");
+	CWaitCursor wait;
+	Sleep(1000);
+	SYSTEMTIME tm = { 0 };
+	GetLocalTime(&tm);
+	CStringATL file_path;
+	file_path.Format("%s\\%04d%02d%02d%02d%02d%02d.lua", this->m_strWorkDir,
+		tm.wYear, tm.wMonth, tm.wDay, tm.wHour, tm.wMinute, tm.wSecond);
+	DeleteFile(file_path);
+	CResource res;
+	if (res.Load(_T("ADDIN"), MAKEINTRESOURCE(IDR_ADDIN5))) {
+		CStringATL text((const char*)res.Lock(), res.GetSize());
+		text = CW2T(CT2W(text, CP_UTF8).m_psz, CP_ACP).m_psz;
+		text.Replace("\r", "");
+		CStlStrArray lines;
+		Global::DepartString((LPCSTR)text, "\n", false, lines);
+		int index = 1;
+		std::map<std::string, std::vector<std::string>> stat_clause;
+		for (auto& item : m_JCMatchItems) {
+			CStringATL clause = item.second->get_lua_clause(index, stat_clause);
+			if (!clause.IsEmpty()) {
+				index++;
+				Global::ReplaceStringInStrArrayOnce(lines, "${REPLACE_CLAUSE}", (LPCSTR)clause);
+			}
+		}
+		if (!stat_clause.empty()) {
+			CStringATL caluses;
+			caluses.Append("\n\t -- stat items");
+			for (const auto& iter : stat_clause) {
+				CStringATL clause;
+				for (const auto& part : iter.second) {
+					if (clause.IsEmpty()) {
+						clause.Append("\n\t");
+						clause.Append(iter.first.c_str());
+						clause.Append(" = ");
+						clause.Append(part.c_str());
+					}
+					else {
+						clause.Append(" + ");
+						clause.Append(part.c_str());
+					}
+				}
+				if (!clause.IsEmpty()) {
+					clause.Append(";");
+					caluses.Append(clause);
+				}
+			}
+			Global::ReplaceStringInStrArrayOnce(lines, "${REPLACE_CLAUSE}", (LPCSTR)caluses);
+		}
+
+		for (index = (int)lines.size() - 1; index >= 0; index--) {
+			if (lines[index] == "${REPLACE_CLAUSE}") {
+				lines.erase(lines.begin() + index);
+			}
+		}
+		text.Empty();
+		for (auto& line : lines) {
+			text.Append(line.c_str());
+			text.Append("\n");
+		}
+		text.Replace("kMatchBets={};kMatchBetsFixed={};", strChoicesText);
+		text.Replace("\n", "\r\n");
+		text = CW2T(CT2W(text, CP_ACP).m_psz, CP_UTF8).m_psz;
+		Global::SaveFileData((LPCSTR)file_path, (uint8_t*)(LPCSTR)text,
+			text.GetLength(), FALSE);
+		std::vector<const char*> select_files;
+		select_files.push_back((LPCSTR)file_path);
+		OpenDirAndSelectFiles((LPCSTR)m_strWorkDir, select_files);
+	}
+	return 1L;
+}
+
+
 
 LRESULT ZuCaiDialog::OnUpload(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	if (m_Engine.get() == nullptr) {
@@ -471,6 +586,8 @@ LRESULT ZuCaiDialog::OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 	CWaitCursor wait;
 	CStringATL strMatchBets = GetLuaGlobalChoiceMember(false);
 	strMatchBets += GetLuaGlobalChoiceMember(true);
+	int choice_count = 0;
+	strMatchBets = CopyChoicesText(choice_count);
 	if (OpenClipboard()) {
 		EmptyClipboard();
 		if (!strMatchBets.IsEmpty()) {
@@ -836,13 +953,36 @@ void ZuCaiDialog::GetBuyLinesData(std::string& abuyLines) {
 	}
 	if (pos_unique_tid) {
 		backup_item = items;
-		if (Global::ComposeMultiSelected(backup_item, true, nullptr, nullptr)) {
+		auto func = [this](int row_index, int row_max, int col_index, int col_max) mutable->void {
+			DWORD dwTick = GetTickCount();
+			if (m_compose_timestamp + 1000 < dwTick) {
+				m_compose_timestamp = dwTick;
+				CStringATL tmp;
+				tmp.Format("InCompose: %d/%d, %d/%d", row_index + 1, row_max, col_index + 1, col_max);
+				m_stTip.SetWindowText(tmp);
+			}
+			if ((col_index % 500) == 0) {
+				MSG m_msg;
+				int msg_count = 0;
+				while (::PeekMessage(&m_msg, NULL, 0, 0, PM_NOREMOVE)) {
+					if (::GetMessage(&m_msg, NULL, 0, 0)) {
+						::TranslateMessage(&m_msg);
+						::DispatchMessage(&m_msg);
+					}
+					if (++msg_count > 200) {
+						break;
+					}
+				}
+			}
+		};
+		if (Global::ComposeMultiSelected(backup_item, true, func)) {
 			items.swap(backup_item);
 		}
 		else {
 			MessageBox("合并复式结果失败了！", "错误", MB_ICONERROR | MB_OK);
 		}
 	}
+
 	backup_item.clear();
 	for (int i = (int)items.size() - 1; i >= 0; i--) { //分离单式、复式
 		int single_count = 0;
@@ -860,10 +1000,18 @@ void ZuCaiDialog::GetBuyLinesData(std::string& abuyLines) {
 		items.swap(backup_item);
 	}
 	bool is_toto14 = (pos_tids.size() == 14);
+	CStlString kaijiang_codes = m_Engine->getKaiJiangCodes();
+	if (kaijiang_codes.size() != 14) {
+		kaijiang_codes.clear();
+	}
 	while (!items.empty()) {
+		int hit_count = -1;
 		if (is_toto14) {
 			for (const auto& item : items) {
 				std::string line;
+				if (!kaijiang_codes.empty()) {
+					hit_count = 0;
+				}
 				for (const auto& m : item) {
 					std::string ms = m.second + ", ";
 					if (!backup_item.empty()) {
@@ -872,6 +1020,15 @@ void ZuCaiDialog::GetBuyLinesData(std::string& abuyLines) {
 						}
 					}
 					line.append(ms);
+					if (hit_count >= 0) {
+						int index = _ttoi(m.first.c_str()) - 1;
+						auto c = kaijiang_codes[index];
+						if (c == '*') hit_count++;
+						else if(m.second.find_first_of(c) != CStlString::npos) hit_count++;
+					}
+				}
+				if (hit_count >= 0) {
+					line.append("    --hit_count:").append(std::to_string(hit_count));
 				}
 				line.append("\r\n");
 				abuyLines.append(line);
@@ -879,13 +1036,26 @@ void ZuCaiDialog::GetBuyLinesData(std::string& abuyLines) {
 		} else {
 			for (const auto& item : items) {
 				std::string line;
+				if (!kaijiang_codes.empty()) {
+					hit_count = 0;
+				}
 				for (const auto& m : item) {
 					std::string ms;
 					ms.append("[").append(m.first).append("]").append(m.second).append(" ");
 					line.append(ms);
+					if (hit_count >= 0) {
+						int index = _ttoi(m.first.c_str()) - 1;
+						auto c = kaijiang_codes[index];
+						if (c == '*') hit_count++;
+						else if (m.second.find_first_of(c) != CStlString::npos) hit_count++;
+					}
 				}
 				CStringATL temp = line.c_str();
 				if (temp.Right(1) == ",") temp = temp.Left(temp.GetLength() - 1);
+				if (hit_count >= 0) {
+					temp.Append("    --hit_count:");
+					temp.Append(std::to_string(hit_count).c_str());
+				}
 				line.assign(temp).append("\r\n").append("\r\n");
 				abuyLines.append(line);
 			}
@@ -1144,4 +1314,48 @@ void ZuCaiDialog::onWebBrowserClose(const std::string& url) {
 	}
 	ShowWindow(IsIconic()? SW_RESTORE:SW_SHOW);
 	::SetForegroundWindow(m_hWnd);
+}
+
+CStringATL ZuCaiDialog::CopyChoicesText(int& choice_count) {
+	choice_count = 0;
+	CStringATL strMatchBets = "kMatchBets = {\r\n";
+	std::vector<CStringATL> prefixs, subfixs;
+	int max_prefixs_length = 0;
+	for (auto& item : m_JCMatchItems) {
+		CStringATL strBets;
+		for (auto& sub : item.second->subjects) {
+			if (sub.checked) {
+				char szTemp[128] = { '\0' };
+				sprintf(szTemp, "%d,%d,%.2f", (int)sub.tid, (int)sub.betCode, sub.odds);
+				if (!strBets.IsEmpty()) {
+					strBets += ";";
+				}
+				strBets += szTemp;
+			}
+		}
+		if (!strBets.IsEmpty()) {
+			CStringATL prefix;
+			int use_hand = (int)item.second->hand;
+			int odds_hand = (int)item.second->odds_hand;
+			prefix.Format("    \"%s;%d;%d;%s\",    ", item.second->id.c_str(),
+				use_hand, odds_hand, strBets);
+			prefixs.push_back(prefix);
+			if (prefix.GetLength() > max_prefixs_length) {
+				max_prefixs_length = prefix.GetLength();
+			}
+			subfixs.push_back(item.second->descrition.c_str());
+			choice_count++;
+		}
+	}
+	for (int i = 0; i < prefixs.size(); i++) {
+		for (int j = prefixs[i].GetLength(); j < max_prefixs_length; j++) {
+			prefixs[i].AppendChar(' ');
+		}
+		CStringATL strItem;
+		strItem.Format("%s--%s\r\n", prefixs[i], subfixs[i]);
+		strMatchBets += strItem;
+
+	}
+	strMatchBets += "};\r\n";
+	return strMatchBets;
 }

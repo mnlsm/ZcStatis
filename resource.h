@@ -85,6 +85,7 @@
 #define IDC_COMBO1                      1045
 #define IDC_MATCH_FILTER                1045
 #define IDC_INFOS                       1046
+#define IDC_STATIC_TIP                  1047
 #define IDC_CORESULT1                   1078
 #define IDC_CORESULT2                   1079
 #define IDC_CORESULT3                   1080
@@ -168,7 +169,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        213
 #define _APS_NEXT_COMMAND_VALUE         32784
-#define _APS_NEXT_CONTROL_VALUE         1047
+#define _APS_NEXT_CONTROL_VALUE         1048
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif
