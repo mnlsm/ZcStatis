@@ -429,7 +429,7 @@ LRESULT BeiDanDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 		int index = 1;
 		std::map<std::string, std::vector<std::string>> stat_clause;
 		for (auto& item : m_JCMatchItems) {
-			CStringATL clause = item.second->get_lua_clause(index, stat_clause);
+			CStringATL clause = item.second->get_lua_clause(index, item.second.get(), stat_clause);
 			if (!clause.IsEmpty()) {
 				index++;
 				Global::ReplaceStringInStrArrayOnce(lines, "${REPLACE_CLAUSE}", (LPCSTR)clause);

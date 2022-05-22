@@ -59,7 +59,7 @@ struct JCMatchItem {
 	Subject* get_subject(int tid, int betCode);
 	Subject* get_subject(int tid, const char* tip);
 
-	CStringATL get_lua_clause(int match_index, 
+	CStringATL get_lua_clause(int match_index, JCMatchItem* owner,
 		std::map<std::string, std::vector<std::string>>& stat);
 	CStringATL get_odds_string(int tid, int code);
 };

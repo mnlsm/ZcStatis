@@ -389,7 +389,8 @@ LRESULT ZuCaiDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 
 LRESULT ZuCaiDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	int choice_count = 0;
-	CStringATL strChoicesText = CopyChoicesText(choice_count);
+	CStringATL strChoicesText = GetLuaGlobalChoiceMember(false, choice_count);
+	strChoicesText += GetLuaGlobalChoiceMember(true, choice_count);
 	if (choice_count == 0) {
 		MessageBox("请先选择投注项目!!!", "错误", MB_ICONERROR | MB_OK);
 		return 1L;
@@ -413,7 +414,7 @@ LRESULT ZuCaiDialog::OnExtractLua(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 		int index = 1;
 		std::map<std::string, std::vector<std::string>> stat_clause;
 		for (auto& item : m_JCMatchItems) {
-			CStringATL clause = item.second->get_lua_clause(index, stat_clause);
+			CStringATL clause = item.second->get_lua_clause(index, item.second.get(), stat_clause);
 			if (!clause.IsEmpty()) {
 				index++;
 				Global::ReplaceStringInStrArrayOnce(lines, "${REPLACE_CLAUSE}", (LPCSTR)clause);
@@ -537,7 +538,7 @@ LRESULT ZuCaiDialog::OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 	return 1L;
 }
 
-CStringATL ZuCaiDialog::GetLuaGlobalChoiceMember(bool multi_selected) {
+CStringATL ZuCaiDialog::GetLuaGlobalChoiceMember(bool multi_selected, int& count) {
 	CStringATL strMatchBets = "\r\nkMatchBets = {\r\n";
 	if (multi_selected) {
 		strMatchBets = "\r\nkMatchBetsFixed = {\r\n";
@@ -548,6 +549,7 @@ CStringATL ZuCaiDialog::GetLuaGlobalChoiceMember(bool multi_selected) {
 		if (item.second->multi_selected != multi_selected) {
 			continue;
 		}
+		count++;
 		CStringATL strBets;
 		for (auto& sub : item.second->subjects) {
 			if (sub.checked) {
@@ -561,8 +563,8 @@ CStringATL ZuCaiDialog::GetLuaGlobalChoiceMember(bool multi_selected) {
 		}
 		if (!strBets.IsEmpty()) {
 			CStringATL prefix;
-			prefix.Format("    \"%s;%d;%s\",    ", item.second->id.c_str(),
-				(int)item.second->hand, strBets);
+			prefix.Format("    \"%s;%d;%d;%s\",    ", item.second->id.c_str(),
+				(int)item.second->hand, (int)item.second->odds_hand, strBets);
 			prefixs.push_back(prefix);
 			if (prefix.GetLength() > max_prefixs_length) {
 				max_prefixs_length = prefix.GetLength();
@@ -584,10 +586,9 @@ CStringATL ZuCaiDialog::GetLuaGlobalChoiceMember(bool multi_selected) {
 
 LRESULT ZuCaiDialog::OnCopyChoices(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
 	CWaitCursor wait;
-	CStringATL strMatchBets = GetLuaGlobalChoiceMember(false);
-	strMatchBets += GetLuaGlobalChoiceMember(true);
 	int choice_count = 0;
-	strMatchBets = CopyChoicesText(choice_count);
+	CStringATL strMatchBets = GetLuaGlobalChoiceMember(false, choice_count);
+	strMatchBets += GetLuaGlobalChoiceMember(true, choice_count);
 	if (OpenClipboard()) {
 		EmptyClipboard();
 		if (!strMatchBets.IsEmpty()) {

@@ -142,7 +142,7 @@ private:
 	void DoRefreshBetArea();
 
 	void DoReloadBackupResult();
-	CStringATL GetLuaGlobalChoiceMember(bool multi_selected);
+	CStringATL GetLuaGlobalChoiceMember(bool multi_selected, int& count);
 
 private:
 	CSortListViewCtrlEx<ZuCaiDialog> m_lstMatch;

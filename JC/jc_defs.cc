@@ -427,9 +427,10 @@ static void appendStatItem(std::map<std::string, std::vector<std::string>>& stat
 }
 
 
-CStringATL JCMatchItem::get_lua_clause(int match_index, 
+CStringATL JCMatchItem::get_lua_clause(int match_index, JCMatchItem* owner,
 		std::map<std::string, std::vector<std::string>>& stat) {
 	CStringATL temp;
+	if (owner->multi_selected) return temp;
 	std::ostringstream oss;
 	bool first = true;
 	bool has_spf = false, has_rspf = false, has_danshuang = false;
