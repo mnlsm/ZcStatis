@@ -1,4 +1,7 @@
 #pragma once
+#include "resource.h"
+#include "AsyncFuncDispatch.h"
+#include "http/HttpClientMgr.h"
 
 #define IDM_EDIT_FANGANS   WM_APP + 300
 #define IDM_DELETE_PLDATA   WM_APP + 301
@@ -8,7 +11,9 @@ class CMainDlg :
 		public CDialogResize<CMainDlg>,
 		public CWinDataExchange< CMainDlg >,
 		public CMessageFilter, 
-		public CIdleHandler
+		public CIdleHandler,
+		public CAsyncFuncDispatcher,
+		public std::enable_shared_from_this<CMainDlg>
 {
 
 public:
@@ -27,15 +32,19 @@ public:
 
 
 public:
-	enum { IDD = IDD_MAINDLG };
+	enum { IDD = IDD_MAINDLG, WM_ASYNC_DISPATCH = WM_APP + 0x360};
 
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	virtual BOOL OnIdle();
+
+	virtual bool AddOneAsyncFunc(talk_base::IAsyncFuncCall* pAsyncFunc);
 
 
 	BEGIN_MSG_MAP(CMainDlg)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
+		MESSAGE_HANDLER(WM_ASYNC_DISPATCH, OnAsyncDispatch)
+
 
 		COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
 		COMMAND_ID_HANDLER(IDM_ADDRECORD, OnAddRecord)
@@ -69,6 +78,8 @@ public:
 	LRESULT OnBeiDan(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnZuCai(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
+	LRESULT OnAsyncDispatch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+
 	
 private:
 	typedef struct DataRowTag {
@@ -89,7 +100,7 @@ private:
 private:
 	void InitControls();
 	void InitializeStatisData();
-	void ReloadStatisData();
+	void ReloadStatisData(BOOL requestNet);
 	BOOL GetPL(const CStringATL &strCode, const CStringATL &strPL1, DataRow &dataPL);
 
 private:
@@ -101,5 +112,43 @@ private:
 
 private:
 	std::shared_ptr<SQLite::Database> m_pDatabase;
+
+
+	//network
+private:
+	static void OnHttpReturnGlobal(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+	void OnHttpReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+	CHttpRequestPtr CreatePostRequest(const std::string& url, const std::string& idprefix, const std::string& data);
+	CHttpRequestPtr CreateGetRequest(const std::string& url, const std::string& idprefix);
+	std::shared_ptr<CHttpClientMgr> httpMgr_;
+
+
+
+
+private:
+	void doRequestNetData();
+	void OnOddsMainReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+	void OnOddsItemReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+
+	void OnKaiJiang14Return(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+	void OnKaiJiang9Return(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+
+	void ReadOddsDataFromFile(const CStlString& fn, CStringATL& strMathchs, CStringATL& strOdds);
+
+	void ReadKaiJiang14FromFile(const CStlString& fn, CStringATL& codes, long& sales, double& prize);
+
+	void ReadKaiJiang9FromFile(const CStlString& fn, const CStringATL& codes, double& prize);
+
+
+	std::set<CStringATL> net_req_ids_;
+	std::set<CStringATL> net_skip_ids_;
+	int pending_request_count_;
+
+private:
+	static std::shared_ptr<CMainDlg> sInst;
+
+private:
+	CStringATL m_strMinQH;
+
 
 };

@@ -296,6 +296,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MainDlg.cpp" />
+    <ClCompile Include="MainDlg_Network.cpp" />
     <ClCompile Include="MiscHelper.cc" />
     <ClCompile Include="MyPrintInfo.cpp" />
     <ClCompile Include="okooo\OkoooDialog.cc" />

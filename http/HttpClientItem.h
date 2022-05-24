@@ -62,6 +62,7 @@ public:
 	talk_base::ProxyInfo proxy;
 	int request_time;
 	std::string request_post_data;
+	std::string postdata_content_type;
 
 public:
 	void(*callback)(const CHttpRequestPtr& pThis, const CHttpResponseDataPtr& response);
@@ -118,7 +119,7 @@ private:
 	uint32 http_response_code_;
 	std::string response_data_;
 	std::string request_data_;
-
+	std::string postdata_content_type_;
 };
 
 typedef std::shared_ptr<CHttpClientItem> CHttpClientItemPtr;

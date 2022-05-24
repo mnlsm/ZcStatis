@@ -309,6 +309,9 @@
     <ClCompile Include="JQC\JQCDialog_Network.cc">
       <Filter>JQC</Filter>
     </ClCompile>
+    <ClCompile Include="MainDlg_Network.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua\lctype.h">

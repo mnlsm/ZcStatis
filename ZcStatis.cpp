@@ -19,15 +19,15 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWMAXIMIZED)
 	CMessageLoop theLoop;
 	_Module.AddMessageLoop(&theLoop);
 
-	CMainDlg dlgMain;
+	std::shared_ptr<CMainDlg> dlgMain = std::make_shared<CMainDlg>();
 
-	if(dlgMain.Create(NULL) == NULL)
+	if(dlgMain->Create(NULL) == NULL)
 	{
 		ATLTRACE(_T("Main dialog creation failed!\n"));
 		return 0;
 	}
 
-	dlgMain.ShowWindow(nCmdShow);
+	dlgMain->ShowWindow(nCmdShow);
 
 	int nRet = theLoop.Run();
 

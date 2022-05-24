@@ -33,6 +33,7 @@ void CHttpClientItem::Request( const THttpRequestData &request_param ) {
 	request_id_ = request_param.request_id;
 	url_ = request_param.request_url;
 	request_data_ = request_param.request_post_data;
+	postdata_content_type_ = request_param.postdata_content_type;
 	request_type_ = request_param.request_type;
 	usessl_ = request_param.use_ssl;
 	responsecategory_ = request_param.response_type;
@@ -127,6 +128,12 @@ void CHttpClientItem::StartAsyncRequest(Url<char>& purl) {
 		http_.reset( new (std::nothrow) pcutil::CHttpClientSession() ) ;
 		if( http_.get() == NULL ) {
 			throw 0;
+		}
+		if (!postdata_content_type_.empty()) {
+			http_->SetContentType(postdata_content_type_.c_str());
+		}
+		if (!request_data_.empty()) {
+			http_->AddPostRawText(request_data_);
 		}
 		AddFixedRequestHeader(http_.get());
 		CStringATL url = CA2T(purl.url().c_str()).m_psz;

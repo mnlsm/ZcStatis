@@ -15,10 +15,18 @@
 #include "zucai/ZuCaiDialog.h"
 
 #include <SQLiteCpp/SQLiteCpp.h>
-extern CMainDlg dlgMain;
 
+//CMainDlg* CMainDlg::sInst = nullptr;
+std::shared_ptr<CMainDlg> CMainDlg::sInst;
 
 CMainDlg::CMainDlg() : m_lstStatis(this, 1) {
+	httpMgr_.reset(new (std::nothrow) CHttpClientMgr());
+	if (httpMgr_.get() != nullptr) {
+		httpMgr_->Init();
+	}
+	SYSTEMTIME tm = { 0 };
+	GetLocalTime(&tm);
+	m_strMinQH.Format(_T("%d001"), ((int)tm.wYear - 2000));
 }
 
 BOOL CMainDlg::PreTranslateMessage(MSG* pMsg) {
@@ -26,10 +34,15 @@ BOOL CMainDlg::PreTranslateMessage(MSG* pMsg) {
 }
 
 BOOL CMainDlg::OnIdle() {
+	int async_count = GetAsyncFuncCount();
+	if (async_count > 0) {
+		PostMessage(ZuCaiDialog::WM_ASYNC_DISPATCH, 0, 0);
+	}
     return FALSE;
 }
 
 LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+	sInst = shared_from_this();
     // center the dialog on the screen
     CenterWindow();
 
@@ -48,7 +61,7 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
     SetWindowPos(NULL, &rcDesktop, SWP_NOZORDER);
 
     InitializeStatisData();
-    ReloadStatisData();
+    ReloadStatisData(TRUE);
 
     return TRUE;
 }
@@ -96,6 +109,7 @@ LRESULT CMainDlg::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 }
 
 LRESULT CMainDlg::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+	sInst.reset();
     DestroyWindow();
 	OkoooDialog::Destroy();
 	BeiDanDialog::Destroy();
@@ -109,7 +123,7 @@ LRESULT CMainDlg::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHand
 LRESULT CMainDlg::OnAddRecord(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	CDialogDB dlg(m_pDatabase); 
     dlg.DoModal();
-    ReloadStatisData();
+    ReloadStatisData(FALSE);
     return 1L;
 }
 
@@ -120,7 +134,7 @@ LRESULT CMainDlg::OnMenuJQC(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 
 
 LRESULT CMainDlg::OnRefresh(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-    ReloadStatisData();
+    ReloadStatisData(FALSE);
     return 1L;
 }
 
@@ -238,7 +252,7 @@ void addRen9Bonus(std::shared_ptr<SQLite::Database>& db) {
 	}
 }
 
-void CMainDlg::ReloadStatisData() {
+void CMainDlg::ReloadStatisData(BOOL requestNet) {
 	addRen9Bonus(m_pDatabase);
 	m_lstStatis.DeleteAllItems();
 
@@ -249,6 +263,15 @@ void CMainDlg::ReloadStatisData() {
 	m_arrPLSCOPE.push_back(4.0);
 	m_arrPLSCOPE.push_back(6.0);
 	m_arrPLSCOPE.push_back(1000.0);
+
+	std::set<CStringATL> net_request_ids;
+	std::set<CStringATL> skip_request_ids;
+	for (int i = 20001; i <= 20083; i++) {
+		net_request_ids.insert(std::to_string(i).c_str());
+	}
+	for (int i = 21001; i <= 21159; i++) {
+		net_request_ids.insert(std::to_string(i).c_str());
+	}
 
 	CStlString strSQL = _T("SELECT ID,BONUS,RESULT,PLDATA,SALES,MATCHS,BONUS9 FROM PLDATA ORDER BY ID ASC");
 	Statement sm(*m_pDatabase, strSQL);
@@ -280,7 +303,15 @@ void CMainDlg::ReloadStatisData() {
 			sprintf(strBonus9.GetBuffer(255), "%.2f", fBonus9);
 			strBonus9.ReleaseBuffer();
 
-
+			if (strCode == "00000000000000" || fBonus9 <= 0.0) {
+				net_request_ids.insert(strQH);
+			} else {
+				auto& iter = net_request_ids.find(strQH);
+				if (iter != net_request_ids.end()) {
+					net_request_ids.erase(iter);
+				}
+				skip_request_ids.insert(strQH);
+			}
 			double avgBonus = lSales;
 			avgBonus = avgBonus / 20000000;
 			if (lSales == 0) {
@@ -324,6 +355,12 @@ void CMainDlg::ReloadStatisData() {
 		}
 	}
 	m_lstStatis.DoSortItems(0, false);
+	if (requestNet) {
+		net_req_ids_.swap(net_request_ids);
+		net_skip_ids_.swap(skip_request_ids);
+		doRequestNetData();
+	}
+
 	return;
 }
 
