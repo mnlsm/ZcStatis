@@ -175,6 +175,17 @@ void CMainDlg::OnBdDictDownloadReturn(const CHttpRequestPtr& request, const CHtt
 void CMainDlg::doRequestNetData() {
 	CStringATL url;
 	/*
+	CStlString root_path = Global::GetAppPath() + "temp";
+	std::vector<CStringATL> dirs, files;
+	CMiscHelper::ListFiles(root_path.c_str(), dirs, files);
+	for (auto& f : files) {
+		CStlString file, file_data, utf8_data;
+		file = root_path + "\\" + (LPCSTR)f;
+		Global::ReadFileData(file, file_data);
+		utf8_data = CW2A(CA2W(file_data.c_str(), CP_ACP).m_psz, CP_UTF8);
+		Global::SaveFileData(file, utf8_data, FALSE);
+	}
+	return;
 	for (size_t i = 1; i <= 7; i++) {
 		url.Format(_T("https://mime.baidu.com/web/iw/c/null/download_number/page:%u"), i);
 		CHttpRequestPtr request = CreateGetRequest((LPCSTR)url, BDDICT_REQ_PREFIX);
