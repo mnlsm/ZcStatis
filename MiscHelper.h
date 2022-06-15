@@ -70,8 +70,13 @@ public:
 	static std::string DateTimeToString(LPDateTime datetime);
 
 public:
-	static void string_replace(std::string& str, const std::string& src,
-		const std::string& dest);
+	static void string_replace(std::string& str, 
+		const std::string& src, const std::string& dest);
+
+	static BOOL ExecConsoleCmd(const CStringATL& cmd, CStringA& result, UINT second_timeout);
+	static BOOL IsDirectoryExist(LPCTSTR lpszDirName);
+	static BOOL IsFileExist(LPCTSTR lpszFileName);
+	static void ListFiles(LPCTSTR Path, std::vector<CStringATL>& dirs, std::vector<CStringATL>& files);
 
 private:
 	static std::wstring SysMultiByteToWide(const char* mb, UINT code_page);

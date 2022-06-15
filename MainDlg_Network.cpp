@@ -9,6 +9,8 @@
 #include "Global.h"
 #include "ZlibStream.h"
 #include "BasicExcel.hpp"
+#include "MiscHelper.h"
+
 
 /*
 #include "DialogDB.h"
@@ -93,6 +95,10 @@ static const char* KAIJIANG9_REQ_PREFIX = "kiaijiang9_req_prefix";
 static const char* JCMATCHLIST_REQ_PREFIX = "jcmatchlist_req_prefix";
 static const char* ZCPL_REQ_PREFIX = "zcpl_req_prefix";
 
+static const char* BDDICT_REQ_PREFIX = "bddict_req_prefix";
+static const char* BDDICT_DOWNLOAD_REQ_PREFIX = "bddict_download_req_prefix";
+
+
 
 void CMainDlg::OnHttpReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
 	
@@ -100,22 +106,110 @@ void CMainDlg::OnHttpReturn(const CHttpRequestPtr& request, const CHttpResponseD
 		OnOddsMainReturn(request, response);
 	} else if (request->request_id.find(ODDSITEM_REQ_PREFIX) == 0) {
 		OnOddsItemReturn(request, response);
-	}
-	else if (request->request_id.find(KAIJIANG14_REQ_PREFIX) == 0) {
+	} else if (request->request_id.find(KAIJIANG14_REQ_PREFIX) == 0) {
 		OnKaiJiang14Return(request, response);
-	}
-	else if (request->request_id.find(KAIJIANG9_REQ_PREFIX) == 0) {
+	} else if (request->request_id.find(KAIJIANG9_REQ_PREFIX) == 0) {
 		OnKaiJiang9Return(request, response);
+	} else if (request->request_id.find(BDDICT_REQ_PREFIX) == 0) {
+		OnBdDictReturn(request, response);
+	} else if (request->request_id.find(BDDICT_DOWNLOAD_REQ_PREFIX) == 0) {
+		OnBdDictDownloadReturn(request, response);
 	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void CMainDlg::OnBdDictReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
+	if (response->httperror == talk_base::HE_NONE && response->response_content.size() > 0) {
+		std::string raw_response;
+		if (response->response_headers.Find("Content-Encoding: gzip") != -1) {
+			CZlibStream zlib;
+			zlib.DecompressGZip(response->response_content, raw_response);
+		}
+		else {
+			raw_response = response->response_content;
+		}
+		int acp_code = CP_ACP;
+		if (raw_response.find("UTF-8") != std::string::npos
+			|| raw_response.find("utf-8") != std::string::npos) {
+			acp_code = CP_UTF8;
+		}
+		int index = 1;
+		CStringA temp = CW2A(CA2W(raw_response.c_str(), acp_code).m_psz).m_psz;
+		int nFindBegin = 0, nFindEnd = -1;
+		CStringA section_begin = "class=\"wordsliblistname\"><a href=\"";
+		CStringA section_end = "\"";
+		do{
+			nFindBegin = temp.Find(section_begin, nFindBegin);
+			if (nFindBegin == -1) {
+				break;
+			}
+			nFindBegin += section_begin.GetLength();
+			nFindEnd = temp.Find(section_end, nFindBegin);
+			if (nFindEnd == -1) {
+				break;
+			}
+			CStringA download_uri = temp.Mid(nFindBegin, nFindEnd - nFindBegin );
+			nFindBegin = nFindEnd;
+			CStringATL url;
+			url.Format(_T("https://mime.baidu.com%s"), download_uri);
+			CHttpRequestPtr req = CreateGetRequest((LPCSTR)url, BDDICT_DOWNLOAD_REQ_PREFIX);
+			req->cmd = std::to_string(atoi(request->cmd.c_str()) * 1000 + index) + ".bcd";
+			httpMgr_->DoHttpCommandRequest(req);
+			index++;
+		}while (true);
+	}
+	return;
+}
+
+void CMainDlg::OnBdDictDownloadReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {
+	if (response->httperror == talk_base::HE_NONE && response->response_content.size() > 0) {
+		CStlString strFilePath = Global::GetAppPath() + request->cmd;
+		Global::SaveFileData(strFilePath, response->response_content, FALSE);
+	}
+	if (httpMgr_->GetRequestCount() <= 0) {
+		Sleep(20);
+	}
+	return;
+}
+
 void CMainDlg::doRequestNetData() {
 	CStringATL url;
+	/*
+	for (size_t i = 1; i <= 7; i++) {
+		url.Format(_T("https://mime.baidu.com/web/iw/c/null/download_number/page:%u"), i);
+		CHttpRequestPtr request = CreateGetRequest((LPCSTR)url, BDDICT_REQ_PREFIX);
+		request->cmd = std::to_string(i);
+		httpMgr_->DoHttpCommandRequest(request);
+	}
+	return;
+	CStlString exe = Global::GetAppPath() + "dict_cvt.exe";
+	CStlString input_path = Global::GetAppPath() + "bcd";
+	CStlString output_path = Global::GetAppPath() + "temp";
+	for (size_t i = 1; i <= 7; i++) {
+		for (size_t j = 1; j <= 20; j++) {
+			std::string fi = input_path + "\\" + std::to_string(i * 1000 + j) + ".bcd";
+			std::string fo = output_path + "\\" + std::to_string(i * 1000 + j) + ".txt";
+			if (CMiscHelper::IsFileExist(fi.c_str())) {
+				CStringATL cmd, result;
+				cmd.Append("\"");
+				cmd.Append(exe.c_str());
+				cmd.Append("\" ");
+				cmd.Append("-i:bcd");
+				cmd.Append(" ");
+				cmd.Append(fi.c_str());
+				cmd.Append(" ");
+				cmd.Append("-o:sgpy");
+				cmd.Append(" ");
+				cmd.Append(fo.c_str());
+				CMiscHelper::ExecConsoleCmd(cmd, result, INFINITE);
+			}
+		}
+	}
+	return;
+	*/
 	url.Format(_T("https://odds.500.com/europe_sfc_%s.shtml"), m_strMinQH);
 	CHttpRequestPtr request = CreateGetRequest((LPCSTR)url, ODDSMAIN_REQ_PREFIX);
 	httpMgr_->DoHttpCommandRequest(request);
-
 }
 
 void CMainDlg::OnOddsMainReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response) {

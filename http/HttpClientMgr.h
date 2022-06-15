@@ -21,6 +21,7 @@ public:
 	BOOL DoHttpCommandRequest(const CHttpRequestPtr &cmd);
 
 	static std::string generateRequestId();
+	int GetRequestCount();
 
 protected:
 	void AsyncInit();

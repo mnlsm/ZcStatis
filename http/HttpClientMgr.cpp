@@ -184,4 +184,11 @@ std::string CHttpClientMgr::generateRequestId() {
 	return identity;
 }
 
-
+int CHttpClientMgr::GetRequestCount() {
+	int result = 0;
+	if (TRUE) {
+		CComCritSecLock< CComCriticalSection > guard(csObj_);
+		result = (int)(pend_requests_.size() + running_requests_.size());
+	}
+	return result;
+}

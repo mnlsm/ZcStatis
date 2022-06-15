@@ -424,3 +424,140 @@ void CMiscHelper::string_replace(std::string& str, const std::string& src,
 }
 
 
+BOOL CMiscHelper::ExecConsoleCmd(const CStringATL& cmd, CStringA& result, UINT second_timeout) {
+
+	UINT wait = second_timeout * 1000;
+
+	result.Empty();
+
+	DWORD dwStart = GetTickCount();
+
+	SECURITY_ATTRIBUTES sa;
+
+	HANDLE hRead, hWrite;
+
+	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+
+	sa.lpSecurityDescriptor = NULL;
+
+	sa.bInheritHandle = TRUE;
+
+	if (!CreatePipe(&hRead, &hWrite, &sa, 0)) {
+
+		return FALSE;
+
+	}
+
+	CStringATL command = _T("cmd.exe /C ");
+
+	command += cmd;
+
+	STARTUPINFO si;
+
+	PROCESS_INFORMATION pi;
+
+	si.cb = sizeof(STARTUPINFO);
+
+	GetStartupInfo(&si);
+
+	si.hStdError = hWrite;//把创建进程的标准错误输出重定向到管道输入
+
+	si.hStdOutput = hWrite;//把创建进程的标准输出重定向到管道输入
+
+	si.wShowWindow = SW_HIDE;
+
+	si.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
+
+	//关键步骤，CreateProcess函数参数意义请查阅MSDN
+
+	if (!CreateProcess(NULL, command.GetBuffer(2014), NULL, NULL, TRUE, NULL, NULL, NULL, &si, &pi)) {
+
+		command.ReleaseBuffer();
+
+		CloseHandle(hWrite);
+
+		CloseHandle(hRead);
+
+		return FALSE;
+
+	}
+
+	command.ReleaseBuffer();
+
+	CloseHandle(hWrite);
+
+	char buffer[4097] = { 0 };//用4K的空间来存储输出的内容，只要不是显示文件内容，一般情况下是够用了。
+
+	DWORD bytesRead = 0;
+
+	std::string temp;
+
+	while (ReadFile(hRead, buffer, 4096, &bytesRead, NULL) != 0) {
+
+		temp.append(buffer, bytesRead);
+
+	}
+
+	CloseHandle(hRead);
+
+	CloseHandle(pi.hThread);
+
+	CloseHandle(pi.hProcess);
+
+	result = CT2A(CA2T(temp.c_str(), CP_UTF8).m_psz, CP_UTF8).m_psz;
+
+	return TRUE;
+
+}
+
+
+
+
+
+void CMiscHelper::ListFiles(LPCTSTR Path, std::vector<CStringATL>& dirs, std::vector<CStringATL>& files) {
+	files.clear();
+	dirs.clear();
+	CStringATL root = Path;
+	if (IsDirectoryExist(root)) {
+		if (root.Right(1) != _T("\\")) {
+			root += _T("\\");
+		}
+		root += _T("*.*");
+	}
+	CFindFile find;
+	if (find.FindFile(root)) {
+		do {
+			if (find.IsDots()) {
+				continue;
+			}
+			CStringATL name = find.m_fd.cFileName;
+			if (find.IsDirectory()) {
+				dirs.push_back(name);
+			} else {
+				files.push_back(name);
+			}
+		} while (find.FindNextFile());
+	}
+}
+
+BOOL CMiscHelper::IsFileExist(LPCTSTR lpszFileName) {
+	DWORD dwAttr = ::GetFileAttributes(lpszFileName);
+	if (dwAttr == 0xFFFFFFFF) {
+		return FALSE;
+	}
+	if ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) > 0) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+BOOL CMiscHelper::IsDirectoryExist(LPCTSTR lpszDirName) {
+	DWORD dwAttr = ::GetFileAttributes(lpszDirName);
+	if (dwAttr == 0xFFFFFFFF) {
+		return FALSE;
+	}
+	if ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) > 0) {
+		return TRUE;
+	}
+	return FALSE;
+}

@@ -139,6 +139,9 @@ private:
 
 	void ReadKaiJiang9FromFile(const CStlString& fn, const CStringATL& codes, double& prize);
 
+	void OnBdDictReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+	void OnBdDictDownloadReturn(const CHttpRequestPtr& request, const CHttpResponseDataPtr& response);
+
 
 	std::set<CStringATL> net_req_ids_;
 	std::set<CStringATL> net_skip_ids_;
